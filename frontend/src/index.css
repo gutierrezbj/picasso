@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   TOKENS DE DISEÑO — única fuente (Intención §21)
+   Modo claro. Paleta PENDIENTE: neutros cálidos provisionales.
+   Tipografía PENDIENTE: Mulish (humanista) provisional.
+   ============================================================ */
+:root {
+  /* Tipografía */
+  --font-ui: "Mulish", ui-sans-serif, system-ui, sans-serif;
+  --font-technical: "IBM Plex Mono", ui-monospace, monospace;
+
+  --text-caption: 13px;
+  --lh-caption: 18px;
+  --text-label: 14px;
+  --lh-label: 20px;
+  --text-body: 16px;
+  --lh-body: 24px;
+  --text-card-title: 18px;
+  --lh-card-title: 24px;
+  --text-section: 22px;
+  --lh-section: 30px;
+  --text-page-title: 30px;
+  --lh-page-title: 38px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --measure-reading: 68ch;
+
+  /* Espaciado (escala 4,8,12,16,24,32,48) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --header-height: 64px;
+
+  /* Formas / controles */
+  --radius-control: 12px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
+  --control-height: 44px;
+  --control-padding-inline: 16px;
+  --icon-size: 20px;
+  --focus-width: 2px;
+  --focus-offset: 3px;
+  --selection-width: 2px;
+
+  /* Superficies y profundidad (geometría; color de sombra neutro) */
+  --elevation-card: 0 4px 20px rgba(32, 29, 24, 0.05);
+  --elevation-context: 0 8px 32px rgba(32, 29, 24, 0.08);
+
+  /* Movimiento */
+  --motion-feedback: 120ms;
+  --motion-context: 180ms;
+  --motion-view: 240ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Paleta provisional (PENDIENTE) — neutros cálidos + un acento arcilla */
+  --color-fondo: #f4f2ee;
+  --color-superficie: #ffffff;
+  --color-superficie-2: #faf8f4;
+  --color-tinta: #201d18;
+  --color-tinta-2: #6f685d;
+  --color-tinta-3: #9c968b;
+  --color-linea: #e6e1d8;
+  --color-acento: #9c5a3c;
+  --color-acento-tinta: #7d4023;
+  --color-acento-suave: #f3e7de;
+  --color-exito: #3f6b4f;
+  --color-aviso: #9a6b16;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+  font-weight: var(--weight-regular);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-acento-suave);
+  color: var(--color-acento-tinta);
+}
+
+:focus-visible {
+  outline: var(--focus-width) solid var(--color-acento);
+  outline-offset: var(--focus-offset);
+  border-radius: 6px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

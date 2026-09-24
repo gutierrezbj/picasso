@@ -1,0 +1,218 @@
+# Recorridos por tipo de proyecto (§4.1 del documento maestro).
+# Esto es un fichero de datos, no código. La aplicación lo lee para mostrar
+# la barra del recorrido y el bloque "Siguiente paso".
+#
+# Campos por paso:
+#   clave        identificador estable
+#   nombre       texto que se muestra en la interfaz (vocabulario §2)
+#   construye    qué se construye en el paso
+#   listo_cuando condición para dar el paso por listo
+#   obligatorio  true | false
+#   pantalla     idea | elementos | guion | lienzo | montaje
+#   clase        (solo pantalla=elementos) personaje | producto | objeto | escenario | null
+#   fase         fase en la que se construye ese paso (para el texto de la pantalla mínima)
+
+corto:
+  nombre: Corto
+  descripcion: "Idea, mundo, personajes, objetos y guion; luego lienzo y montaje."
+  pasos:
+    - clave: idea
+      nombre: Idea
+      construye: "Desarrollo: intención, premisa, tono, qué se quiere contar."
+      listo_cuando: "«Intención» y «premisa» rellenas y pulsas «Listo»."
+      obligatorio: true
+      pantalla: idea
+      fase: 2
+    - clave: mundo
+      nombre: Mundo y escenarios
+      construye: "Descripción del mundo y elementos de clase escenario con su ficha y referencias."
+      listo_cuando: "Al menos un escenario con ficha aprobada."
+      obligatorio: true
+      pantalla: elementos
+      clase: escenario
+      fase: 3
+    - clave: personajes
+      nombre: Personajes
+      construye: "Personajes: ficha (aspecto, rasgos fijos y variables, personalidad, voz) y hoja de personaje."
+      listo_cuando: "Al menos un personaje con ficha aprobada."
+      obligatorio: true
+      pantalla: elementos
+      clase: personaje
+      fase: 3
+    - clave: objetos
+      nombre: Objetos
+      construye: "Elementos objeto que deben mantenerse (un arma, un coche, un collar)."
+      listo_cuando: "Al menos uno aprobado, o marcado «no hace falta»."
+      obligatorio: false
+      pantalla: elementos
+      clase: objeto
+      fase: 3
+    - clave: guion
+      nombre: Guion
+      construye: "Escenas en orden con lo que ocurre, se ve y se dice, usando los elementos preparados."
+      listo_cuando: "Guion aprobado."
+      obligatorio: true
+      pantalla: guion
+      fase: 4
+    - clave: lienzo
+      nombre: Lienzo
+      construye: "Dirección y producción de planos."
+      listo_cuando: "Todos los planos con toma elegida."
+      obligatorio: false
+      pantalla: lienzo
+      fase: 5
+    - clave: montaje
+      nombre: Montaje
+      construye: "Secuencia y paquete de edición."
+      listo_cuando: "Paquete exportado."
+      obligatorio: false
+      pantalla: montaje
+      fase: 7
+
+anuncio:
+  nombre: Anuncio
+  descripcion: "Idea y mensaje, producto, y guion; luego lienzo y montaje."
+  pasos:
+    - clave: idea
+      nombre: Idea y mensaje
+      construye: "Intención, mensaje, público, llamada a la acción, tono."
+      listo_cuando: "«Intención» y «mensaje» rellenos y pulsas «Listo»."
+      obligatorio: true
+      pantalla: idea
+      fase: 2
+    - clave: producto
+      nombre: Producto
+      construye: "Elemento producto: ficha (forma, materiales, colores, detalles que no se reinterpretan) y al menos una referencia. Preparar el photobook es opcional."
+      listo_cuando: "Un producto con ficha aprobada y al menos una referencia (subida o generada)."
+      obligatorio: true
+      pantalla: elementos
+      clase: producto
+      fase: 3
+    - clave: personajes
+      nombre: Personajes
+      construye: "Personajes (modelo, presentador, usuario del producto)."
+      listo_cuando: "Al menos uno aprobado, o «no hace falta»."
+      obligatorio: false
+      pantalla: elementos
+      clase: personaje
+      fase: 3
+    - clave: escenario
+      nombre: Escenario
+      construye: "Escenario donde ocurre el anuncio."
+      listo_cuando: "Al menos uno aprobado, o «no hace falta»."
+      obligatorio: false
+      pantalla: elementos
+      clase: escenario
+      fase: 3
+    - clave: guion
+      nombre: Guion
+      construye: "Escenas del anuncio."
+      listo_cuando: "Guion aprobado."
+      obligatorio: true
+      pantalla: guion
+      fase: 4
+    - clave: lienzo
+      nombre: Lienzo
+      construye: "Dirección y producción de planos."
+      listo_cuando: "Todos los planos con toma elegida."
+      obligatorio: false
+      pantalla: lienzo
+      fase: 5
+    - clave: montaje
+      nombre: Montaje
+      construye: "Secuencia y paquete de edición."
+      listo_cuando: "Paquete exportado."
+      obligatorio: false
+      pantalla: montaje
+      fase: 7
+
+imagen:
+  nombre: Imagen
+  descripcion: "Idea, elementos y encargo de imagen; luego lienzo. Sin montaje."
+  pasos:
+    - clave: idea
+      nombre: Idea
+      construye: "Qué se quiere comunicar y para qué se usará la imagen."
+      listo_cuando: "«Intención» rellena y pulsas «Listo»."
+      obligatorio: true
+      pantalla: idea
+      fase: 2
+    - clave: elementos
+      nombre: Elementos
+      construye: "Los productos, personajes o escenarios que aparecerán, con su ficha."
+      listo_cuando: "Al menos un elemento aprobado."
+      obligatorio: true
+      pantalla: elementos
+      clase: null
+      fase: 3
+    - clave: encargo
+      nombre: Encargo de imagen
+      construye: "Qué se muestra, composición, intención, elementos, referencias, número de imágenes."
+      listo_cuando: "Encargo aprobado."
+      obligatorio: true
+      pantalla: guion
+      fase: 4
+    - clave: lienzo
+      nombre: Lienzo
+      construye: "Dirección y producción de cada imagen."
+      listo_cuando: "Todas con toma elegida."
+      obligatorio: false
+      pantalla: lienzo
+      fase: 5
+
+serie:
+  nombre: Serie
+  descripcion: "Premisa, mundo, personajes, objetos y capítulos; luego lienzo y montaje por capítulo."
+  pasos:
+    - clave: premisa
+      nombre: Premisa
+      construye: "Premisa, tono, arco general."
+      listo_cuando: "«Premisa» y «arco general» rellenos y pulsas «Listo»."
+      obligatorio: true
+      pantalla: idea
+      fase: 2
+    - clave: mundo
+      nombre: Mundo y escenarios
+      construye: "Mundo y escenarios, compartidos por todos los capítulos."
+      listo_cuando: "Al menos un escenario aprobado."
+      obligatorio: true
+      pantalla: elementos
+      clase: escenario
+      fase: 3
+    - clave: personajes
+      nombre: Personajes
+      construye: "Personajes, compartidos por todos los capítulos."
+      listo_cuando: "Al menos un personaje aprobado."
+      obligatorio: true
+      pantalla: elementos
+      clase: personaje
+      fase: 3
+    - clave: objetos
+      nombre: Objetos
+      construye: "Elementos objeto que deben mantenerse."
+      listo_cuando: "Uno aprobado o «no hace falta»."
+      obligatorio: false
+      pantalla: elementos
+      clase: objeto
+      fase: 3
+    - clave: capitulos
+      nombre: Capítulos
+      construye: "Lista de capítulos (número, título, de qué va). Cada capítulo tiene su guion."
+      listo_cuando: "Al menos un capítulo con guion aprobado."
+      obligatorio: true
+      pantalla: guion
+      fase: 4
+    - clave: lienzo
+      nombre: Lienzo
+      construye: "Dirección y producción de planos, por capítulo."
+      listo_cuando: "Todos los planos con toma elegida."
+      obligatorio: false
+      pantalla: lienzo
+      fase: 5
+    - clave: montaje
+      nombre: Montaje
+      construye: "Secuencia y paquete de edición, por capítulo."
+      listo_cuando: "Paquete exportado."
+      obligatorio: false
+      pantalla: montaje
+      fase: 7
