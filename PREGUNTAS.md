@@ -218,6 +218,21 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 - **PENDIENTE**: El documento no fija un **tamaño máximo** por archivo subido. Límite
   puesto en 25 MB por archivo, con error claro al superarlo.
 
+- **DECISIONES DE LA FASE 5 (26-09-2026)**, tomadas donde el documento no lo fija:
+  - La **modalidad por defecto** de un plano nuevo es `video`, salvo en los proyectos de
+    tipo `imagen`, donde es `imagen`. El documento no lo dice; se cambia en la ficha del
+    plano con un selector.
+  - Un plano nuevo **hereda los elementos de su escena** (§3.1: «subconjunto de la
+    escena»), y se quitan a mano en la ficha.
+  - Los planos cuya escena desaparece en una revisión **se conservan** (§13) y el lienzo los
+    devuelve aparte, en `planos_sin_escena`; la fila «sin escena» del lienzo se dibujará
+    cuando haga falta (hoy solo se conservan en datos, no se pierden).
+  - La disposición automática (§7.1) se aplica **por nodo**: cada tarjeta sin posición
+    guardada recibe la automática, y las guardadas mandan siempre. Así los planos nuevos
+    aparecen colocados sin recolocar todo.
+  - `GET /api/escenas/{id}` se ha añadido para poder **sobrescribir** una escena tras un
+    conflicto 409 (§12).
+
 - **NORMA DE PRUEBAS (impuesta por el usuario, 26-09-2026)**: ninguna prueba ni script
   del constructor escribe en la base de datos de la previsualización. Las pruebas de
   backend (pytest + `scripts_pruebas/p1…p6`) se lanzan con

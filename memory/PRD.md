@@ -166,11 +166,39 @@ pruebas de backend aisladas (pytest 31 OK + 1 marcada `integracion` omitida; scr
    con **Recargar** / **Sobrescribir** (§12) y nunca muestra «Guardado» tras un fallo. El mismo
    mecanismo se aplicó a escenas y fichas (`GET /api/escenas/{id}` nuevo para poder sobrescribir).
 
+### Fase 5 · Lienzo (26-09-2026) — CONSTRUIDA Y PROBADA
+Documento: se ha añadido el **§7.7 literal** («El lienzo como mesa de dirección»), el detalle
+de dividir / correcciones / guion gráfico, la variante de vídeo en el §8 (encuadre y ángulo de
+inicio y de final), el detalle de la vista previa del prompt, `Correccion` en el §3.1 y los
+criterios ampliados de la F5 en el §14.
+
+Backend: `Plano`, `Direccion`, `Correccion`, `LayoutLienzo` (§3.1); `app/api/lienzo.py`
+(`GET /api/piezas/{id}/lienzo`, `POST /api/escenas/{id}/planos`, `PATCH`/`DELETE /api/planos/{id}`,
+`mover`, `duplicar`, `dividir`, correcciones, `GET/PUT /api/planos/{id}/prompt` + `reconstruir`,
+`GET /api/direccion/opciones`, `GET/PUT /api/proyectos/{id}/lienzo`); `app/dominio/prompt.py` con
+`backend/data/plantillas_prompt.yaml` y `backend/data/opciones_direccion.yaml` (editables sin
+tocar código). Cambiar de modalidad no pierde nada.
+
+Frontend (tipado, sin `any`): `pantallas/Lienzo.tsx` y `componentes/lienzo/*`
+(`SuperficieLienzo` con React Flow, `NodoElemento`, `NodoEscena`, `NodoPlano`,
+`FichaContextual`, `FichaPlano` con Dirección/Continuidad/Correcciones, `PanelPrompt`,
+`GuionGrafico`), `lib/lienzo.ts` con la disposición automática y las conexiones de reparto.
+
+Arreglos pedidos por el usuario y aplicados: el criterio «paso superado» lo calcula solo el
+backend (`recorridos.calcular` → `superado`) y lo leen la barra, el bloque Siguiente paso y la
+puerta del lienzo; «Estás aquí» sin mayúsculas; ejemplos de rasgos fijos y variables por clase;
+primera referencia de personaje o producto como «Frontal»; confirmación en «Descartar revisión»
+y en «Borrar escena».
+
+Pruebas: `scripts_pruebas/p7_lienzo.py` en la base aislada (todo OK) y agente de pruebas de
+interfaz en «Pruebas del constructor» (iteration_8: **18/18 flujos, 0 fallos**).
+
 ## Backlog (orden del maestro §14)
-- P1 FASE 5 — Lienzo (P7) sin producción (React Flow): estructura desde el guion, grupos,
-  fichas contextuales, dirección, vista previa del prompt, persistencia del layout.
-- P2 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
-  inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina).
+- P1 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
+  inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina). Antes de
+  empezarla: activar `noImplicitAny: true` en el frontend (compromiso con el usuario).
+  En la Fase 6, cada corrección de un plano enlaza su operación y su toma, y al elegir esa
+  toma la corrección se marca «Hecha» sola (§7.7d).
 - P2 FASE 7 — Montaje (P8) + exportación ZIP/FCPXML.
 - P2 FASE 8 — Impacto de cambios (§13), incluido el análisis al actualizar versión de ficha.
 - P2 FASE 9 — Proveedores reales (fal, kie, openai_images, elevenlabs) + catálogo de voces.
