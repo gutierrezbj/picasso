@@ -438,7 +438,11 @@ async def dividir_plano(plano_id: str):
         )
     await db.planos.insert_one(doc)
     proy_id = (await db.piezas.find_one({"_id": plano["pieza_id"]}))["proyecto_id"]
-    return await _vista_plano(sin_id(doc), await _reparto_con_ficha(proy_id))
+    vista = await _vista_plano(sin_id(doc), await _reparto_con_ficha(proy_id))
+    vista["avisos_encadenado"] = await _avisos_encadenado(
+        plano["escena_id"], [p["id"] for p in planos]
+    )
+    return vista
 
 
 # --- correcciones (§7.7d) ----------------------------------------------------

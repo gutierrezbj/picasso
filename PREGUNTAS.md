@@ -40,6 +40,20 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
      heredados de las Fases 1 a 4 que lo necesiten. `yarn build` (que ejecuta
      `tsc --noEmit && vite build`) tiene que pasar sin errores con la bandera puesta.
   3. Mientras esa deuda exista, queda escrita aquí y en `memory/PRD.md`.
+
+- **`noImplicitAny` ACTIVADO (26-09-2026)**. `yarn build` (`tsc --noEmit && vite build`) pasa
+  limpio con la bandera puesta. Cómo se ha tipado lo heredado de las Fases 1-4:
+  - Props de todos los componentes con interfaces explícitas, usando los tipos del dominio
+    (`Escena`, `EntradaReparto`, `Elemento`, `FichaVersion`, `Medio`, `Pieza`, `Proyecto`,
+    `Espacio`, `Paso`, `Recorrido`, `Referencia`).
+  - Los formularios heredados que guardan sus campos **por clave** (ficha de elemento, tarjeta
+    de escena, encargo de imagen, desarrollo) usan `CamposDinamicos = Record<string, any>`, y
+    los mapas de etiquetas/ayudas por clave, `Record<string, any>`. Es un `any` **explícito y
+    acotado**: queda escrito aquí, no se usa en el código nuevo (Fase 5 en adelante) y se
+    cerrará cuando esos formularios pasen a modelos tipados por clase.
+  - Algunas devoluciones de llamada heredadas (eventos del DOM en `PanelAsistente`,
+    `DialogoRevision`, `Biblioteca`) llevan `any` explícito por el mismo motivo.
+  - Lo importante: con la bandera activada **no puede volver a entrar un `any` implícito**.
 - **DESVIACIÓN (acordada)**: En previsualización los servicios los lanza supervisor,
   no `docker-compose`. El `docker-compose.yml` y los Dockerfiles del §15 se añadirán
   para el despliegue en la infraestructura propia del usuario. Ninguna lógica de la

@@ -5,6 +5,7 @@ import Dialogo from "./Dialogo";
 import Selector from "./Selector";
 import SubidorMedios from "./SubidorMedios";
 import { api } from "../api/cliente";
+import type { Medio, Referencia } from "../tipos";
 
 const ROLES = [
   { valor: "frontal", texto: "Frontal" },
@@ -19,6 +20,16 @@ const ROLES = [
 // En personaje y producto la primera referencia entra como «Frontal».
 const CLASES_CON_FRONTAL = ["personaje", "producto"];
 
+interface PropsReferencias {
+  referencias?: Referencia[];
+  medios?: Medio[];
+  editable: boolean;
+  onCambiar: (referencias: Referencia[]) => void;
+  espacioId: string;
+  clase?: string;
+  onMediosNuevos?: (medios: Medio[]) => void | Promise<unknown>;
+}
+
 export default function Referencias({
   referencias = [],
   medios = [],
@@ -27,17 +38,17 @@ export default function Referencias({
   espacioId,
   clase,
   onMediosNuevos,
-}) {
+}: PropsReferencias) {
   const [picker, setPicker] = useState(false);
-  const [visor, setVisor] = useState(null);
+  const [visor, setVisor] = useState<string | null>(null);
   const porId = Object.fromEntries(medios.map((m) => [m.id, m]));
   const yaUsados = new Set(referencias.map((r) => r.medio_id));
   const disponibles = medios.filter((m) => m.clase === "imagen" && !yaUsados.has(m.id));
 
-  const rolPara = (indice) =>
+  const rolPara = (indice: number): string =>
     indice === 0 && CLASES_CON_FRONTAL.includes(clase) ? "frontal" : "otra";
 
-  const anadir = (medioId) => {
+  const anadir = (medioId: string) => {
     if (yaUsados.has(medioId)) return;
     onCambiar([...referencias, { medio_id: medioId, rol: rolPara(referencias.length) }]);
   };

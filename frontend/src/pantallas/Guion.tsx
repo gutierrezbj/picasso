@@ -12,6 +12,7 @@ import LeerGuion from "../componentes/LeerGuion";
 import DialogoRevision from "../componentes/DialogoRevision";
 import PanelElementoNuevo from "../componentes/PanelElementoNuevo";
 import DialogoConfirmar from "../componentes/DialogoConfirmar";
+import type { CamposDinamicos, Encargo, EntradaReparto, Medio, Paso, Pieza, Proyecto } from "../tipos";
 import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import Tarjeta from "../componentes/Tarjeta";
@@ -20,7 +21,13 @@ import { api } from "../api/cliente";
 import { useProyecto, usePiezas, useGuion, useReparto, useMedios, useFormato } from "../api/hooks";
 import { useAutoguardado } from "../estado/useAutoguardado";
 
-function ListaCapitulos({ proyecto, piezas, paso, onCrear, onBorrar }) {
+function ListaCapitulos({ proyecto, piezas, paso, onCrear, onBorrar }: {
+  proyecto: Proyecto;
+  piezas: Pieza[];
+  paso?: Paso;
+  onCrear: (datos: CamposDinamicos) => void | Promise<unknown>;
+  onBorrar: (id: string) => void | Promise<unknown>;
+}) {
   const [abierto, setAbierto] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [deQueVa, setDeQueVa] = useState("");
@@ -124,8 +131,16 @@ function ListaCapitulos({ proyecto, piezas, paso, onCrear, onBorrar }) {
   );
 }
 
-function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuardado, onCrearElemento }) {
-  const [datos, setDatos] = useState({
+function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuardado, onCrearElemento }: {
+  piezaId: string;
+  encargo: Encargo;
+  editable: boolean;
+  reparto: EntradaReparto[];
+  medios: Medio[];
+  onGuardado: () => void | Promise<unknown>;
+  onCrearElemento: () => void;
+}) {
+  const [datos, setDatos] = useState<CamposDinamicos>({
     que_se_muestra: encargo?.que_se_muestra || "",
     composicion: encargo?.composicion || "",
     intencion: encargo?.intencion || "",
@@ -143,7 +158,7 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
     { activo: editable }
   );
 
-  const set = (k, v) => setDatos((d) => ({ ...d, [k]: v }));
+  const set = (k: string, v: any) => setDatos((d) => ({ ...d, [k]: v }));
   const imagenes = (medios || []).filter((m) => m.clase === "imagen");
 
   return (
@@ -188,7 +203,7 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
                   onClick={() =>
                     set(
                       "elementos",
-                      puesto ? datos.elementos.filter((x) => x !== r.id) : [...datos.elementos, r.id]
+                      puesto ? datos.elementos.filter((x: any) => x !== r.id) : [...datos.elementos, r.id]
                     )
                   }
                   className={
@@ -231,7 +246,7 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
                         set(
                           "referencias",
                           puesta
-                            ? datos.referencias.filter((x) => x !== m.id)
+                            ? datos.referencias.filter((x: any) => x !== m.id)
                             : [...datos.referencias, m.id]
                         )
                       }
@@ -327,7 +342,7 @@ export default function Guion() {
     await qc.invalidateQueries({ queryKey: ["reparto", proyectoId] });
   };
 
-  const accion = async (fn) => {
+  const accion = async (fn: any) => {
     setError(null);
     try {
       await fn();

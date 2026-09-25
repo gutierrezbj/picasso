@@ -1,6 +1,6 @@
 import React from "react";
 
-const estilos = {
+const estilos: Record<string, string> = {
   base:
     "inline-flex items-center justify-center gap-2 rounded-control font-ui font-medium " +
     "transition-colors duration-[120ms] ease-suave disabled:opacity-45 disabled:cursor-not-allowed " +
@@ -12,13 +12,20 @@ const estilos = {
   texto: "bg-transparent text-acento hover:bg-acentoSuave px-3",
 };
 
+type Variante = "primario" | "secundario" | "texto";
+
+interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variante?: Variante;
+  pequeno?: boolean;
+}
+
 export default function Boton({
   children,
   variante = "primario",
   pequeno = false,
   className = "",
   ...props
-}) {
+}: Props) {
   return (
     <button
       className={`${estilos.base} ${pequeno ? estilos.tamanoPeq : estilos.tamano} ${estilos[variante]} ${className}`}

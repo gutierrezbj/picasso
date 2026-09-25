@@ -83,7 +83,7 @@ export const api = {
     }),
 
   desarrollo: (pid: string) => peticion<Desarrollo>(`/proyectos/${pid}/desarrollo`),
-  guardarDesarrollo: (pid: string, datos: Desarrollo) =>
+  guardarDesarrollo: (pid: string, datos: Record<string, unknown>) =>
     peticion<Desarrollo>(`/proyectos/${pid}/desarrollo`, {
       method: "PUT",
       body: JSON.stringify(datos),

@@ -37,6 +37,7 @@ import AvisosEncadenado from "./AvisosEncadenado";
 
 interface Props {
   vista: VistaLienzo;
+  relacion: string;
   opciones: OpcionesDireccion;
   proyectoId: string;
   rutaGuion: string;
@@ -54,7 +55,7 @@ export default function SuperficieLienzo(props: Props) {
   );
 }
 
-function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCambiado }: Props) {
+function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePaso, onCambiado }: Props) {
   const { flowToScreenPosition } = useReactFlow();
   const [layout, setLayout] = useState<LayoutLienzo>(vista.layout);
   const [seleccion, setSeleccion] = useState<string[]>(vista.layout.seleccion || []);
@@ -288,6 +289,7 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
 
       {storyboard !== null && (
         <GuionGrafico
+          relacion={relacion}
           escenas={vista.escenas}
           indice={storyboard}
           onIndice={setStoryboard}

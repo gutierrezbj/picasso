@@ -5,6 +5,7 @@ import Selector from "./Selector";
 import SubidorMedios from "./SubidorMedios";
 import { Campo, Entrada, AreaTexto } from "./Campo";
 import { api } from "../api/cliente";
+import type { Medio } from "../tipos";
 
 const CLASES = [
   { valor: "personaje", texto: "Personaje" },
@@ -13,20 +14,28 @@ const CLASES = [
   { valor: "escenario", texto: "Escenario" },
 ];
 
-const EXIGE_REFERENCIA = ["personaje", "producto"];
+const EXIGE_REFERENCIA: string[] = ["personaje", "producto"];
 
 // §4.2: desde el guion se puede crear un elemento que falta sin salir. Se abre la
 // ficha en un panel, se aprueba y se vuelve a la escena donde se estaba.
-export default function PanelElementoNuevo({ abierto, onCerrar, espacioId, proyectoId, onCreado }) {
+interface Props {
+  abierto: boolean;
+  onCerrar: () => void;
+  espacioId: string;
+  proyectoId?: string;
+  onCreado?: (entrada?: unknown) => void | Promise<unknown>;
+}
+
+export default function PanelElementoNuevo({ abierto, onCerrar, espacioId, proyectoId, onCreado }: Props) {
   const [clase, setClase] = useState("personaje");
   const [nombre, setNombre] = useState("");
   const [descripcion, setDescripcion] = useState("");
-  const [medios, setMedios] = useState([]);
-  const [error, setError] = useState(null);
+  const [medios, setMedios] = useState<Medio[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
 
   const exige = EXIGE_REFERENCIA.includes(clase);
-  const faltan = [];
+  const faltan: string[] = [];
   if (!nombre.trim()) faltan.push("pon un nombre");
   if (!descripcion.trim()) faltan.push("escribe la descripción");
   if (exige && medios.length === 0) faltan.push("sube al menos una imagen de referencia");

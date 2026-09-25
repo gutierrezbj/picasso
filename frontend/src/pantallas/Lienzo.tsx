@@ -139,6 +139,7 @@ export default function Lienzo() {
           <SuperficieLienzo
             key={pieza.id}
             vista={vista}
+            relacion={(proyecto.formato_video || "16:9").replace(":", " / ")}
             opciones={opciones}
             proyectoId={proyectoId!}
             rutaGuion={rutaGuion}

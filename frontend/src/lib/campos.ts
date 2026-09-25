@@ -1,4 +1,4 @@
-export const ETIQUETA_CAMPO = {
+export const ETIQUETA_CAMPO: Record<string, any> = {
   intencion: "Intención",
   publico: "Público",
   mensaje: "Mensaje",
@@ -13,7 +13,7 @@ export const ETIQUETA_CAMPO = {
   sonido_previsto: "Sonido previsto",
 };
 
-export const AYUDA_CAMPO = {
+export const AYUDA_CAMPO: Record<string, any> = {
   intencion: "Qué quieres conseguir o contar.",
   premisa: "La idea en una o dos frases.",
   mensaje: "Qué debe quedar claro a quien lo ve.",
@@ -21,14 +21,14 @@ export const AYUDA_CAMPO = {
   arco_general: "Hacia dónde evoluciona la historia.",
 };
 
-export const CAMPOS_POR_TIPO = {
+export const CAMPOS_POR_TIPO: Record<string, any> = {
   corto: ["intencion", "premisa", "tono", "mundo", "notas"],
   anuncio: ["intencion", "mensaje", "publico", "tono", "notas"],
   imagen: ["intencion", "tono", "notas"],
   serie: ["premisa", "arco_general", "tono", "mundo", "notas"],
 };
 
-export const REQUERIDOS = {
+export const REQUERIDOS: Record<string, any> = {
   corto: ["intencion", "premisa"],
   anuncio: ["intencion", "mensaje"],
   imagen: ["intencion"],

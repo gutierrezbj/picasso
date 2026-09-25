@@ -1,10 +1,19 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 
-export default function Dialogo({ abierto, onCerrar, titulo, children, ancho = "max-w-[540px]", "data-testid": testid }) {
+interface Props {
+  abierto: boolean;
+  onCerrar: () => void;
+  titulo?: React.ReactNode;
+  children?: React.ReactNode;
+  ancho?: string;
+  "data-testid"?: string;
+}
+
+export default function Dialogo({ abierto, onCerrar, titulo, children, ancho = "max-w-[540px]", "data-testid": testid }: Props) {
   useEffect(() => {
     if (!abierto) return;
-    const alTecla = (e) => e.key === "Escape" && onCerrar();
+    const alTecla = (e: KeyboardEvent) => e.key === "Escape" && onCerrar();
     window.addEventListener("keydown", alTecla);
     return () => window.removeEventListener("keydown", alTecla);
   }, [abierto, onCerrar]);

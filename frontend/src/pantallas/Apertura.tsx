@@ -9,9 +9,10 @@ import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import Selector from "../componentes/Selector";
 import { useEstudio, useCrearEspacio } from "../api/hooks";
 import { api } from "../api/cliente";
+import type { Espacio as EspacioTipo } from "../tipos";
 import { NOMBRE_TIPO, NOMBRE_TIPO_ESPACIO } from "../lib/formato";
 
-function Inicial({ espacio }) {
+function Inicial({ espacio }: { espacio: EspacioTipo }) {
   const medioId = espacio.portada_id || espacio.logo_id;
   const letra = (espacio.nombre || "?").trim().charAt(0).toUpperCase();
   return (
@@ -30,7 +31,7 @@ function Inicial({ espacio }) {
   );
 }
 
-function DialogoNuevoEspacio({ abierto, onCerrar }) {
+function DialogoNuevoEspacio({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
   const navegar = useNavigate();
   const crear = useCrearEspacio();
   const [nombre, setNombre] = useState("");
@@ -40,7 +41,7 @@ function DialogoNuevoEspacio({ abierto, onCerrar }) {
   const [error, setError] = useState(null);
   const [ocupado, setOcupado] = useState(false);
 
-  const enviar = async (e) => {
+  const enviar = async (e: any) => {
     e.preventDefault();
     if (!nombre.trim()) return;
     setError(null);
@@ -184,7 +185,7 @@ export default function Apertura() {
 
             {recientes.length > 0 && (
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {recientes.map((r) => (
+                {recientes.map((r: any) => (
                   <button
                     key={r.proyecto_id}
                     data-testid={`reciente-${r.proyecto_id}`}
@@ -212,7 +213,7 @@ export default function Apertura() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {espacios.map((e) => (
+              {espacios.map((e: any) => (
                 <button
                   key={e.id}
                   data-testid={`espacio-${e.id}`}

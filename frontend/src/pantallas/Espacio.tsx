@@ -11,6 +11,7 @@ import Selector from "../componentes/Selector";
 import SubidorMedios from "../componentes/SubidorMedios";
 import { useEspacio, useProyectos, useRecorridos, useCrearProyecto } from "../api/hooks";
 import { api } from "../api/cliente";
+import type { Espacio as EspacioTipo } from "../tipos";
 import { useAutoguardado } from "../estado/useAutoguardado";
 import { NOMBRE_TIPO, NOMBRE_TIPO_ESPACIO } from "../lib/formato";
 
@@ -21,7 +22,7 @@ const FORMATOS = [
   { valor: "4:5", texto: "4:5 · retrato" },
 ];
 
-function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }) {
+function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }: { abierto: boolean; onCerrar: () => void; espacioId: string }) {
   const navegar = useNavigate();
   const { data: recorridos } = useRecorridos();
   const crear = useCrearProyecto(espacioId);
@@ -29,7 +30,7 @@ function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }) {
   const [tipo, setTipo] = useState("corto");
   const [formato, setFormato] = useState("16:9");
 
-  const enviar = async (e) => {
+  const enviar = async (e: any) => {
     e.preventDefault();
     if (!nombre.trim()) return;
     const proy = await crear.mutateAsync({ nombre: nombre.trim(), tipo, formato_video: formato });
@@ -91,7 +92,13 @@ function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }) {
   );
 }
 
-function BloqueImagenEspacio({ espacio, clave, etiqueta, ayuda, onAsignar }) {
+function BloqueImagenEspacio({ espacio, clave, etiqueta, ayuda, onAsignar }: {
+  espacio: EspacioTipo;
+  clave: "logo_id" | "portada_id";
+  etiqueta: string;
+  ayuda?: string;
+  onAsignar: (clave: string, medioId: string | null) => void | Promise<unknown>;
+}) {
   const medioId = espacio[clave];
   return (
     <Campo etiqueta={etiqueta} ayuda={ayuda}>
@@ -132,7 +139,7 @@ function BloqueImagenEspacio({ espacio, clave, etiqueta, ayuda, onAsignar }) {
   );
 }
 
-function DialogoIdentidad({ abierto, onCerrar, espacio }) {
+function DialogoIdentidad({ abierto, onCerrar, espacio }: { abierto: boolean; onCerrar: () => void; espacio: EspacioTipo }) {
   const qc = useQueryClient();
   const [nombre, setNombre] = useState(espacio.nombre);
   const [notas, setNotas] = useState(espacio.notas_de_marca || "");
@@ -161,7 +168,7 @@ function DialogoIdentidad({ abierto, onCerrar, espacio }) {
     { activo: abierto }
   );
 
-  const asignar = async (clave, medioId) => {
+  const asignar = async (clave: string, medioId: string) => {
     setError(null);
     try {
       const actualizado = await api.editarEspacio(espacio.id, {

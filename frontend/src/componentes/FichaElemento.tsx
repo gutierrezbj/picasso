@@ -7,10 +7,11 @@ import Referencias from "./Referencias";
 import { Campo, Entrada, AreaTexto } from "./Campo";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
+import type { CamposDinamicos, Elemento, FichaVersion, Medio } from "../tipos";
 
 const CLASES_CON_REFERENCIA = ["personaje", "producto"];
 
-const TEXTO_PREPARAR = {
+const TEXTO_PREPARAR: Record<string, string> = {
   personaje: "Crear hoja de personaje",
   producto: "Crear photobook del producto",
   escenario: "Crear lámina del escenario",
@@ -18,14 +19,14 @@ const TEXTO_PREPARAR = {
 };
 
 // Ejemplos de rasgo según la clase del elemento (§3.1).
-const EJEMPLO_FIJOS = {
+const EJEMPLO_FIJOS: Record<string, string> = {
   personaje: "Cicatriz en la ceja derecha…",
   escenario: "Suelo de baldosa hidráulica…",
   producto: "Logotipo grabado en la tapa…",
   objeto: "Mango de madera astillado…",
 };
 
-const EJEMPLO_VARIABLES = {
+const EJEMPLO_VARIABLES: Record<string, string> = {
   personaje: "Abrigo de invierno en el mundo nevado…",
   escenario: "De noche, con las persianas bajadas…",
   producto: "Con la tapa abierta o cerrada…",
@@ -34,6 +35,21 @@ const EJEMPLO_VARIABLES = {
 
 // Ficha del elemento seleccionado (§6.2). Una versión aprobada es inmutable:
 // editar = crear una versión nueva.
+interface PropsFichaElemento {
+  elemento: Elemento;
+  ficha: FichaVersion;
+  versiones: FichaVersion[];
+  versionFijada?: number | null;
+  ultimaAprobada?: number | null;
+  medios: Medio[];
+  espacioId: string;
+  onElegirVersion?: (version: number) => void;
+  onCambiada?: (opciones?: { recargarLista?: boolean }) => void | Promise<unknown>;
+  onMediosNuevos?: (medios: Medio[]) => void | Promise<unknown>;
+  onActualizarFijada?: (version: number) => void | Promise<unknown>;
+  onVersionCreada?: (version: number) => void | Promise<unknown>;
+}
+
 export default function FichaElemento({
   elemento,
   ficha,
@@ -47,9 +63,9 @@ export default function FichaElemento({
   onMediosNuevos,
   onActualizarFijada,
   onVersionCreada,
-}) {
+}: PropsFichaElemento) {
   const editable = ficha.estado === "borrador";
-  const [datos, setDatos] = useState({
+  const [datos, setDatos] = useState<CamposDinamicos>({
     descripcion: ficha.descripcion || "",
     rasgos_fijos: ficha.rasgos_fijos || [],
     rasgos_variables: ficha.rasgos_variables || [],
@@ -109,9 +125,9 @@ export default function FichaElemento({
     { activo: true }
   );
 
-  const set = (k, v) => setDatos((d) => ({ ...d, [k]: v }));
+  const set = (k: string, v: any) => setDatos((d) => ({ ...d, [k]: v }));
 
-  const accion = async (fn) => {
+  const accion = async (fn: any) => {
     setError(null);
     try {
       await fn();
@@ -350,7 +366,7 @@ export default function FichaElemento({
           editable={editable}
           espacioId={espacioId}
           clase={elemento.clase}
-          onCambiar={(v) => set("referencias", v)}
+          onCambiar={(v: any) => set("referencias", v)}
           onMediosNuevos={onMediosNuevos}
         />
       </Campo>

@@ -1,5 +1,9 @@
 // Tipos del dominio (§3.1 del documento maestro). Se usan en la capa de API.
 
+// Formularios heredados de las Fases 2-4 que guardan sus campos por clave.
+// `noImplicitAny` está activado; aquí el `any` es explícito y acotado a estos formularios.
+export type CamposDinamicos = Record<string, any>;
+
 export type TipoProyecto = "corto" | "anuncio" | "imagen" | "serie";
 export type TipoEspacio = "cliente" | "marca" | "propio";
 export type ClaseElemento = "personaje" | "objeto" | "producto" | "escenario";
@@ -97,7 +101,14 @@ export interface Referencia {
   rol: string;
 }
 
+export interface Voz {
+  proveedor?: string | null;
+  voice_id?: string | null;
+}
+
 export interface FichaVersion {
+  personalidad?: string | null;
+  voz?: Voz | null;
   id: string;
   elemento_id: string;
   version: number;

@@ -1,6 +1,10 @@
 import React from "react";
 
-export default function Tarjeta({ children, className = "", elevada = false, ...props }) {
+interface Props extends React.HTMLAttributes<HTMLDivElement> {
+  elevada?: boolean;
+}
+
+export default function Tarjeta({ children, className = "", elevada = false, ...props }: Props) {
   return (
     <div
       className={

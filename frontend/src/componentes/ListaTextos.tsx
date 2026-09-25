@@ -4,7 +4,15 @@ import { Entrada } from "./Campo";
 import Boton from "./Boton";
 
 // Lista de textos cortos (rasgos fijos / variables de una ficha).
-export default function ListaTextos({ valores = [], onCambiar, editable = true, testid, placeholder }) {
+interface Props {
+  valores?: string[];
+  onCambiar: (valores: string[]) => void;
+  editable?: boolean;
+  testid?: string;
+  placeholder?: string;
+}
+
+export default function ListaTextos({ valores = [], onCambiar, editable = true, testid, placeholder }: Props) {
   const [nuevo, setNuevo] = useState("");
 
   const anadir = () => {

@@ -7,7 +7,7 @@ const MARCAS = [
   { valor: "afecta_planos", texto: "Afecta a los planos" },
 ];
 
-function Valor({ v }) {
+function Valor({ v }: { v: unknown }) {
   if (v === null || v === undefined || v === "") return <span className="text-tinta3">— vacío —</span>;
   if (Array.isArray(v)) {
     if (v.length === 0) return <span className="text-tinta3">— vacío —</span>;
@@ -45,7 +45,7 @@ export default function DialogoRevision({
   const editadas = d.editadas || [];
   const cambioEncargo = esEncargo && d.encargo?.hay_cambios;
   const faltan =
-    editadas.some((e) => !marcas[e.escena_id]) || (cambioEncargo && !marcas.encargo);
+    editadas.some((e: any) => !marcas[e.escena_id]) || (cambioEncargo && !marcas.encargo);
 
   const aprobar = async () => {
     setError(null);
@@ -120,7 +120,7 @@ export default function DialogoRevision({
           <section className="mb-8" data-testid="revision-encargo">
             <h3 className="text-[16px] leading-[24px] font-semibold text-tinta">Encargo de imagen</h3>
             <ul className="mt-3 flex flex-col gap-3">
-              {d.encargo.campos.map((c) => (
+              {d.encargo.campos.map((c: any) => (
                 <li key={c.campo} className="rounded-card border border-linea bg-superficie2 p-3">
                   <div className="text-[13px] leading-[18px] font-medium text-tinta2">{c.etiqueta}</div>
                   <div className="mt-2 grid grid-cols-2 gap-3 text-[14px] leading-[20px]">
@@ -150,7 +150,7 @@ export default function DialogoRevision({
               Escenas añadidas ({d.anadidas.length})
             </h3>
             <ul className="mt-3 flex flex-col gap-2">
-              {d.anadidas.map((e) => (
+              {d.anadidas.map((e: any) => (
                 <li key={e.escena_id} className="text-[14px] leading-[20px] text-tinta2">
                   {e.orden}. {e.titulo || "Escena sin título"}
                 </li>
@@ -165,7 +165,7 @@ export default function DialogoRevision({
               Escenas editadas ({editadas.length})
             </h3>
             <ul className="mt-3 flex flex-col gap-5">
-              {editadas.map((e) => (
+              {editadas.map((e: any) => (
                 <li
                   key={e.escena_id}
                   className="rounded-card border border-linea bg-superficie2 p-4"
@@ -175,7 +175,7 @@ export default function DialogoRevision({
                     {e.titulo || "Escena sin título"}
                   </div>
                   <ul className="mt-3 flex flex-col gap-3">
-                    {e.campos.map((c) => (
+                    {e.campos.map((c: any) => (
                       <li key={c.campo}>
                         <div className="text-[13px] leading-[18px] font-medium text-tinta2">
                           {c.etiqueta}
@@ -210,7 +210,7 @@ export default function DialogoRevision({
               Escenas eliminadas ({d.eliminadas.length})
             </h3>
             <ul className="mt-3 flex flex-col gap-2">
-              {d.eliminadas.map((e) => (
+              {d.eliminadas.map((e: any) => (
                 <li key={e.escena_id} className="text-[14px] leading-[20px] text-tinta2">
                   {e.orden}. {e.titulo || "Escena sin título"}
                 </li>
@@ -228,7 +228,7 @@ export default function DialogoRevision({
               Escenas reordenadas ({d.reordenadas.length})
             </h3>
             <ul className="mt-3 flex flex-col gap-2">
-              {d.reordenadas.map((e) => (
+              {d.reordenadas.map((e: any) => (
                 <li key={e.escena_id} className="text-[14px] leading-[20px] text-tinta2">
                   {e.titulo || "Escena sin título"}: de la posición {e.de} a la {e.a}
                 </li>

@@ -32,7 +32,7 @@ const ORDEN = [
   { valor: "reciente", texto: "Más recientes primero" },
 ];
 
-function ordenar(lista, orden, campoNombre) {
+function ordenar(lista: any[], orden: string, campoNombre: string) {
   const copia = [...lista];
   if (orden === "nombre") {
     copia.sort((a, b) => String(a[campoNombre] || "").localeCompare(String(b[campoNombre] || "")));
@@ -54,7 +54,7 @@ export default function Biblioteca() {
 
   const refrescar = () => qc.invalidateQueries({ queryKey: ["biblioteca", espacioId] });
 
-  const borrar = async (fn) => {
+  const borrar = async (fn: any) => {
     setError(null);
     try {
       await fn();
@@ -75,12 +75,12 @@ export default function Biblioteca() {
     };
   }, [espacio]);
   const elementos = ordenar(
-    (data?.elementos || []).filter((e) => claseEl === "todas" || e.clase === claseEl),
+    (data?.elementos || []).filter((e: any) => claseEl === "todas" || e.clase === claseEl),
     orden,
     "nombre"
   );
   const medios = ordenar(
-    (data?.medios || []).filter((m) => claseMedio === "todas" || m.clase === claseMedio),
+    (data?.medios || []).filter((m: any) => claseMedio === "todas" || m.clase === claseMedio),
     orden,
     "nombre_original"
   );

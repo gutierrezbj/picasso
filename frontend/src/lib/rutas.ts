@@ -1,4 +1,6 @@
-export function rutaPaso(pid, paso) {
+import type { Paso } from "../tipos";
+
+export function rutaPaso(pid: string, paso: Paso): string {
   switch (paso.pantalla) {
     case "idea":
       return `/p/${pid}/idea`;

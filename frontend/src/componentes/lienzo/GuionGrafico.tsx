@@ -67,7 +67,11 @@ export default function GuionGrafico({ relacion, escenas, indice, onIndice, onCe
                       {p.modalidad === "video" ? "Vídeo" : "Imagen"}
                     </span>
                   </div>
-                  <div className="mt-2 flex items-center justify-center rounded-control bg-superficie2" style={{ aspectRatio: relacion }}>
+                  <div
+                    className="mt-2 flex items-center justify-center overflow-hidden rounded-control bg-superficie2"
+                    style={{ aspectRatio: relacion }}
+                    data-testid={`tira-miniatura-${i + 1}`}
+                  >
                     <span className="text-[13px] text-tinta3">sin toma</span>
                   </div>
                   <p className="mt-3 text-[15px] leading-[22px] text-tinta">

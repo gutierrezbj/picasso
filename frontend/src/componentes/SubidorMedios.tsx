@@ -2,27 +2,42 @@ import React, { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import Boton from "./Boton";
 import { api } from "../api/cliente";
+import type { Medio } from "../tipos";
 
 // Subida de medios al espacio (§15.1). Un fichero cada vez, con progreso y error
 // por fichero. El original nunca se modifica: cada subida es un Medio nuevo.
+interface Props {
+  espacioId: string;
+  acepta?: string;
+  texto?: string;
+  onSubido?: (medios: Medio[]) => void | Promise<unknown>;
+  testid?: string;
+}
+
+interface EnCola {
+  nombre: string;
+  pct: number;
+  error: string | null;
+}
+
 export default function SubidorMedios({
   espacioId,
   acepta = "image/*",
   texto = "Subir archivo",
   onSubido,
   testid = "subir-medio",
-}) {
-  const entrada = useRef(null);
-  const [cola, setCola] = useState([]); // {nombre, pct, error}
+}: Props) {
+  const entrada = useRef<HTMLInputElement | null>(null);
+  const [cola, setCola] = useState<EnCola[]>([]);
   const [ocupado, setOcupado] = useState(false);
 
-  const elegir = async (e) => {
+  const elegir = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const archivos: File[] = Array.from(e.target.files || []);
     e.target.value = "";
     if (!archivos.length) return;
     setOcupado(true);
-    setCola(archivos.map((a) => ({ nombre: a.name, pct: 0, error: null })));
-    const creados = [];
+    setCola(archivos.map((a): EnCola => ({ nombre: a.name, pct: 0, error: null })));
+    const creados: Medio[] = [];
     for (let i = 0; i < archivos.length; i += 1) {
       try {
         const medio = await api.subirMedioConProgreso(espacioId, archivos[i], (pct) =>

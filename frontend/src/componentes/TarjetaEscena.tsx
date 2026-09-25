@@ -5,8 +5,23 @@ import Selector from "./Selector";
 import { Campo, Entrada, AreaTexto } from "./Campo";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
+import type { CamposDinamicos, EntradaReparto, Escena } from "../tipos";
 
 // Una escena del guion (§6.3). Se edita en sitio con autoguardado.
+interface PropsTarjetaEscena {
+  escena: Escena;
+  indice: number;
+  total: number;
+  reparto: EntradaReparto[];
+  editable: boolean;
+  onMover?: (id: string, direccion: "subir" | "bajar") => void | Promise<unknown>;
+  onBorrar?: (id: string) => void | Promise<unknown>;
+  onCambiada?: () => void | Promise<unknown>;
+  onCrearElemento?: () => void;
+  onReescribir?: (escena: Escena, campo: string) => void;
+  arrastre?: (desde: number, hasta: number) => void | Promise<unknown>;
+}
+
 export default function TarjetaEscena({
   escena,
   indice,
@@ -19,8 +34,8 @@ export default function TarjetaEscena({
   onCrearElemento,
   onReescribir,
   arrastre,
-}) {
-  const [datos, setDatos] = useState({
+}: PropsTarjetaEscena) {
+  const [datos, setDatos] = useState<CamposDinamicos>({
     titulo: escena.titulo || "",
     que_ocurre: escena.que_ocurre || "",
     que_se_ve: escena.que_se_ve || "",
@@ -64,7 +79,7 @@ export default function TarjetaEscena({
     }
   );
 
-  const set = (k, v) => setDatos((d) => ({ ...d, [k]: v }));
+  const set = (k: string, v: any) => setDatos((d) => ({ ...d, [k]: v }));
   // §6.3: solo el narrador o un personaje que esté en los elementos de esta escena.
   const personajesEnEscena = reparto.filter(
     (r) => r.elemento.clase === "personaje" && datos.elementos.includes(r.id)
@@ -73,11 +88,11 @@ export default function TarjetaEscena({
     { valor: "narrador", texto: "Narrador" },
     ...personajesEnEscena.map((r) => ({ valor: r.elemento_id, texto: r.elemento.nombre })),
   ];
-  const fueraDeEscena = (hablante) =>
+  const fueraDeEscena = (hablante: string) =>
     hablante !== "narrador" && !personajesEnEscena.some((r) => r.elemento_id === hablante);
-  const nombreHablante = (hablante) =>
+  const nombreHablante = (hablante: string) =>
     reparto.find((r) => r.elemento_id === hablante)?.elemento.nombre || "Elemento fuera del reparto";
-  const opcionesHablante = (hablante) =>
+  const opcionesHablante = (hablante: string) =>
     fueraDeEscena(hablante)
       ? [
           ...hablantes,
@@ -85,11 +100,11 @@ export default function TarjetaEscena({
         ]
       : hablantes;
 
-  const alternar = (entradaId) =>
+  const alternar = (entradaId: string) =>
     set(
       "elementos",
       datos.elementos.includes(entradaId)
-        ? datos.elementos.filter((x) => x !== entradaId)
+        ? datos.elementos.filter((x: any) => x !== entradaId)
         : [...datos.elementos, entradaId]
     );
 
@@ -249,7 +264,7 @@ export default function TarjetaEscena({
             {datos.dialogos.length === 0 && !editable && (
               <span className="text-[14px] leading-[20px] text-tinta3">— sin diálogo —</span>
             )}
-            {datos.dialogos.map((d, i) => (
+            {datos.dialogos.map((d: any, i: number) => (
               <div key={i} className="flex flex-wrap items-center gap-2">
                 <div className="w-[180px]">
                   {editable ? (
@@ -257,7 +272,7 @@ export default function TarjetaEscena({
                       data-testid={`dialogo-hablante-${indice + 1}-${i}`}
                       valor={d.hablante}
                       onChange={(v) =>
-                        set("dialogos", datos.dialogos.map((x, j) => (j === i ? { ...x, hablante: v } : x)))
+                        set("dialogos", datos.dialogos.map((x: any, j: number) => (j === i ? { ...x, hablante: v } : x)))
                       }
                       opciones={opcionesHablante(d.hablante)}
                     />
@@ -283,7 +298,7 @@ export default function TarjetaEscena({
                       onChange={(e) =>
                         set(
                           "dialogos",
-                          datos.dialogos.map((x, j) => (j === i ? { ...x, texto: e.target.value } : x))
+                          datos.dialogos.map((x: any, j: number) => (j === i ? { ...x, texto: e.target.value } : x))
                         )
                       }
                     />
@@ -295,7 +310,7 @@ export default function TarjetaEscena({
                   <button
                     data-testid={`quitar-dialogo-${indice + 1}-${i}`}
                     aria-label="Quitar diálogo"
-                    onClick={() => set("dialogos", datos.dialogos.filter((_, j) => j !== i))}
+                    onClick={() => set("dialogos", datos.dialogos.filter((_: any, j: number) => j !== i))}
                     className="flex h-9 w-9 items-center justify-center rounded-control text-tinta2 hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
                   >
                     <X size={16} strokeWidth={1.9} />

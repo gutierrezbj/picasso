@@ -1,7 +1,19 @@
 import React from "react";
 
 // Selector nativo con estilo de token (control.height 44, radius.control 12).
-export default function Selector({ valor, onChange, opciones, "data-testid": testid }) {
+interface Opcion {
+  valor: string;
+  texto: string;
+}
+
+interface Props {
+  valor: string;
+  onChange: (valor: string) => void;
+  opciones: Opcion[];
+  "data-testid"?: string;
+}
+
+export default function Selector({ valor, onChange, opciones, "data-testid": testid }: Props) {
   return (
     <div className="relative">
       <select

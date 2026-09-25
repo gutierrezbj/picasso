@@ -11,6 +11,7 @@ import Boton from "../componentes/Boton";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import { useProyecto, useDesarrollo, useFormato } from "../api/hooks";
 import { api } from "../api/cliente";
+import type { CamposDinamicos } from "../tipos";
 import { useAutoguardado } from "../estado/useAutoguardado";
 import { useGuardado } from "../estado/GuardadoContext";
 import { ETIQUETA_CAMPO, AYUDA_CAMPO, CAMPOS_POR_TIPO, REQUERIDOS, ES_AREA } from "../lib/campos";
@@ -23,7 +24,7 @@ export default function Desarrollo() {
   const tipo = data?.proyecto?.tipo;
   const { data: formatos } = useFormato(tipo);
 
-  const [des, setDes] = useState(null);
+  const [des, setDes] = useState<CamposDinamicos | null>(null);
   const cargado = useRef(false);
   const sello = useRef<string | null>(null); // updated_at guardado (§12)
   const g = useGuardado();
@@ -95,12 +96,12 @@ export default function Desarrollo() {
   const campos = CAMPOS_POR_TIPO[tipo] || [];
   const preguntas = (formatos && formatos[0]?.preguntas_desarrollo) || [];
 
-  const requeridosOk = (REQUERIDOS[tipo] || []).every((c) => (des[c] || "").trim());
+  const requeridosOk = (REQUERIDOS[tipo] || []).every((c: any) => (des[c] || "").trim());
   const listo = des.estado === "listo";
 
-  const set = (k, v) => setDes((d) => ({ ...d, [k]: v }));
-  const setFormato = (clave, v) =>
-    setDes((d) => ({ ...d, respuestas_formato: { ...(d.respuestas_formato || {}), [clave]: v } }));
+  const set = (k: string, v: any) => setDes((d: any) => ({ ...d, [k]: v }));
+  const setFormato = (clave: string, v: any) =>
+    setDes((d: any) => ({ ...d, respuestas_formato: { ...(d.respuestas_formato || {}), [clave]: v } }));
 
   const marcarListo = async () => {
     const nuevo = { ...des, estado: "listo" };
@@ -146,7 +147,7 @@ export default function Desarrollo() {
           </div>
 
           <div className="mt-8 flex max-w-[68ch] flex-col gap-6" data-testid="desarrollo-form">
-            {campos.map((c) => {
+            {campos.map((c: any) => {
               const req = (REQUERIDOS[tipo] || []).includes(c);
               const etiqueta = ETIQUETA_CAMPO[c] + (req ? " *" : "");
               return (
@@ -165,7 +166,7 @@ export default function Desarrollo() {
                 <p className="text-[13px] font-medium text-tinta2">
                   Formato: {formatos[0].nombre}
                 </p>
-                {preguntas.map((q) => (
+                {preguntas.map((q: any) => (
                   <Campo key={q.clave} etiqueta={q.pregunta} ayuda={q.ayuda} htmlFor={`fmt-${q.clave}`}>
                     <AreaTexto
                       id={`fmt-${q.clave}`}

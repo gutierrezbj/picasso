@@ -24,20 +24,20 @@ const CLASES = [
   { valor: "escenario", texto: "Escenario" },
 ];
 
-const NOMBRE_CLASE = {
+const NOMBRE_CLASE: Record<string, any> = {
   personaje: "personaje",
   producto: "producto",
   objeto: "objeto",
   escenario: "escenario",
 };
 
-function CampoDesarrollo({ proyectoId, clave }) {
+function CampoDesarrollo({ proyectoId, clave }: { proyectoId: string; clave: string }) {
   const qc = useQueryClient();
   const { data: inicial } = useDesarrollo(proyectoId);
   const [valor, setValor] = useState(null);
 
   useEffect(() => {
-    if (inicial && valor === null) setValor(inicial[clave] || "");
+    if (inicial && valor === null) setValor((inicial as Record<string, any>)[clave] || "");
     // eslint-disable-next-line
   }, [inicial]);
 
@@ -115,7 +115,7 @@ export default function PasoElementos() {
     }
   };
 
-  const conError = async (fn) => {
+  const conError = async (fn: any) => {
     setError(null);
     try {
       await fn();
@@ -174,7 +174,7 @@ export default function PasoElementos() {
     });
   };
 
-  const traer = async (elementoId) => {
+  const traer = async (elementoId: string) => {
     await conError(async () => {
       await api.anadirAlReparto(proyectoId, { elemento_id: elementoId });
       setSel(elementoId);
@@ -183,14 +183,14 @@ export default function PasoElementos() {
     });
   };
 
-  const quitar = async (entradaId) =>
+  const quitar = async (entradaId: string) =>
     conError(async () => {
       await api.quitarDelReparto(proyectoId, entradaId);
       setSel(null);
       setVersionSel(null);
     });
 
-  const cambiarOmitido = async (valor) =>
+  const cambiarOmitido = async (valor: any) =>
     conError(async () => {
       const lista = new Set(proyecto.pasos_omitidos || []);
       if (valor) lista.add(paso.clave);

@@ -8,7 +8,7 @@ import { useProyecto } from "../api/hooks";
 import { api } from "../api/cliente";
 import { rutaPaso as rutaDePaso } from "../lib/rutas";
 
-export default function PasoMinimo({ pantalla }) {
+export default function PasoMinimo({ pantalla }: { pantalla: string }) {
   const { proyectoId, clave } = useParams();
   const { data, isLoading } = useProyecto(proyectoId);
 

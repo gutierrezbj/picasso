@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import type { Recorrido } from "../tipos";
 import EstadoPaso from "./EstadoPaso";
 import { rutaPaso } from "../lib/rutas";
 
@@ -7,7 +8,13 @@ import { rutaPaso } from "../lib/rutas";
 // El paso que se está viendo lleva el marcador fuerte «Estás aquí». El paso actual
 // del proyecto se distingue por su estado («En curso»), no por el recuadro.
 // Un paso bloqueado se ve y, al pulsarlo, lleva a él.
-export default function BarraRecorrido({ proyectoId, recorrido, claveVista }) {
+interface Props {
+  proyectoId?: string;
+  recorrido: Recorrido;
+  claveVista?: string;
+}
+
+export default function BarraRecorrido({ proyectoId, recorrido, claveVista }: Props) {
   const navegar = useNavigate();
   const { pasos } = recorrido;
 

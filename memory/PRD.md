@@ -193,6 +193,22 @@ y en «Borrar escena».
 Pruebas: `scripts_pruebas/p7_lienzo.py` en la base aislada (todo OK) y agente de pruebas de
 interfaz en «Pruebas del constructor» (iteration_8: **18/18 flujos, 0 fallos**).
 
+### Arreglos de la Fase 5 y modo estricto (26-09-2026) — HECHOS
+- Encadenado (§13): el primer plano de una escena no puede estar encadenado (casilla
+  desactivada y explicada; `PATCH` devuelve 409); al mover, dividir o borrar, el backend
+  devuelve `avisos_encadenado` y la interfaz pide decidir (Desencadenar / Mantener / Deshacer
+  el movimiento). Nada se cambia solo; la tarjeta avisa mientras esté sin resolver.
+- Resumen de dirección: «Plano medio, a la altura de los ojos → Detalle, picado · travelling
+  adelante · 2,5 s», con coma decimal; en imagen, con duración si la tiene.
+- Guion gráfico en rejilla (2/3/4 por fila; 4 en 1440 px), miniaturas en la relación del
+  proyecto y sin recortar (§22), con el resumen legible debajo.
+- Ficha contextual: derecha → izquierda → bandeja inferior; nunca tapa su tarjeta.
+- Prompt: al unir la plantilla no se duplican signos (si el texto ya acaba en . ? o !).
+- **`noImplicitAny: true`** activado y lo heredado tipado; `yarn build` limpio. Detalle y
+  deuda acotada (`CamposDinamicos`) en PREGUNTAS.md.
+- Probado en aislamiento: `scripts_pruebas/p7_lienzo.py` ampliado (409 del primer plano,
+  avisos §13, formato del resumen, prompt sin dobles signos) + pytest: todo OK.
+
 ## Backlog (orden del maestro §14)
 - P1 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
   inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina). Antes de

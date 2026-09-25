@@ -7,7 +7,7 @@ import { api } from "../api/cliente";
 import { useAsistenteEstado } from "../api/hooks";
 import { ETIQUETA_CAMPO, CAMPOS_POR_TIPO } from "../lib/campos";
 
-const NOMBRE_CLASE = {
+const NOMBRE_CLASE: Record<string, any> = {
   personaje: "personajes",
   producto: "productos",
   objeto: "objetos",
@@ -57,7 +57,7 @@ export default function PanelAsistente({
   // Destinos posibles de una respuesta: los campos del Desarrollo y, además,
   // las preguntas del formato del proyecto (§6.1).
   const destinos = [
-    ...campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] })),
+    ...campos.map((c: any) => ({ valor: c, texto: ETIQUETA_CAMPO[c] })),
     ...preguntasFormato.map((q) => ({ valor: `formato:${q.clave}`, texto: `Formato · ${q.pregunta}` })),
   ];
 
@@ -73,7 +73,7 @@ export default function PanelAsistente({
             : "No hay nada que proponer con lo que hay escrito."
         );
       }
-      const nuevos = p.partes.map((x) => ({
+      const nuevos = p.partes.map((x: any) => ({
         ...x,
         propId: p.id,
         edit: x.tipo === "elemento" || x.tipo === "escena" ? x.nombre || "" : x.texto || "",
@@ -87,7 +87,7 @@ export default function PanelAsistente({
     }
   };
 
-  const resolver = async (item, accion) => {
+  const resolver = async (item: any, accion: any) => {
     setError(null);
     const cuerpo =
       accion === "aceptar"
@@ -106,7 +106,7 @@ export default function PanelAsistente({
     }
   };
 
-  const actualizar = (id, campos_) =>
+  const actualizar = (id: string, campos_: any) =>
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...campos_ } : x)));
 
   pedirRef.current = pedir;
@@ -212,7 +212,7 @@ export default function PanelAsistente({
                     data-testid="select-campo-proponer"
                     valor={campo}
                     onChange={setCampo}
-                    opciones={campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] }))}
+                    opciones={campos.map((c: any) => ({ valor: c, texto: ETIQUETA_CAMPO[c] }))}
                   />
                   <Boton
                     pequeno

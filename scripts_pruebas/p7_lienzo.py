@@ -53,7 +53,7 @@ p = req(
         "updated_at": p["updated_at"],
     },
 )
-ok("de Plano general" in p["resumen_direccion"] and "a Primer plano" in p["resumen_direccion"],
+ok(p["resumen_direccion"].startswith("Plano general, a la altura de los ojos → Primer plano, contrapicado"),
    f"resumen de dirección de vídeo: {p['resumen_direccion']}")
 
 viejo = p["updated_at"]
@@ -123,5 +123,30 @@ ok([x["orden"] for x in primera["planos"]] == [0, 1, 2], "órdenes consecutivos"
 req("DELETE", f"/api/planos/{copia['id']}")
 lienzo = req("GET", f"/api/piezas/{PZ}/lienzo")
 ok(len(lienzo["escenas"][0]["planos"]) == 2, "borrar plano y renumerar")
+
+# Arreglos A (26-09-2026): resumen de dirección, encadenado sin anterior, prompt sin dobles signos.
+fresco = next(x for x in req("GET", f"/api/piezas/{PZ}/lienzo")["escenas"][0]["planos"] if x["id"] == p["id"])
+p = req("PATCH", f"/api/planos/{p['id']}", {"duracion_s": 2.5, "updated_at": fresco["updated_at"]})
+ok("→" in p["resumen_direccion"] and "2,5 s" in p["resumen_direccion"],
+   f"resumen con flecha y coma decimal: {p['resumen_direccion']}")
+ok("a la altura de los ojos" in p["resumen_direccion"], "el ángulo va en minúscula tras la coma")
+
+primero = req("GET", f"/api/piezas/{PZ}/lienzo")["escenas"][0]["planos"][0]
+r = req("PATCH", f"/api/planos/{primero['id']}", {"plano_anterior_encadenado": True, "updated_at": primero["updated_at"]})
+ok("primera posición" in str(r.get("detail", "")), "el primer plano no puede encadenarse (409)")
+
+segundo = req("GET", f"/api/piezas/{PZ}/lienzo")["escenas"][0]["planos"][1]
+if not segundo["plano_anterior_encadenado"]:
+    segundo = req("PATCH", f"/api/planos/{segundo['id']}", {"plano_anterior_encadenado": True, "updated_at": segundo["updated_at"]})
+mov = req("POST", f"/api/planos/{segundo['id']}/mover", {"direccion": "antes"})
+avisos = mov["avisos_encadenado"]
+ok(len(avisos) == 1 and avisos[0]["es_primero"], f"aviso §13 al quedarse sin anterior: {avisos}")
+ok(req("GET", f"/api/piezas/{PZ}/lienzo")["escenas"][0]["planos"][0]["encadenado_sin_anterior"],
+   "la tarjeta queda avisada hasta que el usuario decide")
+
+fresco = next(x for x in req("GET", f"/api/piezas/{PZ}/lienzo")["escenas"][0]["planos"] if x["id"] == p["id"])
+req("PATCH", f"/api/planos/{p['id']}", {"direccion": {**fresco["direccion"], "ambiente": "Tarde de otoño."}, "updated_at": fresco["updated_at"]})
+pr = req("GET", f"/api/planos/{p['id']}/prompt")
+ok("otoño.." not in pr["texto"] and "Tarde de otoño." in pr["texto"], "prompt sin dobles signos")
 
 print("\nTodo correcto.")

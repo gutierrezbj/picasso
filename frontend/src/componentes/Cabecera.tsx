@@ -6,7 +6,18 @@ import { formatoMoneda } from "../lib/formato";
 
 // Cabecera fija (§5.3). Ubicación pulsable, indicador de guardado y, dentro de un
 // proyecto, el gasto (siempre visible aunque sea 0 — precisión del usuario).
-export default function Cabecera({ migas = [], gasto = null, moneda = "USD" }) {
+interface Miga {
+  texto: string;
+  a?: string;
+}
+
+interface Props {
+  migas?: Miga[];
+  gasto?: number | null;
+  moneda?: string;
+}
+
+export default function Cabecera({ migas = [], gasto = null, moneda = "USD" }: Props) {
   return (
     <header
       className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-linea bg-superficie/90 px-6 backdrop-blur"

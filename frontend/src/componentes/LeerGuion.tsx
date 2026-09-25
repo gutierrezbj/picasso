@@ -1,12 +1,21 @@
 import React from "react";
 import Dialogo from "./Dialogo";
+import type { EntradaReparto, Escena, Pieza } from "../tipos";
 import Boton from "./Boton";
 
 // Vista «Leer guion completo» (§6.3): el guion como documento continuo, solo lectura.
-export default function LeerGuion({ abierto, onCerrar, pieza, escenas, reparto }) {
-  const nombre = (elementoId) =>
+interface Props {
+  abierto: boolean;
+  onCerrar: () => void;
+  pieza?: Pieza | null;
+  escenas: Escena[];
+  reparto: EntradaReparto[];
+}
+
+export default function LeerGuion({ abierto, onCerrar, pieza, escenas, reparto }: Props) {
+  const nombre = (elementoId: string) =>
     reparto.find((r) => r.elemento_id === elementoId)?.elemento.nombre || "Elemento fuera del reparto";
-  const nombreEntrada = (entradaId) =>
+  const nombreEntrada = (entradaId: string) =>
     reparto.find((r) => r.id === entradaId)?.elemento.nombre || "Elemento fuera del reparto";
 
   return (
