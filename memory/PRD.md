@@ -1,4 +1,4 @@
-# PRD — studio (nombre del producto: PENDIENTE)
+# PRD — Picasso (identificador en código: `studio`)
 
 ## Problema y propósito
 Estudio propio de desarrollo creativo y producción audiovisual para un único
@@ -80,7 +80,10 @@ Validada por testing agent (iteration_3: frontend 100%, sin fallos) + verificaci
 
 ## Backlog (orden del maestro §14)
 - P1 FASE 4 — Guion (P6): escenas, aprobación, lectura continua, encargo de imagen, capítulos.
-  Incluye la opción (c) «revisiones del guion» que el usuario dejará escrita en §6.3/§13.
+  Incluye las **revisiones del guion** ya escritas por el usuario en §3.1, §6.3 y §13
+  (25-09-2026): editar un guion aprobado crea una `revision_en_curso` sin desaprobarlo;
+  `Aprobar revisión` lista escenas añadidas/editadas/eliminadas/reordenadas y por cada
+  escena editada el usuario marca `Solo texto` o `Afecta a los planos`; `Descartar revisión`.
 - P2 FASE 5 — Lienzo (P7) sin producción (React Flow).
 - P2 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
   inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina).
@@ -89,8 +92,9 @@ Validada por testing agent (iteration_3: frontend 100%, sin fallos) + verificaci
 - P2 FASE 9 — Proveedores reales (fal, kie, openai_images, elevenlabs) + catálogo de voces.
 
 ## PENDIENTE (ver PREGUNTAS.md)
-- Nombre del producto, tipografía, paleta (a decidir por el usuario).
-- §6.3/§13: el usuario escribirá las «revisiones del guion» antes de la Fase 4.
+- Tipografía y paleta (a decidir por el usuario). Nombre decidido: **Picasso** (25-09-2026).
+- §3.1 Ajustes y §9.4: el documento fija USD sin conversión; la pantalla P10 todavía
+  tiene un selector de moneda (EUR/GBP). Pendiente de decidir si se quita.
 - §3.1 vs §6.2: `ambiente`/`distribucion` de escenario no están en la lista del §3.1.
 - Catálogo de voces del personaje (depende de Fase 9).
 - El almacén local no está garantizado como persistente en el entorno de previsualización.

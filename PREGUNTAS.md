@@ -5,8 +5,9 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 
 ## Preguntas abiertas del propio documento (§17)
 
-1. **PENDIENTE**: Nombre del producto y familia tipográfica. En código se usa el
-   identificador `studio`. Tipografía provisional: `Mulish` (sans humanista) para
+1. **RESUELTO por el usuario (25-09-2026)**: Nombre del producto: **Picasso**, ya escrito
+   en la cabecera del documento maestro. Identificador en código: `studio`.
+   **PENDIENTE**: familia tipográfica. Provisional: `Mulish` (sans humanista) para
    `font.ui` e `IBM Plex Mono` para `font.technical`. A confirmar por el usuario.
 2. **PENDIENTE**: Paleta de color. Se usan neutros claros provisionales,
    centralizados en tokens (`frontend/src/index.css`). Modo claro.
@@ -47,11 +48,20 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   "Preparar referencias" (§4.3.3, Fase 6). El asistente solo avisa de que el
   proveedor es `simulado`.
 
-- **RESUELTO por el usuario (a construir en Fase 4, §6.3 y §13)**: Edición de un guion
-  aprobado. No es (a) literal ni (b) corrección menor. La decisión es la opción **(c)
-  revisiones del guion**: el usuario la dejará escrita en el documento maestro (§6.3 y
-  §13) y se construirá en la **Fase 4** exactamente según lo que diga el documento. No
-  se implementa nada de esto por adelantado ni por cuenta del constructor.
+- **RESUELTO Y ESCRITO EN EL DOCUMENTO (25-09-2026)**: Edición de un guion aprobado.
+  El usuario ha escrito en el documento maestro la opción **(c) revisiones del guion**:
+  §3.1 (entidad `Guion` con `revision_en_curso?`), §6.3 (`Aprobar guion`, revisión en
+  curso, `Aprobar revisión` con la lista de escenas añadidas/editadas/eliminadas/
+  reordenadas y la marca `Solo texto` / `Afecta a los planos`, `Descartar revisión`) y
+  §13 (fila «Aprobar una revisión del guion»). Se construirá en la **Fase 4** exactamente
+  así. Ya no hay nada que decidir aquí.
+
+- **PENDIENTE (§3.1 Ajustes y §9.4, nuevo 25-09-2026)**: El documento dice ahora que la
+  moneda es **USD** y que no hay conversión en esta versión, pero el campo `moneda` sigue
+  existiendo en `Ajustes` y la pantalla P10 (construida en la Fase 1) muestra un
+  **selector de moneda** con EUR y GBP. No lo he tocado porque el usuario solo pidió
+  aplicar el texto al documento. Falta decidir: ¿se quita el selector y se fija USD, o se
+  deja el campo para más adelante?
 
 - **PENDIENTE (cosmético)**: Etiqueta del estado `guion` de la Pieza en proyectos de
   tipo `imagen`. Resuelto por el usuario: el paso y su estado se llaman

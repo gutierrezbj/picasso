@@ -1,6 +1,6 @@
 # Documento maestro y arquitectura
 
-Versión 0.1 · 24 de septiembre de 2026 · Nombre del producto: pendiente (identificador en código: `studio`)
+Versión 0.1 · 24 de septiembre de 2026 · Nombre del producto: Picasso
 
 Documento compañero: `NUEVA-APLICACION-INTENCION-FUNCIONAMIENTO-Y-DISENO.md` (en adelante, **Intención**). Se entregan juntos. La Intención manda sobre el propósito, el recorrido y el diseño; este documento manda sobre el modelo, la arquitectura y el orden de construcción.
 
@@ -126,7 +126,7 @@ Estudio (implícito, uno)
 - `proyecto_id`, `numero?` y `titulo?` (capítulos), `estado`: `desarrollo` | `guion` | `produccion` | `montaje` | `entregada` (derivado, §5).
 
 **Guion**
-- `pieza_id`, `estado`: `borrador` | `aprobado`, `aprobado_en?`, `revision` (entero que sube en cada aprobación).
+- `pieza_id`, `estado`: `borrador` | `aprobado`, `aprobado_en?`, `revision` (entero que sube en cada aprobación), `revision_en_curso?` (copia en borrador de las escenas mientras se edita un guion ya aprobado).
 - Para tipo `imagen` el guion se sustituye por un **Encargo de imagen** (§4.1, recorrido Imagen), con el mismo ciclo borrador/aprobado.
 
 **Escena**
@@ -149,6 +149,7 @@ Estudio (implícito, uno)
 
 **Ajustes** (global)
 - `moneda`, `presupuesto_por_defecto`, `proveedores_habilitados`, `modelo_asistente`.
+- La moneda del presupuesto y del registro es USD, la misma en que cobran los proveedores. Sin conversión a otras monedas en esta versión.
 
 ### 3.2 Estados derivados (no se guardan a mano)
 
@@ -309,7 +310,10 @@ Una misma pantalla para cada paso de elementos, filtrada por la clase del paso (
 - Cada escena muestra y edita: título, qué ocurre, qué se ve, intención, elementos (chips del reparto), diálogos (hablante + texto), sonido previsto, duración orientativa.
 - Vista `Leer guion completo`: el guion como documento continuo, solo lectura, para comprobar que tiene sentido.
 - Asistente disponible igual que en Desarrollo (puede proponer escenas, reescribir una escena, detectar elementos que faltan en el reparto). Propuestas siempre aceptables una a una.
-- Botón `Aprobar guion`. Si luego se edita un guion aprobado, pasa a `borrador` y se muestra el impacto (§13). Para volver al lienzo hay que aprobarlo de nuevo.
+- Botón `Aprobar guion`. La primera aprobación abre el lienzo (§4.2).
+- Editar un guion ya aprobado no lo desaprueba: crea una **revisión en curso** en borrador. Mientras exista, el guion aprobado sigue vigente y el lienzo sigue abierto trabajando con él.
+- `Aprobar revisión` muestra la lista de escenas añadidas, editadas, eliminadas y reordenadas con sus diferencias. En cada escena editada el usuario marca `Solo texto` o `Afecta a los planos`. Al confirmar, la revisión pasa a ser el guion aprobado y `revision` sube en uno.
+- `Descartar revisión` vuelve al guion aprobado sin cambios.
 - Los **planos no se definen aquí**; se definen en el lienzo.
 
 ---
@@ -464,6 +468,8 @@ Router: con el modelo elegido, usa el primer proveedor de la lista que esté con
 
 Concurrencia máxima por proveedor configurable (por defecto 2).
 
+La moneda del presupuesto y del registro es USD, la misma en que cobran los proveedores. Sin conversión a otras monedas en esta versión.
+
 ### 9.5 Registro (P9)
 
 Tabla filtrable por espacio, proyecto, estado y fecha: acción, modelo, proveedor, destino (enlace al plano/ficha), coste estimado, coste real, estado, intentos. Totales por proyecto y por espacio. Exportable a CSV.
@@ -522,7 +528,7 @@ Cuando el usuario cambia algo compartido, antes de confirmar se muestra una list
 
 | Cambio | Qué se marca |
 | --- | --- |
-| Editar un guion aprobado | Guion vuelve a `borrador`. Al reaprobar: escenas editadas o eliminadas → sus planos con toma se marcan `desactualizado`. Escenas eliminadas: sus planos pasan a "sin escena" (se conservan hasta que el usuario los borre). |
+| Aprobar una revisión del guion | Escenas marcadas `Afecta a los planos`: sus planos con toma pasan a `desactualizado`. Escenas marcadas `Solo texto`: nada. Escenas eliminadas: sus planos pasan a "sin escena" (se conservan hasta que el usuario los borre). Escenas reordenadas: solo cambia el montaje. |
 | Actualizar la versión de ficha en el reparto | Planos cuya toma elegida usa la versión anterior → `desactualizado`, con la lista visible. |
 | Reordenar escenas o planos | Solo cambia el montaje; nada se invalida. Si un plano estaba encadenado al anterior, se avisa. |
 | Borrar un elemento del reparto | Bloqueado si algún plano lo usa; se listan los planos. |
