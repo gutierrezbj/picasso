@@ -201,6 +201,16 @@ def _diferencias_encargo(aprobado: dict | None, borrador: dict | None) -> dict:
     return {"campos": campos, "hay_cambios": bool(campos)}
 
 
+async def _personajes_del_proyecto(proyecto_id: str) -> dict[str, str]:
+    """`id de entrada del reparto` → `elemento_id`, solo de clase personaje (§6.3)."""
+    docs = await db.reparto.find({"proyecto_id": proyecto_id}).to_list(1000)
+    elems = await db.elementos.find(
+        {"_id": {"$in": [d["elemento_id"] for d in docs]}, "clase": "personaje"}
+    ).to_list(1000)
+    personajes = {e["_id"] for e in elems}
+    return {d["_id"]: d["elemento_id"] for d in docs if d["elemento_id"] in personajes}
+
+
 async def _falta_para_aprobar(guion: dict, escenas: list[dict]) -> list[str]:
     falta = []
     if guion["clase"] == "encargo":
@@ -221,6 +231,17 @@ async def _falta_para_aprobar(guion: dict, escenas: list[dict]) -> list[str]:
         falta.append(f"pon título a la escena {', '.join(map(str, sin_titulo))}")
     if sin_que:
         falta.append(f"escribe «qué ocurre» en la escena {', '.join(map(str, sin_que))}")
+
+    proy = await _proyecto_de_guion(guion)
+    personajes = await _personajes_del_proyecto(proy["id"])
+    for i, e in enumerate(escenas):
+        validos = {personajes[r] for r in (e.get("elementos") or []) if r in personajes}
+        for j, d in enumerate(e.get("dialogos") or []):
+            if d["hablante"] != "narrador" and d["hablante"] not in validos:
+                falta.append(
+                    f"corrige el diálogo {j + 1} de la escena {i + 1}: quien habla ya no está "
+                    "en los elementos de la escena"
+                )
     return falta
 
 
@@ -286,7 +307,7 @@ async def editar_escena(escena_id: str, datos: EscenaEditar):
 
     guion = await _guion_por_id(escena["guion_id"])
     proy = await _proyecto_de_guion(guion)
-    ids_reparto, ids_elemento = await _ids_reparto(proy["id"])
+    ids_reparto, _ = await _ids_reparto(proy["id"])
 
     cambios = {k: v for k, v in datos.model_dump(mode="json", exclude={"updated_at"}).items() if v is not None}
     if "elementos" in cambios:
@@ -294,9 +315,10 @@ async def editar_escena(escena_id: str, datos: EscenaEditar):
         if fuera:
             raise HTTPException(409, "Una escena solo puede usar elementos del reparto del proyecto.")
     if "dialogos" in cambios:
+        personajes = set((await _personajes_del_proyecto(proy["id"])).values())
         for d in cambios["dialogos"]:
-            if d["hablante"] != "narrador" and d["hablante"] not in ids_elemento:
-                raise HTTPException(409, "Quien habla debe ser el narrador o un elemento del reparto.")
+            if d["hablante"] != "narrador" and d["hablante"] not in personajes:
+                raise HTTPException(409, "Quien habla debe ser el narrador o un personaje del reparto.")
     cambios["updated_at"] = ahora()
     await db.escenas.update_one({"_id": escena_id}, {"$set": cambios})
     doc = await db.escenas.find_one({"_id": escena_id})

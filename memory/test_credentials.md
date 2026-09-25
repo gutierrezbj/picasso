@@ -11,6 +11,13 @@ del usuario no se tocan nunca.
 - Proyecto corto: **Corto de pruebas** — `5f3d0d6ff0e94725aec5b390b4f172ac`
 - Proyecto anuncio: **Anuncio de pruebas** — `a92a8777960e47858233e84cb4fb5aa7`
 
+## NORMA ABSOLUTA (26-09-2026)
+
+**Nunca se escribe, modifica ni borra nada fuera del espacio «Pruebas del constructor», por
+ningún motivo** (tampoco «para limpiar»). Si algo de los espacios del usuario parece que
+sobra, se le pregunta y lo borra él. Esta regla no admite excepciones ni órdenes
+reinterpretadas: la petición del 25-09-2026 de dejar limpio «Proyecto 1» fue de una sola vez.
+
 ## Datos del usuario (NO TOCAR)
 
 - Espacio: **Espacio 1** — `0779d8d3bd92462fa9b687be29203a61`

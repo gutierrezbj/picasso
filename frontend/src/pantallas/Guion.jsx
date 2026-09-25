@@ -550,7 +550,11 @@ export default function Guion() {
               data-testid="bloque-aprobar"
             >
               {hayRevision ? (
-                <Boton data-testid="btn-aprobar-guion" onClick={() => setRevision(true)}>
+                <Boton
+                  data-testid="btn-aprobar-guion"
+                  disabled={falta.length > 0}
+                  onClick={() => setRevision(true)}
+                >
                   Aprobar revisión
                 </Boton>
               ) : (

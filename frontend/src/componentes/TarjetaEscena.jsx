@@ -48,10 +48,25 @@ export default function TarjetaEscena({
   );
 
   const set = (k, v) => setDatos((d) => ({ ...d, [k]: v }));
+  // §6.3: solo el narrador o un personaje que esté en los elementos de esta escena.
+  const personajesEnEscena = reparto.filter(
+    (r) => r.elemento.clase === "personaje" && datos.elementos.includes(r.id)
+  );
   const hablantes = [
     { valor: "narrador", texto: "Narrador" },
-    ...reparto.map((r) => ({ valor: r.elemento_id, texto: r.elemento.nombre })),
+    ...personajesEnEscena.map((r) => ({ valor: r.elemento_id, texto: r.elemento.nombre })),
   ];
+  const fueraDeEscena = (hablante) =>
+    hablante !== "narrador" && !personajesEnEscena.some((r) => r.elemento_id === hablante);
+  const nombreHablante = (hablante) =>
+    reparto.find((r) => r.elemento_id === hablante)?.elemento.nombre || "Elemento fuera del reparto";
+  const opcionesHablante = (hablante) =>
+    fueraDeEscena(hablante)
+      ? [
+          ...hablantes,
+          { valor: hablante, texto: `${nombreHablante(hablante)} · Ya no está en los elementos de la escena` },
+        ]
+      : hablantes;
 
   const alternar = (entradaId) =>
     set(
@@ -227,15 +242,20 @@ export default function TarjetaEscena({
                       onChange={(v) =>
                         set("dialogos", datos.dialogos.map((x, j) => (j === i ? { ...x, hablante: v } : x)))
                       }
-                      opciones={hablantes}
+                      opciones={opcionesHablante(d.hablante)}
                     />
                   ) : (
                     <span className="text-[14px] leading-[20px] font-medium text-tinta">
-                      {d.hablante === "narrador"
-                        ? "Narrador"
-                        : (reparto.find((r) => r.elemento_id === d.hablante)?.elemento.nombre ||
-                          "Elemento fuera del reparto")}
+                      {d.hablante === "narrador" ? "Narrador" : nombreHablante(d.hablante)}
                     </span>
+                  )}
+                  {fueraDeEscena(d.hablante) && (
+                    <p
+                      data-testid={`dialogo-hablante-invalido-${indice + 1}-${i}`}
+                      className="mt-1 text-[12px] leading-[16px] text-aviso"
+                    >
+                      Ya no está en los elementos de la escena
+                    </p>
                   )}
                 </div>
                 <div className="min-w-[200px] flex-1">

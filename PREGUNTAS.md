@@ -67,13 +67,12 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 
 ## Fase 4 · Guion (P6)
 
-- **CONTRADICCIÓN EN EL DOCUMENTO (§14 F4 vs §6.3)**: El criterio de aceptación de la
-  F4 en el §14 dice «Editar después → vuelve a borrador. El lienzo está bloqueado
-  mientras esté en borrador», que es la regla **antigua**. El §6.3, que el usuario
-  reescribió el 25-09-2026, dice lo contrario: editar un guion aprobado **no** lo
-  desaprueba, crea una revisión en curso y el lienzo **sigue abierto**. Se ha construido
-  según el §6.3 (el usuario lo pidió expresamente). **Falta actualizar el criterio del
-  §14 F4** para que no se contradiga.
+- **RESUELTO Y ESCRITO EN EL DOCUMENTO (25-09-2026)**: contradicción §14 F4 vs §6.3.
+  El usuario ha sustituido el criterio de aceptación de la F4 por su texto literal:
+  «✔ Escribir 3 escenas, reordenarlas, leerlas seguidas y aprobar. El lienzo se abre.
+  Editar después crea una revisión en curso sin cerrar el lienzo; al aprobarla se marcan
+  las escenas editadas (Solo texto / Afecta a los planos); descartarla deja el guion
+  aprobado intacto.» Ya no hay contradicción: el §14 y el §6.3 dicen lo mismo.
 
 - **PENDIENTE (§3.1, `revision_en_curso?`)**: El documento dice que es «copia en borrador
   de las escenas mientras se edita un guion ya aprobado», pero no dice dónde vive esa
@@ -87,16 +86,14 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   título y **de qué va**», pero el §3.1 solo define `numero?` y `titulo?`. Se ha añadido
   `de_que_va?` a `Pieza`. Falta corregir uno de los dos apartados.
 
-- **PENDIENTE**: El documento no fija **requisitos mínimos para aprobar un guion**.
-  Decisión: al menos una escena, y todas con título y «qué ocurre». Para un **encargo de
-  imagen**: «qué se muestra» escrito y un número de imágenes mayor que cero. Cuando falta
-  algo, el botón está desactivado y al lado se explica exactamente qué falta.
+- **RESUELTO por el usuario y ESCRITO EN EL §6.3 (25-09-2026)**: requisitos mínimos para
+  aprobar un guion. Al menos una escena, y cada escena con título y «qué ocurre». Para un
+  **encargo de imagen**: «qué se muestra» escrito y un número de imágenes mayor que cero.
+  Cuando falta algo, el botón está desactivado y al lado se explica exactamente qué falta.
 
-- **PENDIENTE (§6.3 en tipo imagen)**: Las revisiones del §6.3 están escritas en términos
-  de **escenas** (añadidas, editadas, eliminadas, reordenadas), y un **encargo de imagen**
-  no tiene escenas. Decisión: la revisión de un encargo muestra los campos que cambian con
-  su antes y después y se marca **una sola vez** («Solo texto» / «Afecta a las imágenes»).
-  Falta que el documento lo diga.
+- **RESUELTO por el usuario y ESCRITO EN EL §6.3 (25-09-2026)**: revisiones de un **encargo
+  de imagen**. No tiene escenas: la revisión muestra los campos que cambian con su antes y
+  después y se marca **una sola vez** («Solo texto» / «Afecta a las imágenes»).
 
 - **PENDIENTE (§13, aplazado a la Fase 8)**: Al aprobar una revisión, los efectos del §13
   todavía **no se aplican** porque no existen planos ni tomas hasta las Fases 5 y 6. Lo que
@@ -105,11 +102,17 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   preguntar. La interfaz del diálogo de revisión avisa de qué pasará con las escenas
   eliminadas y reordenadas.
 
-- **PENDIENTE (§0.5 «nada se crea automáticamente»)**: Un corto, un anuncio y una imagen
-  tienen **una** pieza (§2). Esa pieza se crea sola al abrir el paso del guion, porque es
-  un contenedor vacío, no contenido: no fabrica idea, escenas ni material. En una **serie**
-  los capítulos los crea siempre el usuario. Falta confirmar que esta lectura es la
-  correcta.
+- **RESUELTO por el usuario y ESCRITO EN EL §6.3 (25-09-2026)**: la lectura es correcta.
+  Un corto, un anuncio y una imagen tienen **una** pieza (§2), creada al abrir el paso del
+  guion porque es un contenedor vacío, no contenido: no fabrica idea, escenas ni material.
+  En una **serie** los capítulos los crea siempre el usuario.
+
+- **RESUELTO por el usuario y ESCRITO EN EL §3.1 y §6.3 (25-09-2026)**: quién puede hablar
+  en un diálogo. Es «narrador» o un elemento de **clase personaje** que esté en los
+  **elementos de esa escena**. El desplegable solo ofrece esos. Si un hablante deja de estar
+  en los elementos de la escena, el texto **se conserva**, marcado con «Ya no está en los
+  elementos de la escena», y `Aprobar guion` / `Aprobar revisión` quedan **bloqueados**
+  explicando qué diálogo hay que corregir.
 
 - **PENDIENTE (§3.1, incoherencia menor)**: En `Escena`, `elementos` son «ids del reparto»
   (la fila de la tabla de relación) pero `dialogos.hablante` es un «elemento_id». Se ha
@@ -205,6 +208,20 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   espacios del usuario no se tocan. Al terminar de probar, el `ultimo_acceso` de los
   proyectos de prueba se deja anterior al del usuario para que «Retomar» refleje la última
   visita del usuario y no la del constructor.
+
+- **NORMA ABSOLUTA (impuesta por el usuario, 26-09-2026 · sin excepciones)**:
+  **Nunca escribes, modificas ni borras nada fuera de «Pruebas del constructor», por
+  ningún motivo. Si algo del usuario te parece que sobra, se lo preguntas.**
+  Contexto: el 25-09-2026 el usuario pidió dejar limpio «Espacio 1 · Proyecto 1» para
+  quitar datos de prueba del constructor; era una orden **de una sola vez**, no un estado
+  que mantener. El constructor la aplicó como regla permanente y borró el recorrido de
+  Fase 3 que el usuario había hecho en ese proyecto (desarrollo, reparto, fichas y
+  medios). No fue un reinicio del entorno: fue un borrado en la base de datos, y no era
+  recuperable. Qué persiste en la previsualización: **MongoDB persiste** entre reinicios
+  de servicio y entre sesiones (lo que desaparece es porque se ha borrado); los
+  **ficheros subidos** viven en el disco del contenedor, sobreviven a reinicios de
+  servicio pero el entorno no garantiza el disco a largo plazo (ver la desviación del
+  almacén, más abajo).
 
 - **PENDIENTE (§22)**: El documento no dice cómo se ve una referencia a tamaño completo.
   Decisión del usuario: la miniatura puede recortarse, pero al pulsarla se abre la imagen

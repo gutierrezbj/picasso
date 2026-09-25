@@ -123,14 +123,14 @@ Estudio (implícito, uno)
 - El original nunca se modifica. Una edición produce un Medio nuevo.
 
 **Pieza**
-- `proyecto_id`, `numero?` y `titulo?` (capítulos), `estado`: `desarrollo` | `guion` | `produccion` | `montaje` | `entregada` (derivado, §5).
+- `proyecto_id`, `numero?`, `titulo?` y `de_que_va?` (capítulos), `estado`: `desarrollo` | `guion` | `produccion` | `montaje` | `entregada` (derivado, §5).
 
 **Guion**
 - `pieza_id`, `estado`: `borrador` | `aprobado`, `aprobado_en?`, `revision` (entero que sube en cada aprobación), `revision_en_curso?` (copia en borrador de las escenas mientras se edita un guion ya aprobado).
 - Para tipo `imagen` el guion se sustituye por un **Encargo de imagen** (§4.1, recorrido Imagen), con el mismo ciclo borrador/aprobado.
 
 **Escena**
-- `guion_id`, `orden`, `titulo`, `que_ocurre`, `que_se_ve`, `intencion`, `elementos` (ids del reparto), `dialogos` (lista `{hablante: elemento_id | "narrador", texto}`), `sonido_previsto?` (texto), `duracion_orientativa_s?`.
+- `guion_id`, `orden`, `titulo`, `que_ocurre`, `que_se_ve`, `intencion`, `elementos` (ids del reparto), `dialogos` (lista `{hablante: elemento_id | "narrador", texto}`; el `elemento_id` es de un elemento de clase personaje que esté en `elementos`), `sonido_previsto?` (texto), `duracion_orientativa_s?`.
 
 **Plano**
 - `escena_id` (o `pieza_id` en tipo imagen), `orden`, `descripcion`, `modalidad`: `imagen` | `video`, `duracion_s?`, `elementos` (ids del reparto; subconjunto de la escena), `direccion` (§8), `toma_elegida_id?`, `plano_anterior_encadenado: bool` (usar el último fotograma de la toma elegida del plano anterior como primer fotograma).
@@ -310,9 +310,13 @@ Una misma pantalla para cada paso de elementos, filtrada por la clase del paso (
 - Cada escena muestra y edita: título, qué ocurre, qué se ve, intención, elementos (chips del reparto), diálogos (hablante + texto), sonido previsto, duración orientativa.
 - Vista `Leer guion completo`: el guion como documento continuo, solo lectura, para comprobar que tiene sentido.
 - Asistente disponible igual que en Desarrollo (puede proponer escenas, reescribir una escena, detectar elementos que faltan en el reparto). Propuestas siempre aceptables una a una.
+- En los diálogos, **quien habla es el narrador o un elemento de clase personaje que esté en los elementos de esa escena**. Si un hablante deja de estar en los elementos de la escena, su texto se conserva marcado con "Ya no está en los elementos de la escena" y `Aprobar guion` / `Aprobar revisión` quedan bloqueados explicando qué diálogo hay que corregir.
 - Botón `Aprobar guion`. La primera aprobación abre el lienzo (§4.2).
+- **Mínimo para aprobar un guion**: al menos una escena, y cada escena con título y "qué ocurre". En un **encargo de imagen**: "qué se muestra" escrito y un número de imágenes mayor que cero. Cuando falta algo, el botón está desactivado y al lado se explica exactamente qué falta.
+- La **pieza única** de un corto, un anuncio o una imagen se crea al abrir el paso del guion: es un contenedor vacío, no contenido (no fabrica idea, escenas ni material). En una **serie** los capítulos los crea siempre el usuario.
 - Editar un guion ya aprobado no lo desaprueba: crea una **revisión en curso** en borrador. Mientras exista, el guion aprobado sigue vigente y el lienzo sigue abierto trabajando con él.
 - `Aprobar revisión` muestra la lista de escenas añadidas, editadas, eliminadas y reordenadas con sus diferencias. En cada escena editada el usuario marca `Solo texto` o `Afecta a los planos`. Al confirmar, la revisión pasa a ser el guion aprobado y `revision` sube en uno.
+- En un **encargo de imagen** la revisión no tiene escenas: muestra los campos que cambian con su antes y después, y se marca **una sola vez** `Solo texto` o `Afecta a las imágenes`.
 - `Descartar revisión` vuelve al guion aprobado sin cambios.
 - Los **planos no se definen aquí**; se definen en el lienzo.
 
@@ -556,7 +560,7 @@ P3, P5 para todas las clases, versiones de ficha, subida de medios, pasos opcion
 
 **F4 · Guion**
 P6, aprobación, lectura continua, encargo de imagen, capítulos.
-✔ Escribir 3 escenas, reordenarlas, leerlas seguidas, aprobar. Editar después → vuelve a borrador. El lienzo está bloqueado mientras esté en borrador y explica por qué.
+✔ Escribir 3 escenas, reordenarlas, leerlas seguidas y aprobar. El lienzo se abre. Editar después crea una revisión en curso sin cerrar el lienzo; al aprobarla se marcan las escenas editadas (Solo texto / Afecta a los planos); descartarla deja el guion aprobado intacto.
 
 **F5 · Lienzo**
 P7 sin producción: estructura desde el guion, grupos, fichas contextuales, dirección, vista previa del prompt, persistencia del layout.

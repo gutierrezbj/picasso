@@ -122,6 +122,25 @@ Validada por testing agent (iteration_5: 13/13 flujos; iteration_6: retest de 2 
   `detectar_elementos`), aceptables una a una. El proveedor simulado no escribe guion.
 - Los planos NO se definen aquí (llegan en el lienzo, Fase 5).
 
+### Respuestas del usuario a PREGUNTAS.md (26-09-2026) — APLICADAS
+- **§14 F4**: criterio de aceptación sustituido por el texto literal del usuario (revisión en
+  curso sin cerrar el lienzo, marcas al aprobar, descartar deja el guion intacto).
+- **§6.3**: escritos el mínimo para aprobar un guion (≥1 escena con título y «qué ocurre»;
+  encargo: «qué se muestra» + número de imágenes), la revisión de un encargo con **una sola
+  marca**, y que la **pieza única** se crea al abrir el guion como contenedor vacío.
+- **§3.1 / §6.3 · diálogos (cambio de código)**: el hablante es «narrador» o un elemento de
+  **clase personaje que esté en los elementos de esa escena**. El desplegable solo ofrece
+  esos; si un hablante deja de estar en la escena el texto se conserva marcado con «Ya no
+  está en los elementos de la escena» y `Aprobar guion` / `Aprobar revisión` se bloquean
+  explicando qué diálogo corregir (`guiones.py::_personajes_del_proyecto`,
+  `_falta_para_aprobar`; `TarjetaEscena.jsx`; `Guion.jsx`).
+  Verificado con `scripts_pruebas/p6_hablantes.py` (11/11) y recorrido de interfaz en
+  «Pruebas del constructor».
+- **NORMA ABSOLUTA**: nunca se escribe, modifica ni borra nada fuera de «Pruebas del
+  constructor». Escrita en `PREGUNTAS.md` y en `memory/test_credentials.md`.
+  Antecedente: el 25-09 el constructor borró el recorrido de Fase 3 que el usuario había
+  hecho en «Espacio 1 · Proyecto 1» al tomar como permanente una orden de limpieza única.
+
 ## Backlog (orden del maestro §14)
 - P1 FASE 5 — Lienzo (P7) sin producción (React Flow): estructura desde el guion, grupos,
   fichas contextuales, dirección, vista previa del prompt, persistencia del layout.
@@ -133,12 +152,8 @@ Validada por testing agent (iteration_5: 13/13 flujos; iteration_6: retest de 2 
 
 ## PENDIENTE (ver PREGUNTAS.md)
 - Tipografía y paleta (a decidir por el usuario). Nombre decidido: **Picasso** (25-09-2026).
-- §3.1 Ajustes y §9.4: el documento fija USD sin conversión; la pantalla P10 todavía
-  tiene un selector de moneda (EUR/GBP). Pendiente de decidir si se quita.
-- §3.1 vs §6.2: `ambiente`/`distribucion` de escenario no están en la lista del §3.1.
 - Catálogo de voces del personaje (depende de Fase 9).
 - El almacén local no está garantizado como persistente en el entorno de previsualización.
-- §14 F4: el criterio de aceptación sigue diciendo «Editar después → vuelve a borrador», que
-  contradice el §6.3 reescrito. Se construyó según el §6.3. Falta actualizar el §14.
-- §3.1: `Pieza` no lista `de_que_va`, que sí pide el §4.1 para los capítulos (añadido).
-- §6.3 no dice cómo son las revisiones de un encargo de imagen (una sola marca).
+- §3.1 vs §6.2: `ambiente`/`distribucion` de escenario no están en la lista del §3.1.
+- §3.1: en `Escena`, `elementos` son ids del reparto y `dialogos.hablante` es un
+  `elemento_id`; sería más limpio un único tipo de id.
