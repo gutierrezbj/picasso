@@ -43,6 +43,7 @@ export interface Paso {
   construye: string;
   listo_cuando: string;
   estado: EstadoPasoValor;
+  superado: boolean;
   obligatorio: boolean;
   fase: number;
   clase?: ClaseElemento | null;
@@ -142,6 +143,11 @@ export interface Pieza {
   titulo: string | null;
   de_que_va: string | null;
   updated_at: string;
+  guion_id?: string;
+  guion_estado?: "borrador" | "aprobado";
+  guion_revision?: number;
+  revision_en_curso?: boolean;
+  num_escenas?: number;
 }
 
 export interface Dialogo {
@@ -224,4 +230,122 @@ export interface Ajustes {
 export interface Entorno {
   db_name: string;
   es_pruebas: boolean;
+}
+
+// --- Fase 5: lienzo, planos y dirección (§7, §7.7, §8) ---
+
+export type Modalidad = "imagen" | "video";
+
+export interface Direccion {
+  protagonista_visual: string | null;
+  encuadre: string | null;
+  angulo: string | null;
+  encuadre_inicio: string | null;
+  angulo_inicio: string | null;
+  encuadre_final: string | null;
+  angulo_final: string | null;
+  movimiento_camara: string | null;
+  optica: string | null;
+  profundidad_campo: string | null;
+  luz_direccion: string | null;
+  luz_calidad: string | null;
+  luz_momento: string | null;
+  temperatura_color: string | null;
+  ambiente: string | null;
+  acabado: string | null;
+  accion: string | null;
+  negativos: string | null;
+  vestuario_y_variables: Record<string, string[]>;
+}
+
+export interface Correccion {
+  id: string;
+  texto: string;
+  estado: "pendiente" | "hecha";
+  creada_en: string;
+  hecha_en: string | null;
+  operacion_id: string | null;
+  toma_id: string | null;
+}
+
+export interface ContinuidadElemento {
+  reparto_id: string;
+  elemento_id: string;
+  nombre: string;
+  clase: ClaseElemento;
+  version: number;
+  ficha_aprobada: boolean;
+  rasgos_fijos: string[];
+  rasgos_variables: string[];
+  rasgos_variables_aplican: string[];
+  referencias: Referencia[];
+}
+
+export interface Plano {
+  id: string;
+  pieza_id: string;
+  escena_id: string | null;
+  orden: number;
+  que_se_muestra: string;
+  modalidad: Modalidad;
+  duracion_s: number | null;
+  elementos: string[];
+  direccion: Direccion;
+  toma_elegida_id: string | null;
+  plano_anterior_encadenado: boolean;
+  correcciones: Correccion[];
+  prompt_editado_a_mano: boolean;
+  prompt_manual: string | null;
+  created_at: string;
+  updated_at: string;
+  resumen_direccion: string;
+  correcciones_pendientes: number;
+  continuidad: ContinuidadElemento[];
+}
+
+export interface RepartoLienzo extends EntradaReparto {
+  referencia_principal: string | null;
+}
+
+export interface EscenaConPlanos {
+  escena: Escena;
+  planos: Plano[];
+}
+
+export interface Posicion {
+  x: number;
+  y: number;
+}
+
+export interface LayoutLienzo {
+  posiciones: Record<string, Posicion>;
+  grupos_plegados: string[];
+  viewport: { x: number; y: number; zoom: number };
+  seleccion: string[];
+  pieza_activa: string | null;
+  mostrar_conexiones_reparto: boolean;
+  updated_at?: string | null;
+}
+
+export interface VistaLienzo {
+  pieza: Pieza;
+  guion: Guion;
+  escenas: EscenaConPlanos[];
+  planos_sin_escena: Plano[];
+  reparto: RepartoLienzo[];
+  layout: LayoutLienzo;
+}
+
+export interface OpcionDireccion {
+  etiqueta: string;
+  opciones: string[];
+}
+
+export type OpcionesDireccion = Record<string, OpcionDireccion>;
+
+export interface PromptVista {
+  texto: string;
+  automatico: string;
+  editado_a_mano: boolean;
+  fichas_usadas: { nombre: string; version: number; aprobada: boolean }[];
 }

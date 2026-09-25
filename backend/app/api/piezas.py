@@ -108,5 +108,6 @@ async def borrar_pieza(pieza_id: str):
         gid = sin_id(guion)["id"]
         await db.escenas.delete_many({"guion_id": gid})
         await db.guiones.delete_one({"_id": gid})
+    await db.planos.delete_many({"pieza_id": pieza_id})
     await db.piezas.delete_one({"_id": pieza_id})
     return {"ok": True}

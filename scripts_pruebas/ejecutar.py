@@ -31,7 +31,15 @@ PUERTO = int(os.environ.get("PUERTO_PRUEBAS", "8002"))
 DATA_DIR = Path("/tmp/picasso_pruebas")
 API = f"http://localhost:{PUERTO}"
 
-SCRIPTS = ["p1_guion", "p2_revision", "p3_encargo_serie", "p4_asistente", "p5_diff", "p6_hablantes"]
+SCRIPTS = [
+    "p1_guion",
+    "p2_revision",
+    "p3_encargo_serie",
+    "p4_asistente",
+    "p5_diff",
+    "p6_hablantes",
+    "p7_lienzo",
+]
 
 
 def limpiar_base() -> None:

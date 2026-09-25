@@ -62,7 +62,7 @@ export default function PasoMinimo({ pantalla }) {
   // §4.2: el lienzo solo se abre con los pasos obligatorios listos y el guion aprobado.
   const bloqueo = pasos
     .slice(0, indice)
-    .filter((p) => p.obligatorio && p.estado !== "listo" && p.estado !== "no_hace_falta");
+    .filter((p) => p.obligatorio && !p.superado);
 
   return (
     <div className="min-h-full">

@@ -35,7 +35,7 @@ export default function BarraRecorrido({ proyectoId, recorrido, claveVista }) {
                 {aqui && (
                   <span
                     data-testid={`estas-aqui-${p.clave}`}
-                    className="text-[12px] leading-[16px] font-semibold uppercase tracking-wide text-acento"
+                    className="text-[12px] leading-[16px] font-semibold text-acento"
                   >
                     Estás aquí
                   </span>

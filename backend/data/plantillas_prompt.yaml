@@ -1,0 +1,37 @@
+# Plantillas de la vista previa del prompt (§8). Una por modalidad.
+# Se rellenan con los bloques que construye app/dominio/prompt.py. Las líneas cuyo
+# valor queda vacío se eliminan. Nunca se piden textos ni rótulos al modelo (§8).
+imagen:
+  lineas:
+    - "{que_se_muestra}"
+    - "Encuadre: {encuadre}. Ángulo: {angulo}."
+    - "Protagonista visual: {protagonista_visual}."
+    - "Óptica: {optica}. Profundidad de campo: {profundidad_campo}."
+    - "Luz: {luz}. Temperatura de color: {temperatura_color}."
+    - "Ambiente: {ambiente}."
+    - "Acabado: {acabado}."
+    - "Elementos: {elementos}."
+    - "Continuidad: {rasgos_fijos}"
+    - "En este plano: {rasgos_variables}"
+    - "Intención de la pieza: {intencion_pieza}"
+    - "Sin: {negativos}"
+    - "Sin texto ni rótulos en la imagen."
+video:
+  lineas:
+    - "{que_se_muestra}"
+    - "Acción: {accion}."
+    - "Inicio — encuadre: {encuadre_inicio}. Ángulo: {angulo_inicio}."
+    - "Final — encuadre: {encuadre_final}. Ángulo: {angulo_final}."
+    - "Movimiento entre ambos: {movimiento_camara}."
+    - "Duración: {duracion}."
+    - "Protagonista visual: {protagonista_visual}."
+    - "Óptica: {optica}. Profundidad de campo: {profundidad_campo}."
+    - "Luz: {luz}. Temperatura de color: {temperatura_color}."
+    - "Ambiente: {ambiente}."
+    - "Acabado: {acabado}."
+    - "Elementos: {elementos}."
+    - "Continuidad: {rasgos_fijos}"
+    - "En este plano: {rasgos_variables}"
+    - "Intención de la pieza: {intencion_pieza}"
+    - "Sin: {negativos}"
+    - "Sin texto ni rótulos en la imagen."

@@ -1,0 +1,67 @@
+# Opciones de dirección (§8). Lista cerrada inicial, editable sin tocar código.
+protagonista_visual:
+  etiqueta: Protagonista visual
+  opciones: []          # se completa con el reparto del proyecto + el entorno
+encuadre:
+  etiqueta: Encuadre
+  opciones:
+    - Gran plano general
+    - Plano general
+    - Plano medio
+    - Primer plano
+    - Detalle
+angulo:
+  etiqueta: Ángulo
+  opciones:
+    - A la altura de los ojos
+    - Picado
+    - Contrapicado
+    - Cenital
+    - A ras de suelo
+movimiento_camara:
+  etiqueta: Movimiento de cámara
+  opciones:
+    - Fija
+    - Travelling adelante
+    - Travelling atrás
+    - Travelling lateral
+    - Panorámica
+    - Grúa
+    - Cámara en mano
+    - Dron
+optica:
+  etiqueta: Óptica
+  opciones:
+    - Angular
+    - Normal
+    - Teleobjetivo
+profundidad_campo:
+  etiqueta: Profundidad de campo
+  opciones:
+    - Amplia
+    - Reducida
+luz_direccion:
+  etiqueta: Dirección de la luz
+  opciones:
+    - Frontal
+    - Lateral
+    - Contraluz
+    - Cenital
+luz_calidad:
+  etiqueta: Calidad de la luz
+  opciones:
+    - Dura
+    - Suave
+luz_momento:
+  etiqueta: Momento
+  opciones:
+    - Día
+    - Hora dorada
+    - Noche
+    - Interior
+temperatura_color:
+  etiqueta: Temperatura de color
+  opciones:
+    - Cálida
+    - Neutra
+    - Fría

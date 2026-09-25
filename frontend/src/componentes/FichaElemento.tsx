@@ -17,6 +17,21 @@ const TEXTO_PREPARAR = {
   objeto: "Preparar referencias del objeto",
 };
 
+// Ejemplos de rasgo según la clase del elemento (§3.1).
+const EJEMPLO_FIJOS = {
+  personaje: "Cicatriz en la ceja derecha…",
+  escenario: "Suelo de baldosa hidráulica…",
+  producto: "Logotipo grabado en la tapa…",
+  objeto: "Mango de madera astillado…",
+};
+
+const EJEMPLO_VARIABLES = {
+  personaje: "Abrigo de invierno en el mundo nevado…",
+  escenario: "De noche, con las persianas bajadas…",
+  producto: "Con la tapa abierta o cerrada…",
+  objeto: "Mojado tras la lluvia…",
+};
+
 // Ficha del elemento seleccionado (§6.2). Una versión aprobada es inmutable:
 // editar = crear una versión nueva.
 export default function FichaElemento({
@@ -219,7 +234,7 @@ export default function FichaElemento({
           testid="rasgos-fijos"
           valores={datos.rasgos_fijos}
           editable={editable}
-          placeholder="Cicatriz en la ceja derecha…"
+          placeholder={EJEMPLO_FIJOS[elemento.clase] || EJEMPLO_FIJOS.personaje}
           onCambiar={(v) => set("rasgos_fijos", v)}
         />
       </Campo>
@@ -229,7 +244,7 @@ export default function FichaElemento({
           testid="rasgos-variables"
           valores={datos.rasgos_variables}
           editable={editable}
-          placeholder="Abrigo de invierno en el mundo nevado…"
+          placeholder={EJEMPLO_VARIABLES[elemento.clase] || EJEMPLO_VARIABLES.personaje}
           onCambiar={(v) => set("rasgos_variables", v)}
         />
       </Campo>
@@ -334,6 +349,7 @@ export default function FichaElemento({
           medios={medios}
           editable={editable}
           espacioId={espacioId}
+          clase={elemento.clase}
           onCambiar={(v) => set("referencias", v)}
           onMediosNuevos={onMediosNuevos}
         />

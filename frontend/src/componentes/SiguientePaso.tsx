@@ -3,12 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Boton from "./Boton";
 import { rutaPaso } from "../lib/rutas";
+import type { Paso } from "../tipos";
+
+interface PropsSiguientePaso {
+  proyectoId: string;
+  paso: Paso;
+  siguiente: Paso | null;
+}
 
 // Bloque "Siguiente paso" (§5.3) al pie de cada paso: qué falta para darlo por listo
-// y el botón para continuar. Si el paso no está listo, el botón no avanza.
-export default function SiguientePaso({ proyectoId, paso, siguiente }) {
+// y el botón para continuar. El criterio de «paso superado» lo calcula el backend
+// (dominio/estado.py + recorridos.calcular): aquí solo se lee `paso.superado`.
+export default function SiguientePaso({ proyectoId, paso, siguiente }: PropsSiguientePaso) {
   const navegar = useNavigate();
-  const listo = paso.estado === "listo";
+  const superado = paso.superado;
 
   return (
     <section
@@ -19,15 +27,19 @@ export default function SiguientePaso({ proyectoId, paso, siguiente }) {
         Siguiente paso
       </h2>
       <p className="mt-3 text-[16px] leading-[24px] text-tinta">
-        Para dar este paso por listo: <span className="text-tinta2">{paso.listo_cuando}</span>
+        {paso.estado === "no_hace_falta" ? (
+          <>Este paso está marcado como <span className="text-tinta2">no hace falta en este proyecto</span>.</>
+        ) : (
+          <>Para dar este paso por listo: <span className="text-tinta2">{paso.listo_cuando}</span></>
+        )}
       </p>
 
       <div className="mt-5 flex items-center gap-4">
         {siguiente ? (
           <Boton
             data-testid="btn-continuar"
-            disabled={!listo}
-            onClick={() => listo && navegar(rutaPaso(proyectoId, siguiente))}
+            disabled={!superado}
+            onClick={() => superado && navegar(rutaPaso(proyectoId, siguiente))}
           >
             Continuar a {siguiente.nombre}
             <ArrowRight size={18} strokeWidth={1.9} />
@@ -37,7 +49,7 @@ export default function SiguientePaso({ proyectoId, paso, siguiente }) {
             Es el último paso del recorrido.
           </span>
         )}
-        {!listo && siguiente && (
+        {!superado && siguiente && (
           <span className="text-[13px] leading-[18px] text-tinta2">
             Completa este paso para continuar.
           </span>

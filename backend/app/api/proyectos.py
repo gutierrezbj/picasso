@@ -97,6 +97,8 @@ async def guardar_ubicacion(proyecto_id: str, datos: Ubicacion):
 async def borrar_proyecto(proyecto_id: str):
     piezas = await db.piezas.find({"proyecto_id": proyecto_id}).to_list(500)
     guiones = await db.guiones.find({"pieza_id": {"$in": [p["_id"] for p in piezas]}}).to_list(500)
+    await db.planos.delete_many({"pieza_id": {"$in": [p["_id"] for p in piezas]}})
+    await db.lienzos.delete_one({"_id": proyecto_id})
     await db.escenas.delete_many({"guion_id": {"$in": [g["_id"] for g in guiones]}})
     await db.guiones.delete_many({"pieza_id": {"$in": [p["_id"] for p in piezas]}})
     await db.piezas.delete_many({"proyecto_id": proyecto_id})

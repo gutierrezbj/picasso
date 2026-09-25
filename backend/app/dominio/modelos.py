@@ -397,3 +397,124 @@ class EncargoEditar(BaseModel):
 
 class AprobarRevision(BaseModel):
     marcas: dict[str, str]  # escena_id -> solo_texto | afecta_planos
+
+
+# --- Fase 5: lienzo, planos y dirección (§7, §7.7, §8) ---
+
+
+class Modalidad(str, Enum):
+    imagen = "imagen"
+    video = "video"
+
+
+class Correccion(BaseModel):
+    """Instrucción en lenguaje llano sobre un plano (§7.7d)."""
+
+    id: str = Field(default_factory=nuevo_id)
+    texto: str
+    estado: str = "pendiente"  # pendiente | hecha
+    creada_en: str = Field(default_factory=ahora)
+    hecha_en: Optional[str] = None
+    operacion_id: Optional[str] = None  # Fase 6
+    toma_id: Optional[str] = None  # Fase 6
+
+
+class Direccion(BaseModel):
+    """Caja de herramientas del director (§8). Ningún campo es obligatorio.
+    En vídeo manda el encuadre/ángulo de inicio y de final (§7.7c); en imagen,
+    `encuadre` y `angulo`. Lo que no se muestra se guarda, no se pierde."""
+
+    protagonista_visual: Optional[str] = None
+    encuadre: Optional[str] = None
+    angulo: Optional[str] = None
+    encuadre_inicio: Optional[str] = None
+    angulo_inicio: Optional[str] = None
+    encuadre_final: Optional[str] = None
+    angulo_final: Optional[str] = None
+    movimiento_camara: Optional[str] = None
+    optica: Optional[str] = None
+    profundidad_campo: Optional[str] = None
+    luz_direccion: Optional[str] = None
+    luz_calidad: Optional[str] = None
+    luz_momento: Optional[str] = None
+    temperatura_color: Optional[str] = None
+    ambiente: Optional[str] = None
+    acabado: Optional[str] = None
+    accion: Optional[str] = None
+    negativos: Optional[str] = None
+    # reparto_id -> rasgos variables que aplican en este plano
+    vestuario_y_variables: dict[str, list[str]] = Field(default_factory=dict)
+
+
+class Plano(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    pieza_id: str
+    escena_id: Optional[str] = None  # None en tipo imagen (§3.1)
+    orden: int
+    que_se_muestra: str = ""
+    modalidad: Modalidad = Modalidad.imagen
+    duracion_s: Optional[float] = None
+    elementos: list[str] = Field(default_factory=list)  # ids del reparto
+    direccion: Direccion = Field(default_factory=Direccion)
+    toma_elegida_id: Optional[str] = None
+    plano_anterior_encadenado: bool = False
+    correcciones: list[Correccion] = Field(default_factory=list)
+    prompt_editado_a_mano: bool = False
+    prompt_manual: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class PlanoCrear(BaseModel):
+    que_se_muestra: Optional[str] = None
+    modalidad: Optional[Modalidad] = None
+
+
+class PlanoEditar(BaseModel):
+    que_se_muestra: Optional[str] = None
+    modalidad: Optional[Modalidad] = None
+    duracion_s: Optional[float] = None
+    elementos: Optional[list[str]] = None
+    direccion: Optional[Direccion] = None
+    plano_anterior_encadenado: Optional[bool] = None
+    updated_at: str
+
+
+class MoverPlano(BaseModel):
+    direccion: Optional[str] = None  # antes | despues
+    a: Optional[int] = None  # posición destino (0-based)
+
+
+class CorreccionCrear(BaseModel):
+    texto: str
+
+
+class CorreccionEditar(BaseModel):
+    estado: str  # pendiente | hecha
+
+
+class PromptManual(BaseModel):
+    texto: str
+
+
+class Posicion(BaseModel):
+    x: float
+    y: float
+
+
+class Viewport(BaseModel):
+    x: float = 0
+    y: float = 0
+    zoom: float = 1
+
+
+class LayoutLienzo(BaseModel):
+    """Uno por proyecto (§3.1, §7.5). Posición ≠ orden (§7.4)."""
+
+    posiciones: dict[str, Posicion] = Field(default_factory=dict)
+    grupos_plegados: list[str] = Field(default_factory=list)
+    viewport: Viewport = Field(default_factory=Viewport)
+    seleccion: list[str] = Field(default_factory=list)
+    pieza_activa: Optional[str] = None
+    mostrar_conexiones_reparto: bool = True
+    updated_at: Optional[str] = None

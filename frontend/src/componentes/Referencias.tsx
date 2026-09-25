@@ -16,12 +16,16 @@ const ROLES = [
 ];
 
 // Referencias de una ficha (§3.1): medios del espacio con su rol.
+// En personaje y producto la primera referencia entra como «Frontal».
+const CLASES_CON_FRONTAL = ["personaje", "producto"];
+
 export default function Referencias({
   referencias = [],
   medios = [],
   editable,
   onCambiar,
   espacioId,
+  clase,
   onMediosNuevos,
 }) {
   const [picker, setPicker] = useState(false);
@@ -30,9 +34,12 @@ export default function Referencias({
   const yaUsados = new Set(referencias.map((r) => r.medio_id));
   const disponibles = medios.filter((m) => m.clase === "imagen" && !yaUsados.has(m.id));
 
+  const rolPara = (indice) =>
+    indice === 0 && CLASES_CON_FRONTAL.includes(clase) ? "frontal" : "otra";
+
   const anadir = (medioId) => {
     if (yaUsados.has(medioId)) return;
-    onCambiar([...referencias, { medio_id: medioId, rol: "otra" }]);
+    onCambiar([...referencias, { medio_id: medioId, rol: rolPara(referencias.length) }]);
   };
 
   return (
@@ -117,7 +124,7 @@ export default function Referencias({
               onMediosNuevos?.(creados);
               onCambiar([
                 ...referencias,
-                ...creados.map((m) => ({ medio_id: m.id, rol: "otra" })),
+                ...creados.map((m, i) => ({ medio_id: m.id, rol: rolPara(referencias.length + i) })),
               ]);
             }}
           />

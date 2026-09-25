@@ -7,11 +7,16 @@ import type {
   Escena,
   Espacio,
   FichaVersion,
+  LayoutLienzo,
   Medio,
+  OpcionesDireccion,
   Pieza,
+  Plano,
+  PromptVista,
   Proyecto,
   Recorrido,
   VistaGuion,
+  VistaLienzo,
   VistaProyecto,
 } from "../tipos";
 
@@ -210,6 +215,50 @@ export const api = {
     peticion<VistaGuion>(`/piezas/${piezaId}/guion/revision/descartar`, { method: "POST" }),
   crearRevision: (piezaId: string) =>
     peticion<VistaGuion>(`/piezas/${piezaId}/guion/revision`, { method: "POST" }),
+
+  // --- Fase 5: lienzo, planos, dirección ---
+  lienzo: (piezaId: string) => peticion<VistaLienzo>(`/piezas/${piezaId}/lienzo`),
+  opcionesDireccion: () => peticion<OpcionesDireccion>("/direccion/opciones"),
+  guardarLayout: (proyectoId: string, datos: LayoutLienzo) =>
+    peticion<LayoutLienzo>(`/proyectos/${proyectoId}/lienzo`, {
+      method: "PUT",
+      body: JSON.stringify(datos),
+    }),
+  crearPlano: (escenaId: string, datos: Record<string, unknown> = {}) =>
+    peticion<Plano>(`/escenas/${escenaId}/planos`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  editarPlano: (id: string, datos: Record<string, unknown>) =>
+    peticion<Plano>(`/planos/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
+  borrarPlano: (id: string) => peticion(`/planos/${id}`, { method: "DELETE" }),
+  moverPlano: (id: string, datos: { direccion?: string; a?: number }) =>
+    peticion<{ ok: boolean; orden: string[] }>(`/planos/${id}/mover`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  duplicarPlano: (id: string) => peticion<Plano>(`/planos/${id}/duplicar`, { method: "POST" }),
+  dividirPlano: (id: string) => peticion<Plano>(`/planos/${id}/dividir`, { method: "POST" }),
+  crearCorreccion: (planoId: string, texto: string) =>
+    peticion<Plano>(`/planos/${planoId}/correcciones`, {
+      method: "POST",
+      body: JSON.stringify({ texto }),
+    }),
+  editarCorreccion: (planoId: string, correccionId: string, estado: "pendiente" | "hecha") =>
+    peticion<Plano>(`/planos/${planoId}/correcciones/${correccionId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ estado }),
+    }),
+  borrarCorreccion: (planoId: string, correccionId: string) =>
+    peticion<Plano>(`/planos/${planoId}/correcciones/${correccionId}`, { method: "DELETE" }),
+  prompt: (planoId: string) => peticion<PromptVista>(`/planos/${planoId}/prompt`),
+  guardarPrompt: (planoId: string, texto: string) =>
+    peticion<PromptVista>(`/planos/${planoId}/prompt`, {
+      method: "PUT",
+      body: JSON.stringify({ texto }),
+    }),
+  reconstruirPrompt: (planoId: string) =>
+    peticion<PromptVista>(`/planos/${planoId}/prompt/reconstruir`, { method: "POST" }),
 };
 
 export { ErrorApi };

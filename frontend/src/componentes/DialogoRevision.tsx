@@ -39,6 +39,7 @@ export default function DialogoRevision({
   const [marcas, setMarcas] = useState<Record<string, string>>({});
   const [error, setError] = useState(null);
   const [ocupado, setOcupado] = useState(false);
+  const [pideConfirmacion, setPideConfirmacion] = useState(false);
 
   const d = diferencias || {};
   const editadas = d.editadas || [];
@@ -66,6 +67,7 @@ export default function DialogoRevision({
     try {
       await onDescartar();
       setMarcas({});
+      setPideConfirmacion(false);
       onCerrar();
     } catch (e) {
       setError(e.message);
@@ -246,9 +248,41 @@ export default function DialogoRevision({
       )}
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <Boton variante="texto" data-testid="btn-descartar-revision" disabled={ocupado} onClick={descartar}>
-          Descartar revisión
-        </Boton>
+        {pideConfirmacion ? (
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-card border border-linea bg-superficie2 px-4 py-3"
+            data-testid="confirmar-descartar-revision"
+          >
+            <span className="text-[14px] leading-[20px] text-tinta">
+              Se pierde todo lo escrito en esta revisión. ¿Descartarla?
+            </span>
+            <Boton
+              pequeno
+              data-testid="btn-confirmar-descartar"
+              disabled={ocupado}
+              onClick={descartar}
+            >
+              Sí, descartar
+            </Boton>
+            <Boton
+              pequeno
+              variante="secundario"
+              data-testid="btn-cancelar-descartar"
+              onClick={() => setPideConfirmacion(false)}
+            >
+              Cancelar
+            </Boton>
+          </div>
+        ) : (
+          <Boton
+            variante="texto"
+            data-testid="btn-descartar-revision"
+            disabled={ocupado}
+            onClick={() => setPideConfirmacion(true)}
+          >
+            Descartar revisión
+          </Boton>
+        )}
         <div className="flex gap-3">
           <Boton variante="secundario" onClick={onCerrar}>
             Seguir editando

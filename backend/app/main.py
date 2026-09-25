@@ -15,6 +15,7 @@ from app.api import (
     estudio,
     formatos,
     guiones,
+    lienzo,
     medios,
     piezas,
     proyectos,
@@ -44,6 +45,7 @@ app.include_router(reparto.router)
 app.include_router(biblioteca.router)
 app.include_router(piezas.router)
 app.include_router(guiones.router)
+app.include_router(lienzo.router)
 
 
 @app.get("/api/salud")

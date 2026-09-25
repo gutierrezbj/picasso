@@ -63,7 +63,7 @@ def calcular(proyecto: dict, completado: dict | None = None) -> dict:
         if p.get("obligatorio", False) and not listo and clave not in omitidos:
             bloqueo = True
 
-        pasos_estado.append({**p, "estado": estado})
+        pasos_estado.append({**p, "estado": estado, "superado": estado in ("listo", "no_hace_falta")})
 
     total = len(pasos)
     indice = next((i for i, p in enumerate(pasos) if p["clave"] == paso_actual), None)

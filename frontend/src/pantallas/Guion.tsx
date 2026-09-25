@@ -11,6 +11,7 @@ import TarjetaEscena from "../componentes/TarjetaEscena";
 import LeerGuion from "../componentes/LeerGuion";
 import DialogoRevision from "../componentes/DialogoRevision";
 import PanelElementoNuevo from "../componentes/PanelElementoNuevo";
+import DialogoConfirmar from "../componentes/DialogoConfirmar";
 import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import Tarjeta from "../componentes/Tarjeta";
@@ -300,6 +301,10 @@ export default function Guion() {
   const [nuevoElemento, setNuevoElemento] = useState(false);
   const [error, setError] = useState(null);
   const [peticion, setPeticion] = useState(null);
+  // Confirmaciones de acciones que pierden trabajo: "descartar" o borrar una escena.
+  const [confirmar, setConfirmar] = useState<"descartar" | { tipo: "borrar-escena"; id: string } | null>(
+    null
+  );
 
   const paso = data?.recorrido?.pasos?.find((p) => p.pantalla === "guion");
 
@@ -361,6 +366,10 @@ export default function Guion() {
   const editable = !aprobado || hayRevision;
   const falta = guionData?.falta_para_aprobar || [];
   const esEncargo = guion?.clase === "encargo";
+  const escenaAConfirmar =
+    confirmar && typeof confirmar === "object"
+      ? escenas.find((e) => e.id === confirmar.id) || null
+      : null;
 
   const cabecera = (
     <>
@@ -475,7 +484,7 @@ export default function Guion() {
               pequeno
               variante="texto"
               data-testid="btn-descartar-revision-directo"
-              onClick={() => accion(() => api.descartarRevision(pieza.id))}
+              onClick={() => setConfirmar("descartar")}
             >
               Descartar revisión
             </Boton>
@@ -534,7 +543,7 @@ export default function Guion() {
                     arrastre={(desde, hasta) =>
                       accion(() => api.moverEscena(escenas[desde].id, { a: hasta }))
                     }
-                    onBorrar={(id) => accion(() => api.borrarEscena(id))}
+                    onBorrar={(id) => setConfirmar({ tipo: "borrar-escena", id })}
                     onCambiada={refrescar}
                     onCrearElemento={() => setNuevoElemento(true)}
                     onReescribir={(escena, campo) =>
@@ -621,6 +630,44 @@ export default function Guion() {
         espacioId={espacioId}
         proyectoId={proyectoId}
         onCreado={refrescar}
+      />
+
+      <DialogoConfirmar
+        abierto={confirmar === "descartar"}
+        testid="confirmar-descartar-revision"
+        titulo="¿Descartar la revisión en curso?"
+        mensaje={
+          <>
+            Se pierde todo lo escrito en esta revisión (escenas añadidas, editadas o
+            eliminadas). El guion aprobado, la revisión {guion?.revision}, queda intacto.
+          </>
+        }
+        etiquetaConfirmar="Descartar revisión"
+        onConfirmar={() => {
+          setConfirmar(null);
+          accion(() => api.descartarRevision(pieza.id));
+        }}
+        onCerrar={() => setConfirmar(null)}
+      />
+
+      <DialogoConfirmar
+        abierto={!!confirmar && typeof confirmar === "object" && confirmar.tipo === "borrar-escena"}
+        testid="confirmar-borrar-escena"
+        titulo="¿Borrar esta escena?"
+        mensaje={
+          <>
+            Se borra «{escenaAConfirmar?.titulo || "sin título"}» con todo lo que contiene:
+            qué ocurre, qué se ve, intención, elementos y diálogos. Las demás escenas se
+            renumeran. No se puede deshacer.
+          </>
+        }
+        etiquetaConfirmar="Borrar escena"
+        onConfirmar={() => {
+          const id = typeof confirmar === "object" && confirmar ? confirmar.id : null;
+          setConfirmar(null);
+          if (id) accion(() => api.borrarEscena(id));
+        }}
+        onCerrar={() => setConfirmar(null)}
       />
     </div>
   );

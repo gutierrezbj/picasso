@@ -133,7 +133,10 @@ Estudio (implícito, uno)
 - `guion_id`, `orden`, `titulo`, `que_ocurre`, `que_se_ve`, `intencion`, `elementos` (ids del reparto), `dialogos` (lista `{hablante: elemento_id | "narrador", texto}`; el `elemento_id` es de un elemento de clase personaje que esté en `elementos`), `sonido_previsto?` (texto), `duracion_orientativa_s?`.
 
 **Plano**
-- `escena_id` (o `pieza_id` en tipo imagen), `orden`, `descripcion`, `modalidad`: `imagen` | `video`, `duracion_s?`, `elementos` (ids del reparto; subconjunto de la escena), `direccion` (§8), `toma_elegida_id?`, `plano_anterior_encadenado: bool` (usar el último fotograma de la toma elegida del plano anterior como primer fotograma).
+- `escena_id` (o `pieza_id` en tipo imagen), `orden`, `descripcion`, `modalidad`: `imagen` | `video`, `duracion_s?`, `elementos` (ids del reparto; subconjunto de la escena), `direccion` (§8), `toma_elegida_id?`, `plano_anterior_encadenado: bool` (usar el último fotograma de la toma elegida del plano anterior como primer fotograma), `correcciones` (lista de Correccion, §7.7d), `prompt_editado_a_mano: bool` y `prompt_manual?` (§8).
+
+**Correccion** (dentro de un Plano, §7.7d)
+- `texto` (instrucción en lenguaje llano), `estado`: `pendiente` | `hecha`, `creada_en`, `hecha_en?`, `operacion_id?` y `toma_id?` (Fase 6: la operación que la ejecuta y la toma resultante).
 
 **Operacion**
 - `proyecto_id`, `destino`: `{tipo: plano | ficha | medio, id}`, `accion` (§9.2), `modelo` (id del catálogo), `entradas` (prompt construido, referencias, fotogramas, duración, relación de aspecto, voz…), `prompt_visible` (lo que el usuario puede leer y editar), `coste_estimado`, `estado` (§9.4), `clave_idempotencia`, `autorizada_en?`.
@@ -369,6 +372,22 @@ Posiciones, grupos plegados, viewport y selección se guardan al terminar cada i
 
 Desde `Tomas`, sobre una imagen: `Ajustar` abre un campo de instrucción ("baja la saturación", "quita las personas del fondo", "más profundidad de campo") que prepara una operación `editar_imagen` con la toma como entrada. El resultado es una **toma nueva** del mismo plano; la original se conserva.
 
+### 7.7 El lienzo como mesa de dirección (valor diferencial del producto)
+
+a) **Estructurar.** En el lienzo se crean, duplican, dividen y borran planos dentro de cada escena, se ordenan con "Mover antes/después" y se encadenan con el plano anterior. Las escenas no se crean en el lienzo: "Editar en el guion" abre una revisión (§6.3).
+
+b) **Leer.** La tarjeta de un elemento abre su ficha contextual en modo lectura: versión usada, rasgos fijos, rasgos variables, personalidad y referencias a tamaño completo, con "Editar en su paso" para cambiarla. La ficha del plano tiene una pestaña "Continuidad": por cada elemento del plano muestra sus rasgos fijos, los rasgos variables que aplican en este plano y las referencias que se enviarán al producir.
+
+c) **Ángulos.** La tarjeta del plano muestra el resumen de su dirección (encuadre · ángulo · movimiento · duración). En un plano de vídeo, la dirección tiene encuadre y ángulo de inicio, encuadre y ángulo de final, y el movimiento entre ambos. Cada escena tiene la vista "Guion gráfico": la tira de sus planos en orden, con miniatura o hueco y su resumen de dirección, para leer la secuencia de ángulos de un vistazo.
+
+d) **Corregir y mejorar por segmento.** Cada plano tiene "Corregir": una instrucción en lenguaje llano sobre ese plano ("que no gire la cabeza", "más luz en la cara"). En la Fase 5 se guarda como corrección pendiente, visible en la tarjeta. En la Fase 6 se convierte en una operación con coste (editar imagen, o volver a producir el plano con la toma como referencia); el resultado es una toma nueva, la original se conserva y se comparan lado a lado antes de elegir.
+
+Reglas de detalle acordadas con el usuario (26-09-2026):
+
+- **Dividir un plano** crea un plano nuevo justo detrás, con la misma dirección y los mismos elementos, la duración partida a la mitad y "qué se muestra" vacío. El nuevo queda **encadenado con el anterior**; en vídeo, su encuadre y ángulo de inicio son los de final del original y su final queda por definir. El original conserva su toma.
+- **Correcciones**: lista por plano. Las marcadas `Hecha` no desaparecen, pasan a un historial plegado; `Borrar` solo para las pendientes. Cada corrección puede enlazar la operación que la ejecuta y la toma resultante (Fase 6); al elegir esa toma se marca `Hecha` sola. En la Fase 5, `Hecha` es manual.
+- **Guion gráfico**: se abre desde la tarjeta de escena, a pantalla completa sobre el lienzo. Pulsar un plano de la tira lo cierra y deja ese plano seleccionado en el lienzo con su ficha abierta. Tiene `Escena anterior` y `Escena siguiente` para leer la secuencia completa sin cerrarlo.
+
 ---
 
 ## 8. Dirección de un plano (caja de herramientas del director)
@@ -379,8 +398,8 @@ Pestaña **Dirección** de la ficha de plano. Cada campo es un selector con opci
 | --- | --- |
 | `que_se_muestra` | Texto libre (obligatorio). |
 | `protagonista_visual` | Un elemento del reparto, el escenario, o "el entorno". |
-| `encuadre` | Gran plano general, plano general, plano medio, primer plano, detalle. |
-| `angulo` | A la altura de los ojos, picado, contrapicado, cenital, a ras de suelo. |
+| `encuadre` | Gran plano general, plano general, plano medio, primer plano, detalle. En **vídeo** son dos: `encuadre_inicio` y `encuadre_final`. |
+| `angulo` | A la altura de los ojos, picado, contrapicado, cenital, a ras de suelo. En **vídeo** son dos: `angulo_inicio` y `angulo_final`. |
 | `movimiento_camara` | Fija, travelling adelante/atrás, lateral, panorámica, grúa, cámara en mano, dron. |
 | `optica` | Angular, normal, teleobjetivo; profundidad de campo: amplia / reducida. |
 | `luz` | Dirección (frontal, lateral, contraluz, cenital), calidad (dura/suave), momento (día, hora dorada, noche, interior). |
@@ -392,6 +411,10 @@ Pestaña **Dirección** de la ficha de plano. Cada campo es un selector con opci
 | `negativos` | Lo que no debe aparecer. |
 
 Debajo, **Vista previa del prompt**: el texto que se enviará, construido a partir de la dirección + rasgos fijos de las fichas + desarrollo. Se muestra y puede editarse; si se edita a mano, se marca "prompt editado a mano" y deja de regenerarse automáticamente hasta pulsar `Reconstruir desde la dirección`.
+
+Detalle de la vista previa (acordado el 26-09-2026): la plantilla vive en `backend/data/plantillas_prompt.yaml`, una por modalidad (imagen / vídeo), editable sin tocar código. Incluye los rasgos fijos y los **rasgos variables que aplican en ese plano**, y los **negativos**; en vídeo, encuadre y ángulo de inicio, de final y el movimiento entre ambos. Nunca incluye texto ni rótulos. Junto a la vista previa se ve **qué versión de cada ficha** se ha usado para construirla.
+
+Cambiar de modalidad no pierde nada sin avisar: al pasar de imagen a vídeo, el encuadre y el ángulo pasan a ser los de inicio y los de final arrancan iguales (plano fijo); al pasar de vídeo a imagen, el encuadre y el ángulo toman los de inicio, y los de final y el movimiento se guardan sin mostrarse y reaparecen si se vuelve a vídeo.
 
 **Lámina de encuadres** (opcional): botón `Explorar encuadres` prepara una operación que genera N imágenes (N elegido por el usuario, por defecto 4) del mismo plano variando solo encuadre/ángulo. Son tomas de exploración; elegir una fija esos valores de dirección. No se genera sin autorización.
 
@@ -563,8 +586,9 @@ P6, aprobación, lectura continua, encargo de imagen, capítulos.
 ✔ Escribir 3 escenas, reordenarlas, leerlas seguidas y aprobar. El lienzo se abre. Editar después crea una revisión en curso sin cerrar el lienzo; al aprobarla se marcan las escenas editadas (Solo texto / Afecta a los planos); descartarla deja el guion aprobado intacto.
 
 **F5 · Lienzo**
-P7 sin producción: estructura desde el guion, grupos, fichas contextuales, dirección, vista previa del prompt, persistencia del layout.
+P7 sin producción: estructura desde el guion, grupos, fichas contextuales, dirección, vista previa del prompt, persistencia del layout, y el §7.7 (estructurar, leer, ángulos y correcciones por segmento).
 ✔ Abrir el lienzo, plegar una escena, mover tarjetas, dirigir un plano, cerrar la ficha sin perder el sitio, salir y volver con todo igual. Mover una tarjeta no cambia el orden del montaje.
+✔ Crear, duplicar, dividir y reordenar planos. Abrir la ficha de un elemento desde el lienzo y leerla sin salir. Ver la pestaña Continuidad de un plano. Dirigir un plano de vídeo con ángulo de inicio y de final y verlo resumido en la tarjeta y en el Guion gráfico. Dejar una corrección y verla pendiente en la tarjeta.
 
 **F6 · Motor con proveedor simulado**
 Operaciones, catálogo, costes, SSE, tomas, comparación, elegir toma, editar imagen, registro, estados inciertos.
