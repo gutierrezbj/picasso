@@ -1,17 +1,32 @@
 import React, { useState } from "react";
 import { Sparkles } from "lucide-react";
 import Boton from "./Boton";
-import { AreaTexto } from "./Campo";
+import { AreaTexto, Entrada } from "./Campo";
 import Selector from "./Selector";
 import { api } from "../api/cliente";
 import { useAsistenteEstado } from "../api/hooks";
 import { ETIQUETA_CAMPO, CAMPOS_POR_TIPO } from "../lib/campos";
 
+const NOMBRE_CLASE = {
+  personaje: "personajes",
+  producto: "productos",
+  objeto: "objetos",
+  escenario: "escenarios",
+};
+
 // Panel del asistente (§10). Propone; nada se escribe sin que el usuario acepte.
 // Las propuestas se ACUMULAN: pedir algo nuevo no borra las pendientes.
-export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado }) {
+export default function PanelAsistente({
+  proyectoId,
+  tipo,
+  desActual,
+  onAplicado,
+  modo = "desarrollo",
+  clase = null,
+  preguntasFormato = [],
+}) {
   const { data: estado } = useAsistenteEstado();
-  const [items, setItems] = useState([]); // {propId,id,tipo,pregunta,destino_campo,texto,modo,edit,destinoSel}
+  const [items, setItems] = useState([]);
   const [campo, setCampo] = useState(CAMPOS_POR_TIPO[tipo]?.[0] || "intencion");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
@@ -19,18 +34,32 @@ export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado
   const disponible = estado?.disponible;
   const campos = CAMPOS_POR_TIPO[tipo] || [];
 
+  // Destinos posibles de una respuesta: los campos del Desarrollo y, además,
+  // las preguntas del formato del proyecto (§6.1).
+  const destinos = [
+    ...campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] })),
+    ...preguntasFormato.map((q) => ({ valor: `formato:${q.clave}`, texto: `Formato · ${q.pregunta}` })),
+  ];
+
   const pedir = async (tarea, extra) => {
     setCargando(true);
     setError(null);
     try {
       const p = await api.proponer(proyectoId, tarea, extra);
+      if (!p.partes.length) {
+        setError(
+          tarea === "detectar_elementos"
+            ? "No hay nada que proponer: el desarrollo no menciona nombres nuevos de esta clase."
+            : "No hay nada que proponer con lo que hay escrito."
+        );
+      }
       const nuevos = p.partes.map((x) => ({
         ...x,
         propId: p.id,
-        edit: x.texto || "",
-        destinoSel: x.destino_campo || campos[0] || "notas",
+        edit: x.tipo === "elemento" ? x.nombre || "" : x.texto || "",
+        destinoSel: x.destino_campo || destinos[0]?.valor || "notas",
       }));
-      setItems((prev) => [...nuevos, ...prev]); // acumular
+      setItems((prev) => [...nuevos, ...prev]);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -39,20 +68,32 @@ export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado
   };
 
   const resolver = async (item, accion) => {
+    setError(null);
     const cuerpo =
       accion === "aceptar"
-        ? { accion, texto: item.edit, destino_campo: item.tipo === "pregunta" ? item.destinoSel : item.destino_campo }
+        ? {
+            accion,
+            texto: item.edit,
+            destino_campo: item.tipo === "pregunta" ? item.destinoSel : item.destino_campo,
+          }
         : { accion };
-    await api.resolverParte(item.propId, item.id, cuerpo);
-    setItems((prev) => prev.filter((x) => x.id !== item.id));
-    if (accion === "aceptar") onAplicado?.();
+    try {
+      await api.resolverParte(item.propId, item.id, cuerpo);
+      setItems((prev) => prev.filter((x) => x.id !== item.id));
+      if (accion === "aceptar") onAplicado?.();
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   const actualizar = (id, campos_) =>
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...campos_ } : x)));
 
   return (
-    <aside data-testid="panel-asistente" className="w-full rounded-panel border border-linea bg-superficie2 p-5 lg:w-[400px] lg:shrink-0">
+    <aside
+      data-testid="panel-asistente"
+      className="w-full rounded-panel border border-linea bg-superficie2 p-5 lg:w-[400px] lg:shrink-0"
+    >
       <div className="flex items-center gap-2 text-[16px] font-semibold text-tinta">
         <Sparkles size={18} strokeWidth={1.9} className="text-acento" /> Asistente
       </div>
@@ -66,38 +107,85 @@ export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado
           <p className="mt-2 text-[13px] leading-[18px] text-tinta2">
             Propone; tú decides. Nada se escribe sin que lo aceptes ({estado?.modelo}).
           </p>
+
           <div className="mt-4 flex flex-col gap-2">
-            <Boton pequeno variante="secundario" data-testid="btn-hacer-preguntas" disabled={cargando} onClick={() => pedir("hacer_preguntas")}>
-              Hacer preguntas
-            </Boton>
-            <Boton pequeno variante="secundario" data-testid="btn-ordenar-notas" disabled={cargando} onClick={() => pedir("ordenar_notas")}>
-              Ordenar mis notas
-            </Boton>
-            <div className="flex gap-2">
-              <Selector data-testid="select-campo-proponer" valor={campo} onChange={setCampo} opciones={campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] }))} />
-              <Boton pequeno data-testid="btn-proponer-campo" disabled={cargando} onClick={() => pedir("proponer_campo", { campo })}>
-                Proponer
+            {modo === "elementos" ? (
+              <Boton
+                pequeno
+                variante="secundario"
+                data-testid="btn-detectar-elementos"
+                disabled={cargando || !clase}
+                onClick={() => pedir("detectar_elementos", { clase })}
+              >
+                Detectar {NOMBRE_CLASE[clase] || "elementos"} que menciona la idea
               </Boton>
-            </div>
+            ) : (
+              <>
+                <Boton
+                  pequeno
+                  variante="secundario"
+                  data-testid="btn-hacer-preguntas"
+                  disabled={cargando}
+                  onClick={() => pedir("hacer_preguntas")}
+                >
+                  Hacer preguntas
+                </Boton>
+                <Boton
+                  pequeno
+                  variante="secundario"
+                  data-testid="btn-ordenar-notas"
+                  disabled={cargando}
+                  onClick={() => pedir("ordenar_notas")}
+                >
+                  Ordenar mis notas
+                </Boton>
+                <div className="flex gap-2">
+                  <Selector
+                    data-testid="select-campo-proponer"
+                    valor={campo}
+                    onChange={setCampo}
+                    opciones={campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] }))}
+                  />
+                  <Boton
+                    pequeno
+                    data-testid="btn-proponer-campo"
+                    disabled={cargando}
+                    onClick={() => pedir("proponer_campo", { campo })}
+                  >
+                    Proponer
+                  </Boton>
+                </div>
+              </>
+            )}
           </div>
 
           {cargando && <p className="mt-4 text-[13px] text-tinta2">Pensando…</p>}
-          {error && <p className="mt-4 text-[13px] text-error">{error}</p>}
+          {error && (
+            <p className="mt-4 text-[13px] text-tinta2" data-testid="asistente-aviso">
+              {error}
+            </p>
+          )}
 
           {items.length > 0 && (
             <div className="mt-5 flex flex-col gap-4" data-testid="propuestas">
               {items.map((item) => (
-                <div key={item.id} className="rounded-card border border-linea bg-superficie p-3" data-testid="propuesta-parte">
-                  {item.tipo === "pregunta" ? (
+                <div
+                  key={item.id}
+                  className="rounded-card border border-linea bg-superficie p-3"
+                  data-testid="propuesta-parte"
+                >
+                  {item.tipo === "pregunta" && (
                     <>
-                      <div className="mb-2 text-[14px] font-medium text-tinta" data-testid="propuesta-pregunta">{item.pregunta}</div>
-                      <div className="mb-2 flex items-center gap-2">
+                      <div className="mb-2 text-[14px] font-medium text-tinta" data-testid="propuesta-pregunta">
+                        {item.pregunta}
+                      </div>
+                      <div className="mb-2 flex flex-col gap-1">
                         <span className="text-[13px] text-tinta2">Responder en:</span>
                         <Selector
                           data-testid="select-destino-respuesta"
                           valor={item.destinoSel}
                           onChange={(v) => actualizar(item.id, { destinoSel: v })}
-                          opciones={campos.map((c) => ({ valor: c, texto: ETIQUETA_CAMPO[c] }))}
+                          opciones={destinos}
                         />
                       </div>
                       <AreaTexto
@@ -107,7 +195,29 @@ export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado
                         onChange={(e) => actualizar(item.id, { edit: e.target.value })}
                       />
                     </>
-                  ) : (
+                  )}
+
+                  {item.tipo === "elemento" && (
+                    <>
+                      <div className="mb-2 text-[13px] font-medium text-tinta2">
+                        Elemento propuesto · {item.clase}
+                      </div>
+                      <Entrada
+                        data-testid="propuesta-nombre-elemento"
+                        value={item.edit}
+                        onChange={(e) => actualizar(item.id, { edit: e.target.value })}
+                      />
+                      {item.texto && (
+                        <p className="mt-2 text-[13px] leading-[18px] text-tinta2">{item.texto}</p>
+                      )}
+                      <p className="mt-2 text-[13px] leading-[18px] text-tinta2">
+                        Al aceptar se crea en el espacio y entra en el reparto con su ficha v1 en
+                        borrador. La descripción y la aprobación las haces tú.
+                      </p>
+                    </>
+                  )}
+
+                  {item.tipo === "campo" && (
                     <>
                       <div className="mb-2 text-[13px] font-medium text-tinta2">
                         {ETIQUETA_CAMPO[item.destino_campo] || item.destino_campo}
@@ -134,11 +244,17 @@ export default function PanelAsistente({ proyectoId, tipo, desActual, onAplicado
                       />
                     </>
                   )}
+
                   <div className="mt-2 flex gap-2">
                     <Boton pequeno data-testid="btn-aceptar-parte" onClick={() => resolver(item, "aceptar")}>
                       Aceptar
                     </Boton>
-                    <Boton pequeno variante="secundario" data-testid="btn-descartar-parte" onClick={() => resolver(item, "descartar")}>
+                    <Boton
+                      pequeno
+                      variante="secundario"
+                      data-testid="btn-descartar-parte"
+                      onClick={() => resolver(item, "descartar")}
+                    >
                       Descartar
                     </Boton>
                   </div>

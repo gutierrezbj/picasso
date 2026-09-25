@@ -10,6 +10,8 @@
 #   obligatorio  true | false
 #   pantalla     idea | elementos | guion | lienzo | montaje
 #   clase        (solo pantalla=elementos) personaje | producto | objeto | escenario | null
+#   campo_desarrollo  (opcional) campo del Desarrollo que también se edita en ese paso
+#   requiere_referencia (opcional) el paso exige al menos una referencia en la ficha
 #   fase         fase en la que se construye ese paso (para el texto de la pantalla mínima)
 
 corto:
@@ -30,6 +32,7 @@ corto:
       obligatorio: true
       pantalla: elementos
       clase: escenario
+      campo_desarrollo: mundo
       fase: 3
     - clave: personajes
       nombre: Personajes
@@ -87,6 +90,7 @@ anuncio:
       obligatorio: true
       pantalla: elementos
       clase: producto
+      requiere_referencia: true
       fase: 3
     - clave: personajes
       nombre: Personajes
@@ -178,6 +182,7 @@ serie:
       obligatorio: true
       pantalla: elementos
       clase: escenario
+      campo_desarrollo: mundo
       fase: 3
     - clave: personajes
       nombre: Personajes

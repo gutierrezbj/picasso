@@ -7,22 +7,50 @@ import json
 import os
 import uuid
 
-TAREAS = {"hacer_preguntas", "proponer_campo", "ordenar_notas"}
+TAREAS = {"hacer_preguntas", "proponer_campo", "ordenar_notas", "detectar_elementos"}
+
+CLASES_ELEMENTO = {"personaje", "producto", "objeto", "escenario"}
 
 # Campos del Desarrollo que una propuesta puede rellenar.
 CAMPOS_VALIDOS = {"intencion", "publico", "mensaje", "tono", "premisa", "mundo", "arco_general", "notas"}
 
 
-def _parte(destino, texto, modo="reemplazar", tipo="campo", pregunta=None):
+def _parte(destino, texto, modo="reemplazar", tipo="campo", pregunta=None, clase=None, nombre=None):
     return {
         "id": uuid.uuid4().hex,
-        "tipo": tipo,  # campo | pregunta
+        "tipo": tipo,  # campo | pregunta | elemento
         "pregunta": pregunta,
         "destino_campo": destino,
         "texto": texto,
         "modo": modo,
+        "clase": clase,
+        "nombre": nombre,
         "estado": "pendiente",
     }
+
+
+_PALABRAS_IGNORADAS = {
+    "El", "La", "Los", "Las", "Un", "Una", "Unos", "Unas", "Y", "O", "Pero", "Que",
+    "Qué", "Cuando", "Cuándo", "Donde", "Dónde", "Como", "Cómo", "Si", "No", "En",
+    "De", "Del", "Al", "A", "Con", "Por", "Para", "Se", "Su", "Sus", "Es", "Son",
+    "Este", "Esta", "Esto", "Ese", "Esa", "Aquel", "Todo", "Toda", "Hay", "Ya",
+}
+
+
+def _candidatos_nombre(texto: str, existentes: set[str]) -> list[str]:
+    """Nombres propios que aparecen en el desarrollo y no están en el proyecto.
+    Extracción literal: no inventa nada que el usuario no haya escrito."""
+    import re
+
+    vistos: list[str] = []
+    bajas = {n.lower() for n in existentes}
+    for palabra in re.findall(r"\b[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ'’-]{2,}\b", texto or ""):
+        if palabra in _PALABRAS_IGNORADAS:
+            continue
+        if palabra.lower() in bajas or palabra in vistos:
+            continue
+        vistos.append(palabra)
+    return vistos[:5]
 
 
 def estado_asistente() -> dict:
@@ -60,6 +88,28 @@ class Simulado:
                 "conecta un modelo real (ProveedorTexto, §10) para propuestas de verdad."
             )
             return [_parte(campo, texto)]
+        if tarea == "detectar_elementos":
+            clase = contexto.get("clase")
+            if clase not in CLASES_ELEMENTO:
+                return []
+            fuente = " ".join(
+                str(des.get(k) or "")
+                for k in ("intencion", "premisa", "mundo", "mensaje", "arco_general", "notas")
+            )
+            fuente += " " + " ".join(str(v or "") for v in (des.get("respuestas_formato") or {}).values())
+            existentes = set(contexto.get("nombres_en_proyecto") or [])
+            nombres = _candidatos_nombre(fuente, existentes)
+            return [
+                _parte(
+                    None,
+                    f"Propuesta simulada: «{n}» aparece escrito en tu desarrollo. "
+                    "La descripción la escribes tú; el proveedor simulado no inventa contenido.",
+                    tipo="elemento",
+                    clase=clase,
+                    nombre=n,
+                )
+                for n in nombres
+            ]
         return []
 
 
@@ -80,8 +130,10 @@ class Anthropic:
             '{"partes":[...]}. '
             "Para la tarea hacer_preguntas, cada parte es una pregunta: "
             '{"tipo":"pregunta","pregunta":"<texto de la pregunta>"} (no rellenes respuesta). '
-            "Para proponer_campo y ordenar_notas, cada parte propone texto para un campo: "
+            'Para proponer_campo y ordenar_notas, cada parte propone texto para un campo: '
             '{"tipo":"campo","destino_campo":"<campo>","texto":"<texto>","modo":"reemplazar|anadir"}. '
+            'Para detectar_elementos, cada parte es un elemento que el desarrollo menciona: '
+            '{"tipo":"elemento","nombre":"<nombre>","texto":"<por qué lo propones>"}. '
             f"Campos válidos: {sorted(CAMPOS_VALIDOS)}. "
             "No inventes escenas, planos ni datos de otros proyectos."
         )
@@ -89,6 +141,10 @@ class Anthropic:
             "hacer_preguntas": "Haz 3 preguntas breves para aclarar la idea.",
             "ordenar_notas": "Reparte las notas libres del usuario en los campos que correspondan.",
             "proponer_campo": f"Propón un texto para el campo «{campo}».",
+            "detectar_elementos": (
+                f"Propón los elementos de clase «{contexto.get('clase')}» que el desarrollo menciona "
+                f"y que no están ya en el proyecto. Ya están: {contexto.get('nombres_en_proyecto')}."
+            ),
         }[tarea]
         prompt = f"{tarea_txt}\n\nContexto del proyecto (JSON):\n{json.dumps(contexto, ensure_ascii=False)}"
 
@@ -104,9 +160,9 @@ class Anthropic:
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as ex:
                 texto = ex.submit(lambda: asyncio.run(_run())).result()
-        return self._parsear(texto, campo)
+        return self._parsear(texto, campo, contexto.get("clase"))
 
-    def _parsear(self, texto: str, campo: str | None) -> list[dict]:
+    def _parsear(self, texto: str, campo: str | None, clase: str | None = None) -> list[dict]:
         try:
             ini = texto.index("{")
             fin = texto.rindex("}") + 1
@@ -115,6 +171,17 @@ class Anthropic:
             for p in datos.get("partes", []):
                 if p.get("tipo") == "pregunta" and p.get("pregunta"):
                     partes.append(_parte(None, "", tipo="pregunta", pregunta=str(p["pregunta"]).strip()))
+                    continue
+                if p.get("tipo") == "elemento" and p.get("nombre"):
+                    partes.append(
+                        _parte(
+                            None,
+                            str(p.get("texto") or "").strip(),
+                            tipo="elemento",
+                            clase=clase,
+                            nombre=str(p["nombre"]).strip(),
+                        )
+                    )
                     continue
                 destino = p.get("destino_campo")
                 if destino in CAMPOS_VALIDOS and p.get("texto"):

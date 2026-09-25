@@ -8,6 +8,7 @@ import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import Selector from "../componentes/Selector";
+import SubidorMedios from "../componentes/SubidorMedios";
 import { useEspacio, useProyectos, useRecorridos, useCrearProyecto } from "../api/hooks";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
@@ -90,10 +91,52 @@ function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }) {
   );
 }
 
+function BloqueImagenEspacio({ espacio, clave, etiqueta, ayuda, onAsignar }) {
+  const medioId = espacio[clave];
+  return (
+    <Campo etiqueta={etiqueta} ayuda={ayuda}>
+      <div className="flex items-center gap-4">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-card border border-linea bg-superficie2">
+          {medioId ? (
+            <img
+              src={api.urlMedio(medioId)}
+              alt={etiqueta}
+              className="h-full w-full object-cover"
+              data-testid={`imagen-${clave}`}
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-[13px] text-tinta3">—</div>
+          )}
+        </div>
+        <div className="flex flex-col gap-2">
+          <SubidorMedios
+            espacioId={espacio.id}
+            acepta="image/*"
+            texto={medioId ? "Cambiar" : "Subir"}
+            testid={`subir-${clave}`}
+            onSubido={(creados) => onAsignar(clave, creados[0].id)}
+          />
+          {medioId && (
+            <Boton
+              pequeno
+              variante="texto"
+              data-testid={`quitar-${clave}`}
+              onClick={() => onAsignar(clave, "")}
+            >
+              Quitar
+            </Boton>
+          )}
+        </div>
+      </div>
+    </Campo>
+  );
+}
+
 function DialogoIdentidad({ abierto, onCerrar, espacio }) {
   const qc = useQueryClient();
   const [nombre, setNombre] = useState(espacio.nombre);
   const [notas, setNotas] = useState(espacio.notas_de_marca || "");
+  const [error, setError] = useState(null);
   const updatedRef = useRef(espacio.updated_at);
 
   useEffect(() => {
@@ -118,6 +161,22 @@ function DialogoIdentidad({ abierto, onCerrar, espacio }) {
     { activo: abierto }
   );
 
+  const asignar = async (clave, medioId) => {
+    setError(null);
+    try {
+      const actualizado = await api.editarEspacio(espacio.id, {
+        [clave]: medioId,
+        updated_at: updatedRef.current,
+      });
+      updatedRef.current = actualizado.updated_at;
+      qc.setQueryData(["espacio", espacio.id], actualizado);
+      qc.invalidateQueries({ queryKey: ["estudio"] });
+      qc.invalidateQueries({ queryKey: ["biblioteca", espacio.id] });
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   return (
     <Dialogo abierto={abierto} onCerrar={onCerrar} titulo="Identidad del espacio" data-testid="dialogo-identidad">
       <div className="flex flex-col gap-6">
@@ -136,8 +195,31 @@ function DialogoIdentidad({ abierto, onCerrar, espacio }) {
             onChange={(e) => setNotas(e.target.value)}
           />
         </Campo>
+        <BloqueImagenEspacio
+          espacio={espacio}
+          clave="logo_id"
+          etiqueta="Logo"
+          ayuda="Se ve en la cabecera del espacio."
+          onAsignar={asignar}
+        />
+        <BloqueImagenEspacio
+          espacio={espacio}
+          clave="portada_id"
+          etiqueta="Portada"
+          ayuda="Se ve en la tarjeta del espacio en la apertura."
+          onAsignar={asignar}
+        />
+        {error && (
+          <p className="text-[14px] leading-[20px] text-error" data-testid="error-identidad">
+            {error}
+          </p>
+        )}
         <p className="text-[13px] leading-[18px] text-tinta2">
-          El logo y la portada llegan con el subsistema de medios (Fase 3).
+          El material del cliente se sube en la{" "}
+          <Link to={`/e/${espacio.id}/biblioteca`} className="text-acento underline underline-offset-2">
+            biblioteca del espacio
+          </Link>
+          .
         </p>
         <div className="flex justify-end">
           <Boton variante="secundario" onClick={onCerrar}>
@@ -173,8 +255,17 @@ export default function Espacio() {
       <main className="mx-auto w-full max-w-[1120px] px-6 py-10 md:px-10">
         <header className="mb-10 flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-card bg-acentoSuave text-[22px] font-semibold text-acentoTinta">
-              {espacio.nombre.charAt(0).toUpperCase()}
+            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-card bg-acentoSuave text-[22px] font-semibold text-acentoTinta">
+              {espacio.logo_id || espacio.portada_id ? (
+                <img
+                  src={api.urlMedio(espacio.logo_id || espacio.portada_id)}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  data-testid="identidad-espacio-imagen"
+                />
+              ) : (
+                espacio.nombre.charAt(0).toUpperCase()
+              )}
             </div>
             <div>
               <h1 className="text-[30px] leading-[38px] font-semibold text-tinta">{espacio.nombre}</h1>

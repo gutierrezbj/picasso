@@ -39,6 +39,29 @@ class FormatoVideo(str, Enum):
     v4_5 = "4:5"
 
 
+class ClaseElemento(str, Enum):
+    personaje = "personaje"
+    producto = "producto"
+    objeto = "objeto"
+    escenario = "escenario"
+
+
+class ClaseMedio(str, Enum):
+    imagen = "imagen"
+    video = "video"
+    audio = "audio"
+    documento = "documento"
+
+
+class RolReferencia(str, Enum):
+    frontal = "frontal"
+    perfil = "perfil"
+    espalda = "espalda"
+    detalle = "detalle"
+    entorno = "entorno"
+    otra = "otra"
+
+
 # --- Espacio ---
 
 
@@ -53,6 +76,8 @@ class EspacioEditar(BaseModel):
     nombre: Optional[str] = None
     descripcion: Optional[str] = None
     notas_de_marca: Optional[str] = None
+    portada_id: Optional[str] = None
+    logo_id: Optional[str] = None
     archivado: Optional[bool] = None
     updated_at: str  # esperado, para detectar conflicto (409)
 
@@ -63,6 +88,8 @@ class Espacio(BaseModel):
     tipo_espacio: TipoEspacio
     descripcion: Optional[str] = None
     notas_de_marca: Optional[str] = None
+    portada_id: Optional[str] = None
+    logo_id: Optional[str] = None
     archivado: bool = False
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
@@ -143,9 +170,125 @@ class Desarrollo(BaseModel):
 
 class PeticionAsistente(BaseModel):
     campo: Optional[str] = None  # para proponer_campo
+    clase: Optional[ClaseElemento] = None  # para detectar_elementos
 
 
 class AceptarParte(BaseModel):
     accion: str  # aceptar | descartar
     texto: Optional[str] = None  # texto editado por el usuario al aceptar
     destino_campo: Optional[str] = None  # campo elegido para una respuesta a pregunta
+
+
+# --- Medio (§3.1) ---
+
+
+class Medio(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    espacio_id: str
+    clase: ClaseMedio
+    ruta: str
+    mime: str
+    nombre_original: Optional[str] = None
+    etiqueta: Optional[str] = None
+    ancho: Optional[int] = None
+    alto: Optional[int] = None
+    duracion_s: Optional[float] = None
+    origen: str = "importado"  # importado | generado
+    operacion_id: Optional[str] = None
+    etiqueta_demo: bool = False
+    hash: str
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+# --- Elemento y FichaVersion (§3.1) ---
+
+
+class Referencia(BaseModel):
+    medio_id: str
+    rol: RolReferencia = RolReferencia.otra
+
+
+class ElementoCrear(BaseModel):
+    clase: ClaseElemento
+    nombre: str
+
+
+class ElementoEditar(BaseModel):
+    nombre: Optional[str] = None
+    updated_at: str
+
+
+class Elemento(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    espacio_id: str
+    clase: ClaseElemento
+    nombre: str
+    ficha_vigente: int = 1
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class Voz(BaseModel):
+    proveedor: Optional[str] = None
+    voice_id: Optional[str] = None
+    ajustes: dict = Field(default_factory=dict)
+
+
+class FichaEditar(BaseModel):
+    """Solo se puede editar una ficha en `borrador`. Aprobar la congela."""
+
+    descripcion: Optional[str] = None
+    rasgos_fijos: Optional[list[str]] = None
+    rasgos_variables: Optional[list[str]] = None
+    referencias: Optional[list[Referencia]] = None
+    personalidad: Optional[str] = None
+    voz: Optional[Voz] = None
+    materiales_colores: Optional[str] = None
+    ambiente: Optional[str] = None
+    distribucion: Optional[str] = None
+    nota_cambio: Optional[str] = None
+    updated_at: str
+
+
+class FichaVersion(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    elemento_id: str
+    version: int
+    descripcion: Optional[str] = None
+    rasgos_fijos: list[str] = Field(default_factory=list)
+    rasgos_variables: list[str] = Field(default_factory=list)
+    referencias: list[Referencia] = Field(default_factory=list)
+    personalidad: Optional[str] = None
+    voz: Optional[Voz] = None
+    materiales_colores: Optional[str] = None
+    ambiente: Optional[str] = None
+    distribucion: Optional[str] = None
+    nota_cambio: Optional[str] = None
+    estado: str = "borrador"  # borrador | aprobada
+    aprobada_en: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+# --- Reparto (§3.1) ---
+
+
+class RepartoCrear(BaseModel):
+    elemento_id: str
+    papel: Optional[str] = None
+
+
+class RepartoEditar(BaseModel):
+    version_ficha: Optional[int] = None
+    papel: Optional[str] = None
+
+
+class Reparto(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    proyecto_id: str
+    elemento_id: str
+    version_ficha: int
+    papel: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)

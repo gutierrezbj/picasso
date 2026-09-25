@@ -35,11 +35,13 @@ export default function Desarrollo() {
   useEffect(() => {
     if (data?.proyecto) {
       api.guardarUbicacion(proyectoId, `/p/${proyectoId}/idea`).catch(() => {});
-      document.title = `${(recorrido.pasos.find((p) => p.pantalla === "idea") || {}).nombre || "Idea"} · ${data.proyecto.nombre} · Picasso`;
+      const pasoIdea = data.recorrido.pasos.find((p) => p.pantalla === "idea");
+      document.title = `${pasoIdea?.nombre || "Idea"} · ${data.proyecto.nombre} · Picasso`;
     }
     return () => {
       document.title = "Estudio";
     };
+    // eslint-disable-next-line
   }, [data?.proyecto?.id, proyectoId]);
 
   useAutoguardado(
@@ -161,7 +163,13 @@ export default function Desarrollo() {
           <SiguientePaso proyectoId={proyectoId} paso={paso} siguiente={siguiente} />
         </div>
 
-        <PanelAsistente proyectoId={proyectoId} tipo={tipo} desActual={des} onAplicado={recargarDesarrollo} />
+        <PanelAsistente
+          proyectoId={proyectoId}
+          tipo={tipo}
+          desActual={des}
+          preguntasFormato={preguntas}
+          onAplicado={recargarDesarrollo}
+        />
       </main>
     </div>
   );

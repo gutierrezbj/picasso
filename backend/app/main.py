@@ -3,7 +3,19 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import ajustes, asistente, desarrollo, espacios, estudio, formatos, proyectos
+from app.api import (
+    ajustes,
+    asistente,
+    biblioteca,
+    desarrollo,
+    elementos,
+    espacios,
+    estudio,
+    formatos,
+    medios,
+    proyectos,
+    reparto,
+)
 
 app = FastAPI(title="studio")
 
@@ -22,6 +34,10 @@ app.include_router(ajustes.router)
 app.include_router(desarrollo.router)
 app.include_router(formatos.router)
 app.include_router(asistente.router)
+app.include_router(medios.router)
+app.include_router(elementos.router)
+app.include_router(reparto.router)
+app.include_router(biblioteca.router)
 
 
 @app.get("/api/salud")

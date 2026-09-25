@@ -10,7 +10,11 @@ export default function BarraRecorrido({ proyectoId, recorrido }) {
   const { pasos, paso_actual } = recorrido;
 
   return (
-    <div className="border-b border-linea bg-superficie2 px-6 py-3" data-testid="barra-recorrido">
+    <div
+      className="sticky z-30 border-b border-linea bg-superficie2/95 px-6 py-3 backdrop-blur"
+      style={{ top: "var(--header-height)" }}
+      data-testid="barra-recorrido"
+    >
       <ol className="flex flex-wrap items-stretch gap-2">
         {pasos.map((p, i) => {
           const actual = p.clave === paso_actual;

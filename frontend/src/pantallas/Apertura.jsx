@@ -8,13 +8,24 @@ import Dialogo from "../componentes/Dialogo";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import Selector from "../componentes/Selector";
 import { useEstudio, useCrearEspacio } from "../api/hooks";
+import { api } from "../api/cliente";
 import { NOMBRE_TIPO, NOMBRE_TIPO_ESPACIO } from "../lib/formato";
 
-function Inicial({ nombre }) {
-  const letra = (nombre || "?").trim().charAt(0).toUpperCase();
+function Inicial({ espacio }) {
+  const medioId = espacio.portada_id || espacio.logo_id;
+  const letra = (espacio.nombre || "?").trim().charAt(0).toUpperCase();
   return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-card bg-acentoSuave text-[22px] font-semibold text-acentoTinta">
-      {letra}
+    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-card bg-acentoSuave text-[22px] font-semibold text-acentoTinta">
+      {medioId ? (
+        <img
+          src={api.urlMedio(medioId)}
+          alt=""
+          className="h-full w-full object-cover"
+          data-testid={`portada-${espacio.id}`}
+        />
+      ) : (
+        letra
+      )}
     </div>
   );
 }
@@ -25,17 +36,32 @@ function DialogoNuevoEspacio({ abierto, onCerrar }) {
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("cliente");
   const [notas, setNotas] = useState("");
+  const [archivo, setArchivo] = useState(null);
+  const [error, setError] = useState(null);
+  const [ocupado, setOcupado] = useState(false);
 
   const enviar = async (e) => {
     e.preventDefault();
     if (!nombre.trim()) return;
-    const esp = await crear.mutateAsync({
-      nombre: nombre.trim(),
-      tipo_espacio: tipo,
-      notas_de_marca: notas.trim() || null,
-    });
-    onCerrar();
-    navegar(`/e/${esp.id}`);
+    setError(null);
+    setOcupado(true);
+    try {
+      const esp = await crear.mutateAsync({
+        nombre: nombre.trim(),
+        tipo_espacio: tipo,
+        notas_de_marca: notas.trim() || null,
+      });
+      if (archivo) {
+        const medio = await api.subirMedio(esp.id, archivo);
+        await api.editarEspacio(esp.id, { portada_id: medio.id, updated_at: esp.updated_at });
+      }
+      onCerrar();
+      navegar(`/e/${esp.id}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setOcupado(false);
+    }
   };
 
   return (
@@ -63,6 +89,15 @@ function DialogoNuevoEspacio({ abierto, onCerrar }) {
             ]}
           />
         </Campo>
+        <Campo etiqueta="Portada o logo (opcional)" ayuda="Una imagen para reconocer el espacio.">
+          <input
+            type="file"
+            accept="image/*"
+            data-testid="input-portada-espacio"
+            onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+            className="text-[14px] leading-[20px] text-tinta2"
+          />
+        </Campo>
         <Campo etiqueta="Notas de marca (opcional)" ayuda="Tono, qué se puede y qué no.">
           <AreaTexto
             data-testid="input-notas-espacio"
@@ -70,11 +105,16 @@ function DialogoNuevoEspacio({ abierto, onCerrar }) {
             onChange={(e) => setNotas(e.target.value)}
           />
         </Campo>
+        {error && (
+          <p className="text-[14px] leading-[20px] text-error" data-testid="error-nuevo-espacio">
+            {error}
+          </p>
+        )}
         <div className="flex justify-end gap-3">
           <Boton type="button" variante="secundario" onClick={onCerrar}>
             Cancelar
           </Boton>
-          <Boton type="submit" data-testid="btn-crear-espacio" disabled={!nombre.trim() || crear.isPending}>
+          <Boton type="submit" data-testid="btn-crear-espacio" disabled={!nombre.trim() || ocupado}>
             Crear espacio
           </Boton>
         </div>
@@ -180,7 +220,7 @@ export default function Apertura() {
                   className="flex flex-col gap-4 rounded-panel bg-superficie p-6 text-left shadow-card transition-[box-shadow] duration-[180ms] ease-suave hover:shadow-context focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
                 >
                   <div className="flex items-center gap-4">
-                    <Inicial nombre={e.nombre} />
+                    <Inicial espacio={e} />
                     <div className="min-w-0">
                       <div className="truncate text-[18px] leading-[24px] font-semibold text-tinta">{e.nombre}</div>
                       <div className="text-[14px] leading-[20px] text-tinta2">{NOMBRE_TIPO_ESPACIO[e.tipo_espacio]}</div>

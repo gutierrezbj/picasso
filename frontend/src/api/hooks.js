@@ -16,6 +16,26 @@ export const useFormato = (tipo) =>
   useQuery({ queryKey: ["formato", tipo], queryFn: () => api.formatos(tipo), enabled: !!tipo });
 export const useAsistenteEstado = () =>
   useQuery({ queryKey: ["asistente-estado"], queryFn: api.asistenteEstado });
+export const useMedios = (espacioId, clase) =>
+  useQuery({
+    queryKey: ["medios", espacioId, clase || "todos"],
+    queryFn: () => api.medios(espacioId, clase),
+    enabled: !!espacioId,
+  });
+export const useElementos = (espacioId, clase) =>
+  useQuery({
+    queryKey: ["elementos", espacioId, clase || "todos"],
+    queryFn: () => api.elementos(espacioId, clase),
+    enabled: !!espacioId,
+  });
+export const useReparto = (proyectoId, clase) =>
+  useQuery({
+    queryKey: ["reparto", proyectoId, clase || "todos"],
+    queryFn: () => api.reparto(proyectoId, clase),
+    enabled: !!proyectoId,
+  });
+export const useBiblioteca = (espacioId) =>
+  useQuery({ queryKey: ["biblioteca", espacioId], queryFn: () => api.biblioteca(espacioId), enabled: !!espacioId });
 
 export function useCrearEspacio() {
   const qc = useQueryClient();

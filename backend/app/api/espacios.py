@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
+from app.almacen import almacen
 from app.db import db, sin_id
 from app.dominio import recorridos
+from app.dominio.estado import completado_de
 from app.dominio.modelos import (
     Espacio,
     EspacioCrear,
@@ -19,7 +21,7 @@ async def _resumen_espacio(esp: dict) -> dict:
     num = len(proyectos)
     en_curso = 0
     for p in proyectos:
-        estado = recorridos.calcular(p)
+        estado = recorridos.calcular(p, await completado_de(db, p))
         if estado["paso_actual"] is not None:
             en_curso += 1
     return {**esp, "num_proyectos": num, "num_en_curso": en_curso}
@@ -56,6 +58,10 @@ async def editar_espacio(espacio_id: str, datos: EspacioEditar):
     if doc["updated_at"] != datos.updated_at:
         raise HTTPException(409, "El espacio se ha modificado en otro sitio. Recarga o sobrescribe.")
     cambios = {k: v for k, v in datos.model_dump(exclude={"updated_at"}).items() if v is not None}
+    # "" significa quitar la portada o el logo.
+    for clave in ("portada_id", "logo_id"):
+        if cambios.get(clave) == "":
+            cambios[clave] = None
     cambios["updated_at"] = ahora()
     await db.espacios.update_one({"_id": espacio_id}, {"$set": cambios})
     doc = await db.espacios.find_one({"_id": espacio_id})
@@ -64,6 +70,16 @@ async def editar_espacio(espacio_id: str, datos: EspacioEditar):
 
 @router.delete("/espacios/{espacio_id}", status_code=204)
 async def borrar_espacio(espacio_id: str):
+    proyectos = await db.proyectos.find({"espacio_id": espacio_id}).to_list(1000)
+    ids = [p["_id"] for p in proyectos]
+    elementos = await db.elementos.find({"espacio_id": espacio_id}).to_list(2000)
+    await db.reparto.delete_many({"proyecto_id": {"$in": ids}})
+    await db.desarrollos.delete_many({"_id": {"$in": ids}})
+    await db.fichas.delete_many({"elemento_id": {"$in": [e["_id"] for e in elementos]}})
+    await db.elementos.delete_many({"espacio_id": espacio_id})
+    for m in await db.medios.find({"espacio_id": espacio_id}).to_list(5000):
+        almacen.borrar(m["ruta"])
+    await db.medios.delete_many({"espacio_id": espacio_id})
     await db.proyectos.delete_many({"espacio_id": espacio_id})
     await db.espacios.delete_one({"_id": espacio_id})
     return None

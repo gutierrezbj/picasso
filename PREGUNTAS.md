@@ -31,7 +31,9 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   (`.env.example`, §15.4). Se añade `DB_NAME` a las variables por requisito de la
   plataforma (el §15.4 no lo listaba).
 
-- **PENDIENTE (Fase 2, §10)**: Conexión del asistente a un modelo real
+## Fase 2 · Desarrollo y asistente
+
+- **PENDIENTE (§10)**: Conexión del asistente a un modelo real
   (`ProveedorTexto`, §10) para uso por defecto. Por decisión del usuario el asistente
   se mantiene en **`simulado`** durante la revisión; las propuestas simuladas se
   muestran como tales ("Propuesta simulada para <campo>", texto de relleno evidente).
@@ -39,14 +41,11 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   active. La ruta Anthropic (`claude-sonnet-5` vía Universal Key) está implementada y
   verificada una vez; el valor por defecto de `modelo_asistente` es ahora `simulado`
   (el §10 fija Claude por defecto → desviación temporal registrada aquí).
-
-- **PENDIENTE (Fase 3)**: Portada/logo del espacio. El formulario de "Nuevo espacio"
-  (§5.1) menciona "portada o logo opcional" y las tarjetas de espacio (P1) muestran
-  "portada o logo". Pero la subida de medios (entidad `Medio` + almacén) está en la
-  **Fase 3**. Decisión tomada para no construir medios fuera de su fase: en Fase 1 el
-  espacio se crea con nombre, tipo y notas de marca; la portada/logo llega con el
-  subsistema de medios en la Fase 3. Las tarjetas muestran una superficie neutra con
-  la inicial del nombre mientras tanto.
+- **CORRECCIÓN de un resumen anterior**: se dijo que el asistente muestra el coste
+  antes de ejecutar. **No lo hace y el documento no lo pide**: el §10 no habla de
+  coste; el coste visible antes de ejecutar es del **motor** (§9, Fase 6) y de
+  "Preparar referencias" (§4.3.3, Fase 6). El asistente solo avisa de que el
+  proveedor es `simulado`.
 
 - **RESUELTO por el usuario (a construir en Fase 4, §6.3 y §13)**: Edición de un guion
   aprobado. No es (a) literal ni (b) corrección menor. La decisión es la opción **(c)
@@ -57,3 +56,79 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 - **PENDIENTE (cosmético)**: Etiqueta del estado `guion` de la Pieza en proyectos de
   tipo `imagen`. Resuelto por el usuario: el paso y su estado se llaman
   "Encargo de imagen", nunca "Guion". Aplicado en `recorridos.yaml`.
+
+## Fase 3 · Pasos de elementos, fichas, biblioteca y medios
+
+- **RESUELTO por el usuario (Fase 1 → hecho en Fase 3)**: Portada y logo del espacio.
+  Quedó aplazado porque dependía del subsistema de medios. Ya está construido: se
+  suben desde `Identidad del espacio` (P2) y desde el formulario de `Nuevo espacio`
+  (P1). Las tarjetas de espacio muestran la portada o, si no hay, el logo; la cabecera
+  del espacio muestra el logo o, si no hay, la portada.
+
+- **DESVIACIÓN (acordada, decisión del usuario)**: El §15.1 fija el almacén de medios
+  en sistema de ficheros bajo `DATA_DIR/media/<espacio>/<medio_id>.<ext>`. Se construye
+  así, detrás de la interfaz `Almacen` (`backend/app/almacen/`), con una única
+  implementación `AlmacenLocal`. **Aviso honesto**: en el entorno de previsualización
+  el disco del contenedor no está garantizado como persistente, así que los archivos
+  subidos pueden desaparecer en un reinicio. El usuario asume que en su
+  infraestructura el volumen sí persiste. Cambiar a S3 compatible es añadir otra
+  implementación de `Almacen`; nada más del código cambia.
+
+- **PENDIENTE (§3.1 vs §6.2)**: El §3.1 define `FichaVersion` con
+  `materiales_colores?` para productos, pero **no** lista campos para escenario,
+  mientras que el §6.2 sí pide "ambiente y distribución (escenario)". Se han añadido
+  `ambiente?` y `distribucion?` a `FichaVersion` para poder cumplir el §6.2. Si el
+  §3.1 es la lista cerrada, habría que corregir uno de los dos apartados.
+
+- **PENDIENTE (§3.1)**: `voz` de un personaje es `{proveedor, voice_id, ajustes}`,
+  pero el catálogo de voces depende de los proveedores reales (ElevenLabs, §9.3,
+  Fase 9). En Fase 3 `proveedor` y `voice_id` son dos campos de texto libres y la
+  ayuda del campo lo dice. Falta decidir de dónde sale la lista de voces elegibles.
+
+- **RESUELTO por el usuario**: Paso «Mundo y escenarios». El §4.1 dice que en ese paso
+  se construye "Descripción del mundo (**en el Desarrollo**) y los escenarios". Decisión
+  del usuario: el campo «Mundo» se **muestra y edita también en la pantalla del paso**,
+  además de en Idea. Implementado como dato, no como código: el paso lleva
+  `campo_desarrollo: mundo` en `recorridos.yaml` (corto y serie).
+
+- **RESUELTO por el usuario**: `Actualizar a vN+1` (§6.2) dice que abre el análisis de
+  impacto del §13, pero el §13 se construye en la **Fase 8** y en Fase 3 todavía no hay
+  guion ni planos que invalidar. Decisión del usuario: en Fase 3 el botón **actualiza la
+  versión de ficha fijada en el reparto** y la interfaz avisa de que el análisis de
+  impacto llega en la Fase 8.
+
+- **PENDIENTE (§4.1, anuncio)**: El paso `Producto` está listo "con ficha aprobada **y al
+  menos una referencia**", condición que ningún otro paso de elementos tiene. Se ha
+  modelado como dato (`requiere_referencia: true` en `recorridos.yaml`) para no meter
+  una excepción en el código. Falta confirmar si es solo del anuncio o debería aplicarse
+  a más pasos.
+
+- **PENDIENTE**: El documento no dice qué pasa al **borrar un Medio que se usa como
+  referencia** en una ficha. Decisión, por coherencia con el §13 ("Borrar un elemento
+  del reparto: bloqueado si algún plano lo usa"): se **bloquea** y se listan los
+  elementos que lo usan. Igual con **borrar un Elemento** que está en algún reparto.
+
+- **PENDIENTE**: El documento no fija **requisitos mínimos para aprobar** una
+  `FichaVersion`. Decisión: se exige **descripción no vacía**; el resto de campos son
+  opcionales. Si debe exigirse más (por ejemplo una referencia en todas las clases),
+  hay que escribirlo.
+
+- **PENDIENTE (§10, `detectar_elementos`)**: Con el proveedor `simulado` la tarea no
+  puede "entender" el desarrollo: extrae **literalmente** las palabras con mayúscula
+  inicial que el usuario ha escrito y que no están ya en el proyecto, y las propone con
+  el aviso de que son propuestas simuladas. Por eso puede proponer ruido (por ejemplo
+  un verbo al principio de una frase). El trabajo de verdad lo hace el proveedor real
+  (§10) cuando el usuario lo active.
+
+- **PENDIENTE (§5, P3)**: La Biblioteca del espacio es "para consultar y **ordenar**
+  fuera de un proyecto". Interpretado como **filtrar por clase y ordenar** (por nombre o
+  por más recientes). No hay reordenación manual porque el documento no define ningún
+  orden que se guarde ni carpetas ni etiquetas.
+
+- **PENDIENTE**: El documento no fija un **tamaño máximo** por archivo subido. Límite
+  puesto en 25 MB por archivo, con error claro al superarlo.
+
+- **NO CONSTRUIDO A PROPÓSITO (Fase 6)**: `Preparar referencias` (hoja de personaje,
+  photobook del producto, lámina del escenario, §4.3.3 y §6.2). El botón se muestra
+  desactivado con el texto "Disponible cuando esté el motor (Fase 6)" y nada más, por
+  indicación del usuario.

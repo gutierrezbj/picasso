@@ -95,5 +95,8 @@ async def guardar_ubicacion(proyecto_id: str, datos: Ubicacion):
 
 @router.delete("/proyectos/{proyecto_id}", status_code=204)
 async def borrar_proyecto(proyecto_id: str):
+    await db.reparto.delete_many({"proyecto_id": proyecto_id})
+    await db.desarrollos.delete_one({"_id": proyecto_id})
+    await db.propuestas.delete_many({"proyecto_id": proyecto_id})
     await db.proyectos.delete_one({"_id": proyecto_id})
     return None

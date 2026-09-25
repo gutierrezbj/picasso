@@ -1,4 +1,8 @@
-# estado derivado: qué pasos están "listos" (Fase 2: solo el paso de Idea/Desarrollo)
+"""Estado derivado (§3.2): qué pasos están «listos». No se guarda a mano.
+
+Fase 3: además del paso de Idea, los pasos de elementos (P5).
+Los pasos de Guion, Lienzo y Montaje llegan en fases posteriores.
+"""
 from __future__ import annotations
 
 from app.dominio import recorridos
@@ -11,12 +15,43 @@ def paso_idea_clave(tipo: str) -> str | None:
     return None
 
 
+async def _reparto_listo(db, proyecto_id: str) -> list[dict]:
+    """Entradas del reparto cuya versión fijada está aprobada, con su ficha."""
+    entradas = await db.reparto.find({"proyecto_id": proyecto_id}).to_list(1000)
+    salida = []
+    for e in entradas:
+        el = await db.elementos.find_one({"_id": e["elemento_id"]})
+        if not el:
+            continue
+        ficha = await db.fichas.find_one(
+            {"elemento_id": e["elemento_id"], "version": e["version_ficha"]}
+        )
+        if not ficha or ficha["estado"] != "aprobada":
+            continue
+        salida.append({"clase": el["clase"], "ficha": ficha})
+    return salida
+
+
 async def completado_de(db, proyecto: dict) -> dict:
-    """Mapa clave_paso -> bool. En Fase 2 solo se puede completar el paso de Idea."""
-    completado = {}
+    """Mapa clave_paso -> bool."""
+    completado: dict[str, bool] = {}
+
     des = await db.desarrollos.find_one({"_id": proyecto["id"]})
     if des and des.get("estado") == "listo":
         clave = paso_idea_clave(proyecto["tipo"])
         if clave:
             completado[clave] = True
+
+    pasos = recorridos.RECORRIDOS[proyecto["tipo"]]["pasos"]
+    if any(p["pantalla"] == "elementos" for p in pasos):
+        aprobadas = await _reparto_listo(db, proyecto["id"])
+        for p in pasos:
+            if p["pantalla"] != "elementos":
+                continue
+            clase = p.get("clase")
+            candidatas = [a for a in aprobadas if clase is None or a["clase"] == clase]
+            if p.get("requiere_referencia"):
+                candidatas = [a for a in candidatas if a["ficha"].get("referencias")]
+            completado[p["clave"]] = bool(candidatas)
+
     return completado
