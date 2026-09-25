@@ -61,19 +61,20 @@
   --motion-view: 240ms;
   --motion-easing: cubic-bezier(0.2, 0, 0, 1);
 
-  /* Paleta provisional (PENDIENTE) — neutros cálidos + un acento arcilla */
-  --color-fondo: #f4f2ee;
+  /* Paleta A · Niebla con acento petróleo (modo claro) */
+  --color-fondo: #eaf1f1;
   --color-superficie: #ffffff;
-  --color-superficie-2: #faf8f4;
-  --color-tinta: #201d18;
-  --color-tinta-2: #6f685d;
-  --color-tinta-3: #9c968b;
-  --color-linea: #e6e1d8;
-  --color-acento: #9c5a3c;
-  --color-acento-tinta: #7d4023;
-  --color-acento-suave: #f3e7de;
+  --color-superficie-2: #f4f8f8;
+  --color-tinta: #1b2426;
+  --color-tinta-2: #5b6668;
+  --color-tinta-3: #9aa6a8;
+  --color-linea: #d5e0e1;
+  --color-acento: #1f4e5f;
+  --color-acento-tinta: #173c49;
+  --color-acento-suave: #dceaee;
   --color-exito: #3f6b4f;
-  --color-aviso: #9a6b16;
+  --color-aviso: #8a5a0b;
+  --color-error: #b42318;
 }
 
 * {
@@ -100,7 +101,7 @@ body {
 
 ::selection {
   background: var(--color-acento-suave);
-  color: var(--color-acento-tinta);
+  color: var(--color-acento);
 }
 
 :focus-visible {

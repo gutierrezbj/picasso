@@ -15,6 +15,7 @@ module.exports = {
         acentoSuave: "var(--color-acento-suave)",
         exito: "var(--color-exito)",
         aviso: "var(--color-aviso)",
+        error: "var(--color-error)",
       },
       fontFamily: {
         ui: "var(--font-ui)",

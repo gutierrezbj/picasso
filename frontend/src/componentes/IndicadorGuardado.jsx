@@ -21,7 +21,7 @@ export default function IndicadorGuardado() {
     );
   }
   return (
-    <span data-testid="indicador-guardado" className="flex items-center gap-2 text-[13px] leading-[18px] text-acentoTinta">
+    <span data-testid="indicador-guardado" className="flex items-center gap-2 text-[13px] leading-[18px] text-error">
       No se ha podido guardar
       <button
         data-testid="reintentar-guardado"

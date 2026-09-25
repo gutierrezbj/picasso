@@ -6,8 +6,8 @@ const MAPA = {
   listo: { texto: "Listo", Icono: CheckCircle2, color: "var(--color-exito)" },
   en_curso: { texto: "En curso", Icono: CircleDot, color: "var(--color-acento)" },
   pendiente: { texto: "Pendiente", Icono: Clock, color: "var(--color-tinta-2)" },
-  bloqueado: { texto: "Bloqueado", Icono: Lock, color: "var(--color-tinta-3)" },
-  no_hace_falta: { texto: "No hace falta", Icono: MinusCircle, color: "var(--color-tinta-3)" },
+  bloqueado: { texto: "Bloqueado", Icono: Lock, color: "var(--color-tinta-2)" },
+  no_hace_falta: { texto: "No hace falta", Icono: MinusCircle, color: "var(--color-tinta-2)" },
 };
 
 export default function EstadoPaso({ estado, className = "" }) {
