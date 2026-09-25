@@ -1,0 +1,22 @@
+{
+  "summary": "Se ejecutaron las 22 pruebas de UI de la Fase 3 (Picasso). Se creó espacio+proyecto corto de prueba (TEST_Espacio_UI/TEST_Corto_UI) y un segundo espacio+proyecto anuncio (TEST_Espacio_Anuncio/TEST_Anuncio_UI) para verificar aislamiento. Todo el flujo funciona correctamente: creación de espacios/proyectos, autoguardado (indicador «Guardado»), asistente con destinos ‘Formato · …’, barra del recorrido sticky, campo Mundo, creación y aprobación de fichas versionadas, subida de referencias con progreso, botón «Preparar referencias» desactivado con el texto correcto, versiones v1/v2 con aviso y actualización de versión fijada, paso opcional Objetos con «No hace falta» y recuperar, detectar_elementos, biblioteca P3 con pestañas, filtros, subida de medios, borrado bloqueado con mensajes claros, identidad del espacio (logo/portada), aislamiento entre espacios, producto que exige referencia y persistencia tras recarga. Todos los pasos completados sin errores JS (solo advertencias inocuas de react-router v7 flags).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "UX menor (no bloqueante): tras pulsar 'btn-crear-version' la ficha mostrada sigue siendo la versión fijada aprobada (solo lectura) porque 'versionSel' permanece null y 'fichaMostrada' usa versionSel || entrada.version_ficha. El usuario tiene que abrir 'select-version-ficha' y elegir manualmente la nueva vNueva para poder editarla. Sería más intuitivo que crearVersionFicha auto-seleccione la nueva versión (setVersionSel(nueva.version) en PasoElementos.jsx tras la mutación, o que FichaElemento devuelva la nueva versión al callback).",
+    "Consistencia visual menor: el estado del paso en la barra del recorrido tarda un instante en pasar a «Listo» inmediatamente tras aprobar la ficha; tras recargar sí sale «Listo». La invalidación de la query ['proyecto', proyectoId] ocurre pero puede haber una carrera con el render antes del refetch. No es un fallo funcional."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "100% de escenarios cubiertos"},
+  "test_credentials": "N/A (app sin autenticación)",
+  "seed_data_creation": "Creados dos espacios de prueba: TEST_Espacio_UI (Cliente) con proyecto TEST_Corto_UI (corto), y TEST_Espacio_Anuncio (Cliente) con proyecto TEST_Anuncio_UI (anuncio). En Corto: escenario TEST_Bosque aprobado v1 y v2, personaje TEST_Cazador aprobado, propuesta elementos aceptada (1 personaje adicional). En Anuncio: producto TEST_ProdX v2 aprobado con referencia. También varias imágenes de prueba en las bibliotecas de ambos espacios y logo/portada asignados al primer espacio.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Todos los flujos de Fase 3 verificados. Los datos de prueba TEST_* conviven con los datos previos (Espacio F3, Otro Espacio, Espacio 1). El único punto perfectible es la UX de crear versión nueva: la nueva versión no queda auto-seleccionada tras crearse."
+}

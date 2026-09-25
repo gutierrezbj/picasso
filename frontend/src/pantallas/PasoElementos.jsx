@@ -319,6 +319,7 @@ export default function PasoElementos() {
                 medios={medios || []}
                 espacioId={espacioId}
                 onElegirVersion={setVersionSel}
+                onVersionCreada={setVersionSel}
                 onCambiada={refrescar}
                 onMediosNuevos={() => qc.invalidateQueries({ queryKey: ["medios", espacioId] })}
                 onActualizarFijada={(v) =>

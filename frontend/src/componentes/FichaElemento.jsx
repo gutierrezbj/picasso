@@ -29,6 +29,7 @@ export default function FichaElemento({
   onCambiada,
   onMediosNuevos,
   onActualizarFijada,
+  onVersionCreada,
 }) {
   const editable = ficha.estado === "borrador";
   const [datos, setDatos] = useState({
@@ -157,7 +158,12 @@ export default function FichaElemento({
             pequeno
             variante="secundario"
             data-testid="btn-crear-version"
-            onClick={() => accion(() => api.crearVersionFicha(elemento.id))}
+            onClick={() =>
+              accion(async () => {
+                const nueva = await api.crearVersionFicha(elemento.id);
+                onVersionCreada?.(nueva.version);
+              })
+            }
           >
             <FilePlus2 size={16} strokeWidth={1.9} /> Crear versión nueva
           </Boton>
