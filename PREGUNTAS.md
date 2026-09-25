@@ -41,13 +41,11 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   subsistema de medios en la Fase 3. Las tarjetas muestran una superficie neutra con
   la inicial del nombre mientras tanto.
 
-- **PENDIENTE (decisión del usuario, necesaria para la Fase 4)**: Corrección menor de
-  un guion aprobado. El §13 dice, sin matices, que editar un guion aprobado lo devuelve
-  a `borrador`. Falta decidir si existe un camino de "corrección menor" (solo texto,
-  sin tocar estructura, orden, elementos, diálogos ni intención) que conserve la
-  aprobación. Opciones planteadas al usuario: (a) literal — cualquier edición devuelve
-  a borrador; (b) corrección menor que conserva `aprobado`. El usuario aún no ha
-  elegido. Comportamiento por defecto hasta entonces: (a) literal. No bloquea la Fase 1.
+- **RESUELTO por el usuario (a construir en Fase 4, §6.3 y §13)**: Edición de un guion
+  aprobado. No es (a) literal ni (b) corrección menor. La decisión es la opción **(c)
+  revisiones del guion**: el usuario la dejará escrita en el documento maestro (§6.3 y
+  §13) y se construirá en la **Fase 4** exactamente según lo que diga el documento. No
+  se implementa nada de esto por adelantado ni por cuenta del constructor.
 
 - **PENDIENTE (cosmético)**: Etiqueta del estado `guion` de la Pieza en proyectos de
   tipo `imagen`. Resuelto por el usuario: el paso y su estado se llaman
