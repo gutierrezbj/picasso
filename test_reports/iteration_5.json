@@ -1,0 +1,62 @@
+{
+  "summary": "Fase 4 (Guion P6) probada por interfaz en el espacio 'Pruebas del constructor' sobre los proyectos existentes (Corto/Serie/Imagen) más un proyecto en blanco temporal (TEST F4 Blank, luego borrado). Cubierto: pantalla del guion aprobado, iniciar/aprobar/descartar revisión, diálogo de diferencias con marcas obligatorias solo_texto/afecta_planos, chips del reparto (aria-pressed toggle) y su persistencia, panel-elemento-nuevo, capítulos de serie (crear, abrir, volver, borrar, numeración), encargo de imagen (formulario en revisión, revision-encargo con antes/ahora, marcas), lienzo-bloqueado con lista-falta y navegación a paso faltante, lienzo desbloqueado con aviso-fase, asistente proponer_escenas (propuestas simuladas con aceptar/descartar), leer-guion, títulos de pestaña. Espacio 1 y Proyecto 1 del usuario intactos; mongosh cleanup ejecutado y verificado: Retomar apunta a Espacio 1 · Proyecto 1 · Paso 1 · Idea.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/piezas/{id}/guion (diferencias) + POST iniciar_revision",
+        "issue": "Bug de detección de diferencias: al iniciar una revisión sobre un guion aprobado SIN editar nada, si las escenas aprobadas tienen algún campo Optional[str] guardado como null pero el frontend hace autoguardado con '' (por la normalización 'escena.sonido_previsto || \"\"' en TarjetaEscena.jsx línea 30), _diferencias() compara None vs '' y marca esas escenas como editadas con 'Sonido previsto: Antes — vacío — · Ahora — vacío —'. Reproducido en 'Corto de pruebas' (rev 2 → rev 3): edité SOLO una escena y el diálogo listó 3 editadas; hubo que marcar solo_texto en las tres. Igual en encargo (Imagen de pruebas): al abrir revisión y cambiar solo 'número de imágenes', la sección revision-encargo también añadió una línea 'Intención — vacío — → — vacío —'. Fix sugerido: normalizar None/'' como equivalentes dentro de _valor() en /app/backend/app/api/guiones.py (por ejemplo `return e.get(campo) or None if isinstance(e.get(campo), str) and e.get(campo) == '' else e.get(campo)` o directamente tratar '' y None como iguales en la comparación)."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Revisión del guion — marcas obligatorias",
+        "issue": "Se exige marcar solo_texto/afecta_planos en escenas que en realidad no cambiaron, por el bug de diff descrito arriba. Consecuencia UX: usuario obligado a decidir sobre cambios inexistentes.",
+        "affected_selectors": ["marca-<id>-solo_texto","marca-<id>-afecta_planos","btn-confirmar-revision","revision-editadas"]
+      }
+    ],
+    "design_issues": [
+      {"screen": "DialogoRevision (encargo)","issues": ["'aviso-marcas' dice literalmente 'Marca en cada escena editada…' también cuando la revisión es del ENCARGO de imagen (no hay escenas). Debería ser genérico o adaptarse."]}
+    ]
+  },
+  "results_per_flow": {
+    "F4_criterio_oficial_corto": "OK parcial — verificado sobre Corto de pruebas ya existente (rev 2 → rev 3): btn-editar-aprobado, aviso-revision, estado-guion 'Aprobado · revisión 2 · revisión en curso', escenas editables, editar 'qué ocurre' de una escena, abrir diálogo, marcar solo_texto en las 3 (por bug de diff), confirmar → 'Aprobado · revisión 3'. Escenas y numeración correctas.",
+    "lienzo_bloqueado": "OK — En TEST F4 Blank (proyecto corto sin Idea rellena): 'paso-minimo' + 'lienzo-bloqueado' + 'lista-falta' con enlaces falta-idea/falta-mundo/falta-personajes/falta-guion. Click en falta-idea navega a /idea correctamente.",
+    "lienzo_desbloqueado": "OK — En Corto de pruebas (todo obligatorio listo): no hay lienzo-bloqueado; se muestra aviso-fase 'Este paso se construye en la Fase 5.'",
+    "revisiones_guion": "OK — btn-editar-aprobado activa revisión (aviso-revision + estado-guion actualizado). Escenas antes de pulsar: SOLO LECTURA (0 inputs editables). Tras pulsar: 3 inputs de título editables. Diálogo lista revision-anadidas / revision-editadas / revision-eliminadas / revision-reordenadas. btn-confirmar-revision se HABILITA solo cuando todas las escenas editadas están marcadas. aviso-marcas visible.",
+    "descartar_revision": "OK — btn-descartar-revision-directo y btn-descartar-revision (en diálogo) restauran el estado aprobado; estado-guion vuelve a 'Aprobado · revisión N' sin 'revisión en curso'.",
+    "chips_solo_reparto": "OK — En cada escena editable 'escena-elementos-N' muestra un chip por cada elemento del reparto (3 elementos → 3 chips por escena). aria-pressed cambia al pulsar (true↔false). Persistencia verificada.",
+    "dialogos": "OK — inputs de diálogo presentes y con testids esperados. Hablantes esperados: Narrador + reparto (no probado exhaustivo por tiempo pero código lo confirma).",
+    "crear_elemento_desde_guion": "OK — crear-elemento-1 abre panel-elemento-nuevo con nuevo-elemento-clase (select con Personaje/Objeto/Producto/Escenario), nombre, descripción, btn-crear-elemento-desde-guion y aviso-elemento-nuevo.",
+    "asistente_guion": "OK — btn-proponer-escenas devuelve propuestas simuladas (2) con 'propuesta-titulo-escena' editable + btn-aceptar-parte + btn-descartar-parte + texto 'Escena simulada: el proveedor simulado no escribe guion'. select-clase-detectar y btn-detectar-elementos presentes.",
+    "encargo_imagen": "OK — Imagen de pruebas: 'encargo-imagen' visible, sin lista-escenas ni btn-anadir-escena. Título de pestaña: 'Encargo de imagen · Imagen de pruebas · Picasso'. Al pulsar btn-editar-aprobado aparecen encargo-que_se_muestra, encargo-composicion, encargo-intencion, encargo-numero. Diálogo revision-encargo muestra Antes/Ahora para 'Número de imágenes'. marca-encargo-solo_texto/afecta_planos habilitan btn-confirmar-revision.",
+    "capitulos_serie": "OK — Serie de pruebas: /guion sirve la pantalla-capitulos con lista-capitulos y btn-nuevo-capitulo. Diálogo dialogo-nuevo-capitulo con input-titulo-capitulo + input-dequeva-capitulo + btn-crear-capitulo. Capítulos numerados 1 y 2. abrir-capitulo-<id> entra en /guion/<id> con volver-capitulos y miga de pan actualizada. borrar-capitulo-<id> elimina el capítulo.",
+    "leer_guion": "OK — btn-leer-guion abre leer-guion con 3 leer-escena-<orden>.",
+    "titulos_pestana": "OK — 'Guion · Corto de pruebas · Picasso', 'Capítulos · Serie de pruebas · Picasso', 'Encargo de imagen · Imagen de pruebas · Picasso'. En el guion de un capítulo el título hereda 'Capítulos · Serie de pruebas · Picasso' (spec dice 'Capítulos · <proyecto> · Picasso' → correcto).",
+    "estas_aqui_guion": "OK — 'estas-aqui-guion' presente y único en la pantalla del guion. En capítulos: 'estas-aqui-capitulos' presente y único.",
+    "persistencia_retomar": "OK — Chips y ediciones persisten tras recargar. Tras cleanup mongosh, tarjeta-retomar muestra 'Espacio 1 · Proyecto 1 · Paso 1 de 7 · Idea' como esperado.",
+    "aislamiento_espacio1": "OK — Espacio 1 (0779d8d3bd92462fa9b687be29203a61) intacto: Proyecto 1 sigue en Paso 1 · Idea sin paso_actual, sin pasos_omitidos; biblioteca con 0 elementos y 0 medios."
+  },
+  "test_report_links": [],
+  "action_items": [
+    "PRIORIDAD ALTA — Corregir _diferencias en /app/backend/app/api/guiones.py (o normalizar en TarjetaEscena.jsx antes de enviar el patch) para que None y '' se traten como equivalentes en los campos Optional[str] (sonido_previsto, intencion, etc.). El bug provoca que al abrir una revisión y editar solo UN campo, se marquen como 'editadas' TODAS las escenas cuyo sonido_previsto (u otro Optional[str]) estaba null y el autoguardado del frontend lo escribió como '' — obligando al usuario a marcar solo_texto/afecta_planos en escenas realmente inalteradas. Igual efecto en el encargo de imagen (Intención — vacío — → — vacío —).",
+    "PRIORIDAD BAJA — 'aviso-marcas' en DialogoRevision usa el texto 'Marca en cada escena editada…' incluso cuando la revisión es de un ENCARGO de imagen (no hay escenas). Adaptar el copy para tipo imagen."
+  ],
+  "critical_code_review_comments": [
+    "TarjetaEscena.jsx (línea 30): `sonido_previsto: escena.sonido_previsto || \"\"` normaliza null → '' y luego el autoguardado envía '' al backend, alterando el valor almacenado en la aprobada al iniciar una revisión (Escena Pydantic acepta '' como string). Combinado con `_valor` en guiones.py que hace comparación estricta, produce falsos positivos en el diff.",
+    "guiones.py _valor(): comparación directa sin normalizar None/''; sugerido devolver `v or None` cuando el campo es Optional[str] para robustez.",
+    "Guion.jsx: la ruta serie/capítulos usa /guion tanto para lista como para un capítulo (/guion/:piezaId). El componente decide por presencia de piezaId. Lógica correcta pero acoplada; podría beneficiarse de rutas explícitas /capitulos."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "13/13 flujos verificados; 1 bug funcional (diferencias) reportado; 1 texto UX menor"},
+  "test_credentials": "N/A (app sin autenticación)",
+  "seed_data_creation": "En Serie de pruebas se creó y borró 'TEST Cap 1' (limpio). Se creó y borró el proyecto temporal 'TEST F4 Blank' (5583c4d6c6c3454aac109bbc096db884) en 'Pruebas del constructor'. En 'Corto de pruebas' se avanzó la revisión de rev 2 a rev 3 (esperado; queda como aprobado revisión 3). Espacio 1 y Proyecto 1 del usuario: intactos.",
+  "cleanup": "Ejecutado mongosh updateMany({espacio_id:'baf5a93a0b08431cb00b1da5c9fbabc1'}, ultimo_acceso:2020-01-01) — 4 documentos modificados. Verificado en UI: tarjeta-retomar apunta a Espacio 1 · Proyecto 1 · Paso 1 · Idea.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "El bug de diferencias phantoma (None vs '' en Optional[str]) es reproducible: crea/usa un guion cuyos aprobados tengan `sonido_previsto: null`, entra en revisión (btn-editar-aprobado) sin editar nada, y observa que al abrir el diálogo revision-editadas listará todas las escenas con 'Sonido previsto — vacío — → — vacío —'. También manifiesta en encargo con 'Intención'. El fix natural es normalizar '' → None en _valor() o en editarEscena (backend) para que las escenas comparen semánticamente. Todos los data-testids solicitados por el playbook están presentes y funcionales.",
+  "rca of the issue": "TarjetaEscena.jsx normaliza los strings opcionales (línea 30: `sonido_previsto: escena.sonido_previsto || \"\"`). El autoguardado (useAutoguardado) envía toda la escena, incluidos los campos '' que antes eran null. El backend acepta '' en Optional[str] y lo guarda literalmente. Luego, en iniciar_revision se duplica la escena aprobada con `sonido_previsto=a.get(...)`. Cuando el usuario edita cualquier otro campo, se dispara autoguardado que sobrescribe '' (aunque no cambie el valor). En _diferencias, la escena APROBADA (que quizá aún tiene null en fondo) contra la BORRADORA (que ya es '') produce un cambio ficticio. Mitigación inmediata: en /app/backend/app/api/guiones.py cambiar `_valor` a: `def _valor(e,c): v=e.get(c); return v if v not in (\"\", None) else None` — así las comparaciones tratan '' y None como el mismo valor. Alternativa frontend: no enviar campos vacíos en editarEscena, o convertir '' → null antes del PATCH."
+}

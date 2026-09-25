@@ -125,7 +125,12 @@ async def _asegurar_trabajo(guion: dict) -> dict:
 
 
 def _valor(e: dict, campo: str):
-    return e.get(campo)
+    """Un campo vacío y un campo sin escribir son lo mismo: si no se normaliza,
+    el autoguardado convierte null en "" y aparecen diferencias fantasma."""
+    v = e.get(campo)
+    if v is None or v == "" or v == []:
+        return None
+    return v
 
 
 def _diferencias(aprobadas: list[dict], trabajo: list[dict]) -> dict:
@@ -184,7 +189,7 @@ def _diferencias_encargo(aprobado: dict | None, borrador: dict | None) -> dict:
     a = aprobado or {}
     b = borrador or {}
     for campo in ("que_se_muestra", "composicion", "intencion", "elementos", "referencias", "numero_imagenes"):
-        if a.get(campo) != b.get(campo):
+        if _valor(a, campo) != _valor(b, campo):
             campos.append(
                 {
                     "campo": campo,

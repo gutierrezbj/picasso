@@ -65,9 +65,12 @@ export default function DialogoRevision({
     }
   };
 
-  const Marca = ({ id }) => (
+  const Marca = ({ id, segundaEtiqueta }) => (
     <div className="mt-3 flex flex-wrap gap-2" data-testid={`marcas-${id}`}>
-      {MARCAS.map((m) => (
+      {MARCAS.map((m0) => {
+        const m =
+          m0.valor === "afecta_planos" && segundaEtiqueta ? { ...m0, texto: segundaEtiqueta } : m0;
+        return (
         <button
           key={m.valor}
           data-testid={`marca-${id}-${m.valor}`}
@@ -80,9 +83,10 @@ export default function DialogoRevision({
               : "border border-linea bg-superficie text-tinta2 hover:bg-superficie2")
           }
         >
-          {m.texto}
-        </button>
-      ))}
+            {m.texto}
+          </button>
+        );
+      })}
     </div>
   );
 
@@ -125,7 +129,7 @@ export default function DialogoRevision({
                 </li>
               ))}
             </ul>
-            <Marca id="encargo" />
+            <Marca id="encargo" segundaEtiqueta="Afecta a las imágenes" />
           </section>
         )}
 
@@ -247,7 +251,9 @@ export default function DialogoRevision({
       </div>
       {faltan && (
         <p className="mt-3 text-right text-[13px] leading-[18px] text-tinta2" data-testid="aviso-marcas">
-          Marca en cada escena editada si el cambio es solo de texto o si afecta a los planos.
+          {editadas.length > 0
+            ? "Marca en cada escena editada si el cambio es solo de texto o si afecta a los planos."
+            : "Marca si el cambio del encargo es solo de texto o si afecta a las imágenes."}
         </p>
       )}
     </Dialogo>
