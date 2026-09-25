@@ -48,8 +48,10 @@ async def proponer(proyecto_id: str, tarea: str, datos: PeticionAsistente):
         raise HTTPException(409, motivo)
     contexto = await _contexto(sin_id(proy))
     partes = proveedor.proponer(contexto, tarea, datos.campo)
+    _pid = __import__("uuid").uuid4().hex
     doc = {
-        "_id": __import__("uuid").uuid4().hex,
+        "_id": _pid,
+        "id": _pid,
         "proyecto_id": proyecto_id,
         "tarea": tarea,
         "proveedor": proveedor.id,

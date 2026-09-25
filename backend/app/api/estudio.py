@@ -24,7 +24,11 @@ async def estudio():
         e = sin_id(d)
         mapa_espacio[e["id"]] = e
         proyectos = await db.proyectos.find({"espacio_id": e["id"]}).to_list(1000)
-        en_curso = sum(1 for p in proyectos if recorridos.calcular(p, await completado_de(db, p))["paso_actual"] is not None)
+        en_curso = 0
+        for p in proyectos:
+            comp = await completado_de(db, p)
+            if recorridos.calcular(p, comp)["paso_actual"] is not None:
+                en_curso += 1
         espacios.append({**e, "num_proyectos": len(proyectos), "num_en_curso": en_curso})
 
     todos = await db.proyectos.find().sort("ultimo_acceso", -1).to_list(1000)

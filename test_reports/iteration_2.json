@@ -1,0 +1,37 @@
+{
+  "summary": "Fase 2 (Desarrollo + Asistente) validated end-to-end. Backend: 16/16 new pytest cases pass covering GET/PUT /api/proyectos/{id}/desarrollo (default, persist, 404), /api/formatos?tipo= for all 4 tipos, GET /api/asistente/estado (simulado + claude-sonnet-5 both disponible=true), POST asistente {hacer_preguntas, proponer_campo, ordenar_notas} with proveedor 'simulado', invalid tarea -> 400, POST /api/propuestas/{id}/parte/{parteId} accept writes to desarrollo (with edited texto), discard writes nothing, and ONE live Claude call returning proveedor='anthropic' with real Spanish parts. Fase 1 regression suite: 14/14 still pass (30/30 total). Frontend Playwright E2E on /p/{id}/idea (corto): titulo 'Idea', all 5 campos (intencion/premisa/tono/mundo/notas) + fmt-objetivo/fmt-duracion visible; btn-marcar-listo initially disabled; typing in notas shows indicador-guardado 'Guardando…' -> 'Guardado', persists across reload; formato answers persist; PanelAsistente hacer_preguntas returns 3 partes, campo NOT modified before accept, descartar removes a parte and does NOT write, accept with edited textarea writes edited text (modo 'anadir' appends to notas) and persists; proponer_campo returns 1 parte and campo remains unchanged until accepted; after filling required (intencion, premisa) btn-marcar-listo enables and clicking replaces button with desarrollo-listo confirmation while campos stay editable; recorrido advances Idea->listo, Mundo y escenarios->en_curso (verified via GET proyecto). Ajustes select-modelo-asistente switches asistente-estado to 'Disponible · claude-sonnet-5'.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_fase2_desarrollo.py",
+    "/app/backend/tests/test_studio_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "FIXED (by tester) — /app/backend/app/api/estudio.py line 27 contained `sum(1 for p in proyectos if recorridos.calcular(p, await completado_de(db, p))...)`. Using `await` inside a generator expression turns it into an async_generator that `sum` cannot iterate, causing GET /api/estudio to return 500 whenever any espacio contained at least one proyecto (a Fase 1 regression introduced by the Fase 2 wiring). Replaced with an explicit for-loop. Root cause: async/await inside generator comprehension is invalid in Python 3.11. Recommend adding a unit test for the estudio aggregate with populated proyectos to prevent recurrence.",
+    "FIXED (by tester) — /app/backend/app/api/asistente.py POST propuesta response only had `_id` which was stripped by `sin_id`, leaving the propuesta with no `id` field; the frontend PanelAsistente reads `propuesta.id` to call the resolver endpoint, so Aceptar/Descartar would always 404 in the UI. Added an explicit `id` alongside `_id` in the inserted doc so `sin_id(doc)` exposes it. Consider generalizing: create the id first and always store it as a real field to avoid this class of bug.",
+    "Anthropic provider in proveedor.py uses `asyncio.run(_run())` inside an already-running FastAPI event loop, falling back to a ThreadPoolExecutor. The current control flow (`if False else asyncio.run(_run())`) is dead-code and confusing; simplify to try/except RuntimeError + thread executor. Works today but is fragile.",
+    "PanelAsistente re-renders `estado?.modelo` in the intro text; if user switches modelo in Ajustes while the panel is open, the label updates only after react-query invalidation. Non-blocking.",
+    "React Router v6 future-flag warnings still logged in console (v7_startTransition, v7_relativeSplatPath). Non-blocking."
+  ],
+  "updated_files": [
+    "/app/backend/app/api/estudio.py",
+    "/app/backend/app/api/asistente.py",
+    "/app/backend/tests/test_fase2_desarrollo.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "test_credentials": "N/A - no auth",
+  "seed_data_creation": "Tests create TEST_ prefixed espacios/proyectos and clean up in teardown. Manual cleanup ran to purge leftover TEST_F2 espacios from failed intermediate playwright runs. DB is clean.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Fase 2 complete. Backend contract summary: PUT desarrollo accepts full Desarrollo model; asistente proponer returns {id, proyecto_id, tarea, proveedor, partes:[{id, destino_campo, texto, modo, estado}]}; resolver POST /api/propuestas/{id}/parte/{parte_id} with {accion:'aceptar'|'descartar', texto?}. Idea step goes 'listo' only when desarrollos.estado=='listo' (see dominio/estado.completado_de). EMERGENT_LLM_KEY present in backend/.env and Anthropic path verified once via a real Claude call. Two backend bugs were fixed by the testing agent (see critical_code_review_comments).",
+  "rca of the issue": "1) GET /api/estudio 500: `await` inside generator expression -> async_generator not iterable by sum(). Reproduced by creating 1 espacio + 1 proyecto and calling /api/estudio. Fix: expand to for-loop. 2) UI Aceptar/Descartar always 404: propuesta response had `_id` stripped by sin_id but no `id` field; frontend used propuesta.id. Reproduced by test_aceptar_parte_escribe_en_desarrollo (KeyError 'id'). Fix: add explicit `id` field on insert."
+}

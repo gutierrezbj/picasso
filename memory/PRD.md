@@ -42,6 +42,13 @@ Implementado y validado (testing agent: backend 14/14, frontend 100%):
 - Retomar → ultima_ubicacion real. P10 Ajustes sin proveedores (moneda + presupuesto).
 - Nada se crea automáticamente.
 
+### ✅ FASE 2 — Desarrollo y asistente (COMPLETADA · 25-09-2026)
+Validada por testing agent (backend 30/30, frontend 100%):
+- P4 Desarrollo (`/p/:id/idea`): campos por tipo (obligatorios marcados *), columna de lectura ~68ch, autoguardado (§12), «Marcar desarrollo como listo» (habilitado al rellenar obligatorios) que desbloquea el recorrido (Idea→listo, siguiente→en curso).
+- Formatos: semilla genérica por tipo (`formatos_semilla.yaml`); sus preguntas aparecen como bloques y persisten en `respuestas_formato`.
+- Asistente (§10): proveedor `simulado` (sin coste) y **Claude `claude-sonnet-5` vía Universal Key** (verificado en vivo). Tareas `hacer_preguntas`, `proponer_campo`, `ordenar_notas`. Propuestas Aceptar/Editar/Descartar una a una; **nada se escribe sin aceptar**. Selector de modelo + estado en Ajustes.
+- Bugs corregidos: `/api/estudio` (await en genexpr) y `id` de propuesta.
+
 ## Backlog (orden del maestro §14)
 - P1 FASE 2 — Desarrollo (P4) + formatos (semilla genérica) + asistente (simulado y Claude).
 - P1 FASE 3 — Pasos de elementos (P5) + biblioteca (P3) + versiones de ficha + medios + pasos opcionales.
