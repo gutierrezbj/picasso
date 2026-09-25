@@ -54,8 +54,17 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
       </p>
 
       {plano.plano_anterior_encadenado && (
-        <p className="mt-1 inline-flex items-center gap-1 text-[12px] leading-[16px] text-tinta2">
-          <Link2 size={12} strokeWidth={1.9} /> encadenado con el anterior
+        <p
+          data-testid={`encadenado-${etiqueta}`}
+          className={
+            "mt-1 inline-flex items-center gap-1 text-[12px] leading-[16px] " +
+            (plano.encadenado_sin_anterior ? "text-aviso" : "text-tinta2")
+          }
+        >
+          <Link2 size={12} strokeWidth={1.9} />{" "}
+          {plano.encadenado_sin_anterior
+            ? "encadenado sin plano anterior"
+            : "encadenado con el anterior"}
         </p>
       )}
 

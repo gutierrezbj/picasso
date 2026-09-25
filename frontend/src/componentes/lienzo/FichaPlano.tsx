@@ -336,18 +336,26 @@ export default function FichaPlano({
             )}
           </Campo>
 
-          <label className="flex items-center gap-2 text-[14px] leading-[20px] text-tinta">
-            <input
-              type="checkbox"
-              data-testid="plano-encadenado"
-              checked={datos.plano_anterior_encadenado}
-              onChange={(e) =>
-                setDatos({ ...datos, plano_anterior_encadenado: e.target.checked })
-              }
-              className="h-4 w-4 accent-[var(--color-acento)]"
-            />
-            Encadenado con el plano anterior
-          </label>
+          <div>
+            <label className="flex items-center gap-2 text-[14px] leading-[20px] text-tinta">
+              <input
+                type="checkbox"
+                data-testid="plano-encadenado"
+                disabled={plano.orden === 0}
+                checked={datos.plano_anterior_encadenado}
+                onChange={(e) =>
+                  setDatos({ ...datos, plano_anterior_encadenado: e.target.checked })
+                }
+                className="h-4 w-4 accent-[var(--color-acento)] disabled:opacity-40"
+              />
+              Encadenado con el plano anterior
+            </label>
+            {plano.orden === 0 && (
+              <p data-testid="aviso-primer-plano" className="mt-1 text-[12px] leading-[16px] text-tinta2">
+                Es el primer plano de la escena: no hay un plano anterior con el que encadenarlo.
+              </p>
+            )}
+          </div>
 
           <div className="border-t border-linea pt-4">
             <PanelPrompt planoId={plano.id} sello={plano.updated_at} />

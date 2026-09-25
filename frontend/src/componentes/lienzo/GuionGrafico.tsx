@@ -4,6 +4,7 @@ import Boton from "../Boton";
 import type { EscenaConPlanos } from "../../tipos";
 
 interface Props {
+  relacion: string; // relación de aspecto del proyecto, p. ej. "16 / 9"
   escenas: EscenaConPlanos[];
   indice: number;
   onIndice: (i: number) => void;
@@ -13,7 +14,7 @@ interface Props {
 
 // Guion gráfico de una escena (§7.7c): la tira de sus planos en orden, con
 // miniatura o hueco y su resumen de dirección.
-export default function GuionGrafico({ escenas, indice, onIndice, onCerrar, onAbrirPlano }: Props) {
+export default function GuionGrafico({ relacion, escenas, indice, onIndice, onCerrar, onAbrirPlano }: Props) {
   const actual = escenas[indice];
   if (!actual) return null;
 
@@ -50,9 +51,9 @@ export default function GuionGrafico({ escenas, indice, onIndice, onCerrar, onAb
             Esta escena todavía no tiene planos.
           </p>
         ) : (
-          <ol className="mt-8 flex gap-4 overflow-x-auto pb-4" data-testid="tira-planos">
+          <ol className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" data-testid="tira-planos">
             {actual.planos.map((p, i) => (
-              <li key={p.id} className="w-[240px] shrink-0">
+              <li key={p.id}>
                 <button
                   data-testid={`tira-plano-${i + 1}`}
                   onClick={() => onAbrirPlano(p.id)}
@@ -66,13 +67,13 @@ export default function GuionGrafico({ escenas, indice, onIndice, onCerrar, onAb
                       {p.modalidad === "video" ? "Vídeo" : "Imagen"}
                     </span>
                   </div>
-                  <div className="mt-2 flex h-[130px] items-center justify-center rounded-control bg-superficie2">
+                  <div className="mt-2 flex items-center justify-center rounded-control bg-superficie2" style={{ aspectRatio: relacion }}>
                     <span className="text-[13px] text-tinta3">sin toma</span>
                   </div>
-                  <p className="mt-2 line-clamp-2 text-[13px] leading-[18px] text-tinta">
+                  <p className="mt-3 text-[15px] leading-[22px] text-tinta">
                     {p.que_se_muestra || "sin describir"}
                   </p>
-                  <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
+                  <p className="mt-1 text-[13px] leading-[18px] text-tinta2">
                     {p.resumen_direccion || "sin dirigir"}
                   </p>
                   {p.correcciones_pendientes > 0 && (

@@ -4,40 +4,46 @@ import { X } from "lucide-react";
 interface PropsFichaContextual {
   titulo: string;
   subtitulo?: string;
-  posicion: { x: number; y: number };
+  // Rectángulo en pantalla de la tarjeta que abre la ficha: nunca se tapa (§7.3).
+  tarjeta: { izquierda: number; derecha: number; arriba: number };
   onCerrar: () => void;
   ancho?: number;
   testid?: string;
   children: React.ReactNode;
 }
 
-// Ficha contextual (§7.3): se abre junto a la tarjeta, sin mover el encuadre. Si no
-// cabe se recoloca; en pantallas estrechas pasa a una bandeja inferior.
+const MARGEN = 16;
+
 export default function FichaContextual({
   titulo,
   subtitulo,
-  posicion,
+  tarjeta,
   onCerrar,
   ancho = 380,
   testid = "ficha-contextual",
   children,
 }: PropsFichaContextual) {
-  const estrecha = typeof window !== "undefined" && window.innerWidth < 760;
-  const margen = 16;
-  const maxIzq = (typeof window !== "undefined" ? window.innerWidth : 1200) - ancho - margen;
-  const izquierda = Math.max(margen, Math.min(posicion.x, maxIzq));
-  const arriba = Math.max(
-    margen + 56,
-    Math.min(posicion.y, (typeof window !== "undefined" ? window.innerHeight : 800) - 260)
-  );
+  const anchoVentana = typeof window !== "undefined" ? window.innerWidth : 1440;
+  const altoVentana = typeof window !== "undefined" ? window.innerHeight : 900;
 
-  const estilo: React.CSSProperties = estrecha
-    ? { left: 0, right: 0, bottom: 0, width: "100%", maxHeight: "60vh" }
-    : { left: izquierda, top: arriba, width: ancho, maxHeight: "calc(100vh - 140px)" };
+  const cabeDerecha = tarjeta.derecha + MARGEN + ancho <= anchoVentana - MARGEN;
+  const cabeIzquierda = tarjeta.izquierda - MARGEN - ancho >= MARGEN;
+  const lado = cabeDerecha ? "derecha" : cabeIzquierda ? "izquierda" : "bandeja";
+
+  const estilo: React.CSSProperties =
+    lado === "bandeja"
+      ? { left: 0, right: 0, bottom: 0, width: "100%", maxHeight: "60vh" }
+      : {
+          left: lado === "derecha" ? tarjeta.derecha + MARGEN : tarjeta.izquierda - MARGEN - ancho,
+          top: Math.max(MARGEN + 56, Math.min(tarjeta.arriba, altoVentana - 260)),
+          width: ancho,
+          maxHeight: "calc(100vh - 140px)",
+        };
 
   return (
     <aside
       data-testid={testid}
+      data-lado={lado}
       role="dialog"
       aria-label={titulo}
       style={estilo}

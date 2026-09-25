@@ -4,6 +4,7 @@ intención y premisa del desarrollo. Nunca se piden textos ni rótulos.
 """
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from string import Formatter
 
@@ -68,6 +69,12 @@ def _valores(plano: dict, continuidad: list[dict], desarrollo: dict | None) -> d
     }
 
 
+def _une(linea: str, valores: dict[str, str]) -> str:
+    """Une la línea sin dobles signos: si el valor ya acaba en . ? o !, no se añade otro."""
+    texto = linea.format(**valores)
+    return re.sub(r"([.?!])\s*\.", r"\1", texto)
+
+
 def construir(plano: dict, continuidad: list[dict], desarrollo: dict | None) -> str:
     modalidad = plano.get("modalidad") or "imagen"
     plantilla = PLANTILLAS.get(modalidad) or PLANTILLAS["imagen"]
@@ -77,5 +84,5 @@ def construir(plano: dict, continuidad: list[dict], desarrollo: dict | None) -> 
         claves = [c for _, c, _, _ in Formatter().parse(linea) if c]
         if claves and not all(valores.get(c) for c in claves):
             continue
-        lineas.append(linea.format(**valores))
+        lineas.append(_une(linea, valores))
     return "\n".join(lineas)

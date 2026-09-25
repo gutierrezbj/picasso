@@ -126,27 +126,61 @@ async def _continuidad(plano: dict, reparto: list[dict]) -> list[dict]:
     return salida
 
 
+def _minus(valor: str | None) -> str:
+    return (valor[0].lower() + valor[1:]) if valor else ""
+
+
+def _segundos(valor: float) -> str:
+    return f"{valor:g}".replace(".", ",") + " s"
+
+
+def _par(encuadre: str | None, angulo: str | None) -> str:
+    if encuadre and angulo:
+        return f"{encuadre}, {_minus(angulo)}"
+    return encuadre or _minus(angulo)
+
+
 def _resumen_direccion(plano: dict) -> str:
-    """Encuadre · ángulo · movimiento · duración (§7.7c)."""
+    """«Plano medio, a la altura de los ojos → Detalle, picado · travelling adelante · 2,5 s» (§7.7c)."""
     d = plano.get("direccion") or {}
     partes: list[str] = []
     if plano.get("modalidad") == "video":
-        inicio = " ".join([x for x in (d.get("encuadre_inicio"), d.get("angulo_inicio")) if x])
-        final = " ".join([x for x in (d.get("encuadre_final"), d.get("angulo_final")) if x])
-        if inicio:
-            partes.append(f"de {inicio}")
-        if final:
-            partes.append(f"a {final}")
+        inicio = _par(d.get("encuadre_inicio"), d.get("angulo_inicio"))
+        final = _par(d.get("encuadre_final"), d.get("angulo_final"))
+        base = f"{inicio} → {final}" if inicio and final else (inicio or final)
     else:
-        if d.get("encuadre"):
-            partes.append(d["encuadre"])
-        if d.get("angulo"):
-            partes.append(d["angulo"])
+        base = _par(d.get("encuadre"), d.get("angulo"))
+    if base:
+        partes.append(base)
     if d.get("movimiento_camara"):
-        partes.append(d["movimiento_camara"])
+        partes.append(_minus(d["movimiento_camara"]))
     if plano.get("duracion_s"):
-        partes.append(f"{plano['duracion_s']:g} s")
+        partes.append(_segundos(plano["duracion_s"]))
     return " · ".join(partes)
+
+
+async def _avisos_encadenado(escena_id: str, antes: list[str]) -> list[dict]:
+    """§13: si un plano encadenado se queda sin anterior o cambia de anterior, se avisa
+    y lo decide el usuario. Aquí no se cambia nada."""
+    despues = [p["id"] for p in await _planos_de_escena(escena_id)]
+    previo_antes = {pid: (antes[i - 1] if i > 0 else None) for i, pid in enumerate(antes)}
+    avisos = []
+    for i, pid in enumerate(despues):
+        doc = await db.planos.find_one({"_id": pid})
+        if not doc or not doc.get("plano_anterior_encadenado"):
+            continue
+        anterior = despues[i - 1] if i > 0 else None
+        if anterior == previo_antes.get(pid):
+            continue
+        avisos.append(
+            {
+                "plano_id": pid,
+                "es_primero": anterior is None,
+                "anterior_antes": previo_antes.get(pid),
+                "anterior_ahora": anterior,
+            }
+        )
+    return avisos
 
 
 async def _vista_plano(plano: dict, reparto: list[dict]) -> dict:
@@ -155,6 +189,8 @@ async def _vista_plano(plano: dict, reparto: list[dict]) -> dict:
         **plano,
         "resumen_direccion": _resumen_direccion(plano),
         "correcciones_pendientes": len(pendientes),
+        "encadenado_sin_anterior": bool(plano.get("plano_anterior_encadenado"))
+        and plano.get("orden") == 0,
         "continuidad": await _continuidad(plano, reparto),
     }
 
@@ -278,6 +314,8 @@ async def editar_plano(plano_id: str, datos: PlanoEditar):
             d["angulo"] = d.get("angulo_inicio") or d.get("angulo")
         cambios["direccion"] = d
     cambios["updated_at"] = ahora()
+    if cambios.get("plano_anterior_encadenado") and plano["orden"] == 0:
+        raise HTTPException(409, "Un plano en primera posición no puede estar encadenado con el anterior.")
     await db.planos.update_one({"_id": plano_id}, {"$set": cambios})
     actualizado = await _plano(plano_id)
     proy_id = (await db.piezas.find_one({"_id": actualizado["pieza_id"]}))["proyecto_id"]
@@ -287,10 +325,17 @@ async def editar_plano(plano_id: str, datos: PlanoEditar):
 @router.delete("/planos/{plano_id}")
 async def borrar_plano(plano_id: str):
     plano = await _plano(plano_id)
+    antes = (
+        [p["id"] for p in await _planos_de_escena(plano["escena_id"])]
+        if plano.get("escena_id")
+        else []
+    )
     await db.planos.delete_one({"_id": plano_id})
+    avisos: list[dict] = []
     if plano.get("escena_id"):
         await _renumerar(plano["escena_id"])
-    return {"ok": True}
+        avisos = await _avisos_encadenado(plano["escena_id"], [p for p in antes if p != plano_id])
+    return {"ok": True, "avisos_encadenado": avisos}
 
 
 @router.post("/planos/{plano_id}/mover")
@@ -313,7 +358,11 @@ async def mover_plano(plano_id: str, datos: MoverPlano):
     momento = ahora()
     for i, pid in enumerate(ids):
         await db.planos.update_one({"_id": pid}, {"$set": {"orden": i, "updated_at": momento}})
-    return {"ok": True, "orden": ids}
+    return {
+        "ok": True,
+        "orden": ids,
+        "avisos_encadenado": await _avisos_encadenado(plano["escena_id"], [p["id"] for p in planos]),
+    }
 
 
 @router.post("/planos/{plano_id}/duplicar", status_code=201)

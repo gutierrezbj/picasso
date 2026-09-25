@@ -1,5 +1,6 @@
 import type {
   Ajustes,
+  AvisoEncadenado,
   Desarrollo,
   Elemento,
   Entorno,
@@ -231,14 +232,20 @@ export const api = {
     }),
   editarPlano: (id: string, datos: Record<string, unknown>) =>
     peticion<Plano>(`/planos/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
-  borrarPlano: (id: string) => peticion(`/planos/${id}`, { method: "DELETE" }),
-  moverPlano: (id: string, datos: { direccion?: string; a?: number }) =>
-    peticion<{ ok: boolean; orden: string[] }>(`/planos/${id}/mover`, {
-      method: "POST",
-      body: JSON.stringify(datos),
+  borrarPlano: (id: string) =>
+    peticion<{ ok: boolean; avisos_encadenado: AvisoEncadenado[] }>(`/planos/${id}`, {
+      method: "DELETE",
     }),
+  moverPlano: (id: string, datos: { direccion?: string; a?: number }) =>
+    peticion<{ ok: boolean; orden: string[]; avisos_encadenado: AvisoEncadenado[] }>(
+      `/planos/${id}/mover`,
+      { method: "POST", body: JSON.stringify(datos) }
+    ),
   duplicarPlano: (id: string) => peticion<Plano>(`/planos/${id}/duplicar`, { method: "POST" }),
-  dividirPlano: (id: string) => peticion<Plano>(`/planos/${id}/dividir`, { method: "POST" }),
+  dividirPlano: (id: string) =>
+    peticion<Plano & { avisos_encadenado?: AvisoEncadenado[] }>(`/planos/${id}/dividir`, {
+      method: "POST",
+    }),
   crearCorreccion: (planoId: string, texto: string) =>
     peticion<Plano>(`/planos/${planoId}/correcciones`, {
       method: "POST",

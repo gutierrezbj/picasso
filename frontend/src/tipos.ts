@@ -300,7 +300,15 @@ export interface Plano {
   updated_at: string;
   resumen_direccion: string;
   correcciones_pendientes: number;
+  encadenado_sin_anterior: boolean;
   continuidad: ContinuidadElemento[];
+}
+
+export interface AvisoEncadenado {
+  plano_id: string;
+  es_primero: boolean;
+  anterior_antes: string | null;
+  anterior_ahora: string | null;
 }
 
 export interface RepartoLienzo extends EntradaReparto {

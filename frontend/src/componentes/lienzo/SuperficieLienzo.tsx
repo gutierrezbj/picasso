@@ -32,7 +32,8 @@ import {
   type NodoLienzo,
 } from "../../lib/lienzo";
 import { api } from "../../api/cliente";
-import type { LayoutLienzo, OpcionesDireccion, Plano, VistaLienzo } from "../../tipos";
+import type { AvisoEncadenado, LayoutLienzo, OpcionesDireccion, Plano, VistaLienzo } from "../../tipos";
+import AvisosEncadenado from "./AvisosEncadenado";
 
 interface Props {
   vista: VistaLienzo;
@@ -60,6 +61,10 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
   const [ficha, setFicha] = useState<string | null>(null);
   const [storyboard, setStoryboard] = useState<number | null>(null);
   const [recolocar, setRecolocar] = useState(false);
+  const [avisos, setAvisos] = useState<{
+    lista: AvisoEncadenado[];
+    deshacer: (() => Promise<unknown>) | null;
+  } | null>(null);
   const [nodos, setNodos, onNodosChange] = useNodesState<NodoLienzo>([]);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -128,21 +133,30 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
       setFicha(nodoId);
     },
     moverPlano: async (planoId, direccion) => {
-      await api.moverPlano(planoId, { direccion });
+      const r = await api.moverPlano(planoId, { direccion });
       await onCambiado();
+      if (r.avisos_encadenado?.length) {
+        setAvisos({
+          lista: r.avisos_encadenado,
+          deshacer: () =>
+            api.moverPlano(planoId, { direccion: direccion === "antes" ? "despues" : "antes" }),
+        });
+      }
     },
     duplicarPlano: async (planoId) => {
       await api.duplicarPlano(planoId);
       await onCambiado();
     },
     dividirPlano: async (planoId) => {
-      await api.dividirPlano(planoId);
+      const r = await api.dividirPlano(planoId);
       await onCambiado();
+      if (r.avisos_encadenado?.length) setAvisos({ lista: r.avisos_encadenado, deshacer: null });
     },
     borrarPlano: async (planoId) => {
-      await api.borrarPlano(planoId);
+      const r = await api.borrarPlano(planoId);
       if (ficha === idPlano(planoId)) setFicha(null);
       await onCambiado();
+      if (r.avisos_encadenado?.length) setAvisos({ lista: r.avisos_encadenado, deshacer: null });
     },
     urlMedio: api.urlMedio,
   };
@@ -173,14 +187,13 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
   const entradaFicha = vista.reparto.find((r) => `el:${r.id}` === ficha) || null;
   const planoFicha = planos.find((p) => `pl:${p.id}` === ficha) || null;
 
-  const posicionFicha = () => {
-    if (!nodoFicha) return { x: 0, y: 0 };
+  // Rectángulo de la tarjeta en pantalla: la ficha se abre al lado que quepa (§7.3).
+  const tarjetaFicha = () => {
+    if (!nodoFicha) return { izquierda: 0, derecha: 0, arriba: 0 };
     const ancho = nodoFicha.type === "elemento" ? ANCHO_ELEMENTO : ANCHO_PLANO;
-    const p = flowToScreenPosition({
-      x: nodoFicha.position.x + ancho + 16,
-      y: nodoFicha.position.y,
-    });
-    return { x: p.x, y: p.y };
+    const a = flowToScreenPosition({ x: nodoFicha.position.x, y: nodoFicha.position.y });
+    const b = flowToScreenPosition({ x: nodoFicha.position.x + ancho, y: nodoFicha.position.y });
+    return { izquierda: a.x, derecha: b.x, arriba: a.y };
   };
 
   return (
@@ -242,7 +255,7 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
           testid="ficha-contextual-plano"
           titulo={`Plano ${etiquetaDe(planoFicha.id)}`}
           subtitulo={planoFicha.modalidad === "video" ? "Vídeo" : "Imagen"}
-          posicion={posicionFicha()}
+          tarjeta={tarjetaFicha()}
           onCerrar={() => setFicha(null)}
         >
           <FichaPlano
@@ -262,7 +275,7 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
           testid="ficha-contextual-elemento"
           titulo={entradaFicha.elemento.nombre}
           subtitulo={`${entradaFicha.elemento.clase} · v${entradaFicha.version_ficha}`}
-          posicion={posicionFicha()}
+          tarjeta={tarjetaFicha()}
           onCerrar={() => setFicha(null)}
         >
           <FichaElementoLectura
@@ -283,6 +296,32 @@ function Superficie({ vista, opciones, proyectoId, rutaGuion, rutaDePaso, onCamb
             setStoryboard(null);
             acciones.abrirFicha(idPlano(planoId));
           }}
+        />
+      )}
+
+      {avisos && (
+        <AvisosEncadenado
+          avisos={avisos.lista}
+          etiquetaDe={etiquetaDe}
+          onDesencadenar={async (planoId) => {
+            const plano = planos.find((p) => p.id === planoId);
+            if (plano) {
+              await api.editarPlano(planoId, {
+                plano_anterior_encadenado: false,
+                updated_at: plano.updated_at,
+              });
+              await onCambiado();
+            }
+          }}
+          onDeshacer={
+            avisos.deshacer
+              ? async () => {
+                  await avisos.deshacer!();
+                  await onCambiado();
+                }
+              : null
+          }
+          onCerrar={() => setAvisos(null)}
         />
       )}
 
