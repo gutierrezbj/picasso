@@ -8,24 +8,18 @@ import { useAjustes, useAsistenteEstado } from "../api/hooks";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
 
-const MONEDAS = [
-  { valor: "USD", texto: "Dólar (USD $)" },
-  { valor: "EUR", texto: "Euro (EUR €)" },
-  { valor: "GBP", texto: "Libra (GBP £)" },
-];
+const MONEDA_FIJA = "USD";
 
 export default function Ajustes() {
   const qc = useQueryClient();
   const { data, isLoading } = useAjustes();
   const { data: asis } = useAsistenteEstado();
-  const [moneda, setMoneda] = useState("USD");
   const [presupuesto, setPresupuesto] = useState("0");
   const [modelo, setModelo] = useState("claude-sonnet-5");
   const [listo, setListo] = useState(false);
 
   useEffect(() => {
     if (data && !listo) {
-      setMoneda(data.moneda);
       setPresupuesto(String(data.presupuesto_por_defecto ?? 0));
       setModelo(data.modelo_asistente || "claude-sonnet-5");
       setListo(true);
@@ -33,10 +27,10 @@ export default function Ajustes() {
   }, [data, listo]);
 
   useAutoguardado(
-    { moneda, presupuesto, modelo },
+    { presupuesto, modelo },
     async () => {
       const guardado = await api.guardarAjustes({
-        moneda,
+        moneda: MONEDA_FIJA,
         presupuesto_por_defecto: Number(presupuesto) || 0,
         modelo_asistente: modelo,
       });
@@ -55,8 +49,13 @@ export default function Ajustes() {
           <p className="mt-8 text-tinta2">Cargando…</p>
         ) : (
           <Tarjeta className="mt-8 flex flex-col gap-8 p-8" data-testid="ajustes-form">
-            <Campo etiqueta="Moneda" ayuda="Se usa para mostrar costes y presupuesto.">
-              <Selector data-testid="select-moneda" valor={moneda} onChange={setMoneda} opciones={MONEDAS} />
+            <Campo
+              etiqueta="Moneda"
+              ayuda="La misma en que cobran los proveedores. Sin conversión a otras monedas en esta versión."
+            >
+              <span className="text-[16px] leading-[24px] text-tinta" data-testid="dato-moneda">
+                USD
+              </span>
             </Campo>
             <Campo etiqueta="Presupuesto por defecto" ayuda="Tope de gasto sugerido al crear un proyecto.">
               <Entrada

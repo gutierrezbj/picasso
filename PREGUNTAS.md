@@ -56,12 +56,10 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   §13 (fila «Aprobar una revisión del guion»). Se construirá en la **Fase 4** exactamente
   así. Ya no hay nada que decidir aquí.
 
-- **PENDIENTE (§3.1 Ajustes y §9.4, nuevo 25-09-2026)**: El documento dice ahora que la
-  moneda es **USD** y que no hay conversión en esta versión, pero el campo `moneda` sigue
-  existiendo en `Ajustes` y la pantalla P10 (construida en la Fase 1) muestra un
-  **selector de moneda** con EUR y GBP. No lo he tocado porque el usuario solo pidió
-  aplicar el texto al documento. Falta decidir: ¿se quita el selector y se fija USD, o se
-  deja el campo para más adelante?
+- **RESUELTO por el usuario (25-09-2026)**: Moneda. El documento (§3.1 Ajustes y §9.4)
+  fija **USD sin conversión**. El selector de moneda se ha quitado de la pantalla P10:
+  ahora «Moneda: USD» es un dato fijo. El campo `moneda` sigue existiendo en la entidad
+  `Ajustes` porque el §3.1 lo lista, y se guarda siempre como `USD`.
 
 - **PENDIENTE (cosmético)**: Etiqueta del estado `guion` de la Pieza en proyectos de
   tipo `imagen`. Resuelto por el usuario: el paso y su estado se llaman
