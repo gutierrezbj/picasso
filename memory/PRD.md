@@ -17,11 +17,17 @@ DaVinci Resolve o CapCut.
   `simulado`; catálogo con `null` y "coste sin verificar"; modo claro, tokens §21;
   dudas en `PREGUNTAS.md`.
 
-## Stack (desviaciones acordadas en PREGUNTAS.md)
-- Frontend: Create React App + JavaScript + Tailwind (tokens §21) + React Router +
-  TanStack Query + lucide-react. (§15 pedía Vite+TS+React19; entorno impone CRA → React 18.)
+## Stack (§15 cumplido tras la migración del 26-09-2026)
+- Frontend: **Vite + React 19 + TypeScript** + Tailwind (tokens §21) + React Router 7 +
+  TanStack Query + lucide-react. Tipos del dominio en `frontend/src/tipos.ts`, aplicados en
+  la capa de API. `tsconfig.json` en modo pragmático (`strict: false`): apretar el modo
+  estricto fichero a fichero queda como deuda registrada en PREGUNTAS.md.
 - Backend: FastAPI + MongoDB (motor async), estructura §15.2 (api → dominio → motor/…).
 - Datos de recorrido en `backend/data/recorridos.yaml`.
+- Pruebas de backend **aisladas**: `python3 scripts_pruebas/ejecutar.py` levanta una segunda
+  instancia en el puerto 8002 con la base `picasso_pruebas` y el almacén `/tmp/picasso_pruebas`,
+  ejecuta pytest + p1…p6 y borra la base. `GET /api/entorno` + cerrojos hacen que ninguna
+  prueba pueda escribir en la base de la previsualización.
 - En preview lo lanza supervisor; docker-compose se añadirá para infra propia.
 
 ## Persona
@@ -140,6 +146,23 @@ Validada por testing agent (iteration_5: 13/13 flujos; iteration_6: retest de 2 
   constructor». Escrita en `PREGUNTAS.md` y en `memory/test_credentials.md`.
   Antecedente: el 25-09 el constructor borró el recorrido de Fase 3 que el usuario había
   hecho en «Espacio 1 · Proyecto 1» al tomar como permanente una orden de limpieza única.
+
+### Revisión del código pedida por el usuario (26-09-2026) — APLICADA
+Validada por el agente de pruebas (iteration_7: 9/9 flujos de interfaz, 0 fallos) y por las
+pruebas de backend aisladas (pytest 31 OK + 1 marcada `integracion` omitida; scripts p1…p6 OK).
+1. **Pruebas aisladas**: `GET /api/entorno` (`{db_name, es_pruebas}`), `DB_NAME_PRUEBAS`,
+   `scripts_pruebas/ejecutar.py` (segunda instancia en :8002, base `picasso_pruebas`, almacén
+   `/tmp/picasso_pruebas`, se borra al terminar), cerrojos en `scripts_pruebas/comun.py` y
+   `backend/tests/conftest.py`, scripts p1…p6 con semilla propia. La prueba que llamaba a
+   Claude de verdad pasa a `@pytest.mark.integracion` (§15.5), solo con `PRUEBAS_INTEGRACION=1`.
+2. **Stack**: migración real a **Vite + React 19 + TypeScript** (sin cambios de funcionalidad
+   ni de aspecto) y corrección en `PREGUNTAS.md` de la falsa «desviación acordada».
+3. **Repositorio**: `backend/.env.example` con §15.4 + `DB_NAME`/`DB_NAME_PRUEBAS`, excepción
+   en `.gitignore` para `*.env.example` y `frontend/yarn.lock` ya versionable.
+4. **Desarrollo (Idea) con sello de versión**: `PUT /api/proyectos/{id}/desarrollo` responde
+   **409** si el `updated_at` no coincide; la cabecera muestra «Se ha modificado en otro sitio»
+   con **Recargar** / **Sobrescribir** (§12) y nunca muestra «Guardado» tras un fallo. El mismo
+   mecanismo se aplicó a escenas y fichas (`GET /api/escenas/{id}` nuevo para poder sobrescribir).
 
 ## Backlog (orden del maestro §14)
 - P1 FASE 5 — Lienzo (P7) sin producción (React Flow): estructura desde el guion, grupos,
