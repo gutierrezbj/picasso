@@ -113,7 +113,7 @@ class Ajustes(BaseModel):
     moneda: str = "USD"
     presupuesto_por_defecto: float = 0.0
     proveedores_habilitados: list[str] = Field(default_factory=list)
-    modelo_asistente: str = "claude-sonnet-5"
+    modelo_asistente: str = "simulado"
 
 
 class AjustesEditar(BaseModel):
@@ -148,3 +148,4 @@ class PeticionAsistente(BaseModel):
 class AceptarParte(BaseModel):
     accion: str  # aceptar | descartar
     texto: Optional[str] = None  # texto editado por el usuario al aceptar
+    destino_campo: Optional[str] = None  # campo elegido para una respuesta a pregunta

@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api", tags=["asistente"])
 
 async def _modelo() -> str:
     aj = await db.ajustes.find_one({"_id": "global"})
-    return (aj or {}).get("modelo_asistente", "claude-sonnet-5")
+    return (aj or {}).get("modelo_asistente", "simulado")
 
 
 @router.get("/asistente/estado")
@@ -78,10 +78,14 @@ async def resolver_parte(propuesta_id: str, parte_id: str, datos: AceptarParte):
 
     # aceptar: escribir en el desarrollo (solo aquí se escribe algo)
     texto = (datos.texto if datos.texto is not None else parte["texto"]).strip()
-    campo = parte["destino_campo"]
+    campo = datos.destino_campo or parte["destino_campo"]
+    if campo not in prov.CAMPOS_VALIDOS:
+        raise HTTPException(400, "Debes elegir un campo de destino válido para la respuesta.")
     pid = prop["proyecto_id"]
     des = await db.desarrollos.find_one({"_id": pid}) or {"_id": pid, "estado": "en_curso", "respuestas_formato": {}}
-    if parte.get("modo") == "anadir" and des.get(campo):
+    # Las respuestas a preguntas se añaden; las propuestas de campo reemplazan salvo modo 'anadir'.
+    anadir = parte.get("tipo") == "pregunta" or parte.get("modo") == "anadir"
+    if anadir and des.get(campo):
         des[campo] = f"{des[campo]}\n{texto}"
     else:
         des[campo] = texto

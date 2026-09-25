@@ -31,7 +31,14 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   (`.env.example`, §15.4). Se añade `DB_NAME` a las variables por requisito de la
   plataforma (el §15.4 no lo listaba).
 
-## Ambigüedades marcadas durante la Fase 1
+- **PENDIENTE (Fase 2, §10)**: Conexión del asistente a un modelo real
+  (`ProveedorTexto`, §10) para uso por defecto. Por decisión del usuario el asistente
+  se mantiene en **`simulado`** durante la revisión; las propuestas simuladas se
+  muestran como tales ("Propuesta simulada para <campo>", texto de relleno evidente).
+  El criterio de la Fase 2 "con Claude" queda **aplazado** hasta que el usuario lo
+  active. La ruta Anthropic (`claude-sonnet-5` vía Universal Key) está implementada y
+  verificada una vez; el valor por defecto de `modelo_asistente` es ahora `simulado`
+  (el §10 fija Claude por defecto → desviación temporal registrada aquí).
 
 - **PENDIENTE (Fase 3)**: Portada/logo del espacio. El formulario de "Nuevo espacio"
   (§5.1) menciona "portada o logo opcional" y las tarjetas de espacio (P1) muestran

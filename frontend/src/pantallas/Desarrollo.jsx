@@ -35,7 +35,11 @@ export default function Desarrollo() {
   useEffect(() => {
     if (data?.proyecto) {
       api.guardarUbicacion(proyectoId, `/p/${proyectoId}/idea`).catch(() => {});
+      document.title = `${(recorrido.pasos.find((p) => p.pantalla === "idea") || {}).nombre || "Idea"} · ${data.proyecto.nombre} · Picasso`;
     }
+    return () => {
+      document.title = "Estudio";
+    };
   }, [data?.proyecto?.id, proyectoId]);
 
   useAutoguardado(
@@ -120,7 +124,7 @@ export default function Desarrollo() {
 
             {preguntas.length > 0 && (
               <div className="mt-2 flex flex-col gap-6 border-t border-linea pt-6">
-                <p className="text-[13px] font-medium uppercase tracking-wide text-tinta2">
+                <p className="text-[13px] font-medium text-tinta2">
                   Formato: {formatos[0].nombre}
                 </p>
                 {preguntas.map((q) => (
@@ -157,7 +161,7 @@ export default function Desarrollo() {
           <SiguientePaso proyectoId={proyectoId} paso={paso} siguiente={siguiente} />
         </div>
 
-        <PanelAsistente proyectoId={proyectoId} tipo={tipo} onAplicado={recargarDesarrollo} />
+        <PanelAsistente proyectoId={proyectoId} tipo={tipo} desActual={des} onAplicado={recargarDesarrollo} />
       </main>
     </div>
   );

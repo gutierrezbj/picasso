@@ -15,7 +15,7 @@ export default function SiguientePaso({ proyectoId, paso, siguiente }) {
       data-testid="bloque-siguiente-paso"
       className="mt-12 rounded-panel border border-linea bg-superficie2 p-6"
     >
-      <h2 className="text-[14px] leading-[20px] font-semibold uppercase tracking-wide text-tinta2">
+      <h2 className="text-[16px] leading-[24px] font-semibold text-tinta">
         Siguiente paso
       </h2>
       <p className="mt-3 text-[16px] leading-[24px] text-tinta">

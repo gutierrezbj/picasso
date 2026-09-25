@@ -14,9 +14,8 @@ export function GuardadoProvider({ children }) {
   }, []);
 
   const guardado = useCallback(() => {
-    setEstado("guardado");
     if (temporizador.current) clearTimeout(temporizador.current);
-    temporizador.current = setTimeout(() => setEstado("inactivo"), 2500);
+    setEstado("guardado");
   }, []);
 
   const error = useCallback((accionReintentar) => {

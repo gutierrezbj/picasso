@@ -13,8 +13,16 @@ TAREAS = {"hacer_preguntas", "proponer_campo", "ordenar_notas"}
 CAMPOS_VALIDOS = {"intencion", "publico", "mensaje", "tono", "premisa", "mundo", "arco_general", "notas"}
 
 
-def _parte(destino, texto, modo="reemplazar"):
-    return {"id": uuid.uuid4().hex, "destino_campo": destino, "texto": texto, "modo": modo, "estado": "pendiente"}
+def _parte(destino, texto, modo="reemplazar", tipo="campo", pregunta=None):
+    return {
+        "id": uuid.uuid4().hex,
+        "tipo": tipo,  # campo | pregunta
+        "pregunta": pregunta,
+        "destino_campo": destino,
+        "texto": texto,
+        "modo": modo,
+        "estado": "pendiente",
+    }
 
 
 def estado_asistente() -> dict:
@@ -28,10 +36,11 @@ class Simulado:
     def proponer(self, contexto: dict, tarea: str, campo: str | None = None) -> list[dict]:
         des = contexto.get("desarrollo", {})
         if tarea == "hacer_preguntas":
+            # Preguntas: cada una con su campo de respuesta y su selector de destino.
             return [
-                _parte("notas", "¿Qué es lo único que no puede faltar en esta pieza?", "anadir"),
-                _parte("notas", "¿A quién va dirigida y qué debe sentir?", "anadir"),
-                _parte("notas", "¿Qué NO quieres que aparezca?", "anadir"),
+                _parte(None, "", tipo="pregunta", pregunta="¿Qué es lo único que no puede faltar en esta pieza?"),
+                _parte(None, "", tipo="pregunta", pregunta="¿A quién va dirigida y qué debe sentir?"),
+                _parte(None, "", tipo="pregunta", pregunta="¿Qué NO quieres que aparezca?"),
             ]
         if tarea == "ordenar_notas":
             notas = (des.get("notas") or "").strip()
@@ -42,11 +51,15 @@ class Simulado:
             if trozos:
                 partes.append(_parte("intencion", trozos[0]))
             if len(trozos) > 1:
-                partes.append(_parte("premisa" if "premisa" in contexto.get("campos", []) else "notas", trozos[1]))
+                destino = "premisa" if "premisa" in contexto.get("campos", []) else "notas"
+                partes.append(_parte(destino, trozos[1]))
             return partes
         if tarea == "proponer_campo" and campo in CAMPOS_VALIDOS:
-            base = (des.get("intencion") or "esta pieza").strip()
-            return [_parte(campo, f"[Propuesta simulada para «{campo}»] A partir de: {base[:80]}")]
+            texto = (
+                f"Propuesta simulada para «{campo}». Texto de relleno evidente; "
+                "conecta un modelo real (ProveedorTexto, §10) para propuestas de verdad."
+            )
+            return [_parte(campo, texto)]
         return []
 
 
@@ -63,10 +76,13 @@ class Anthropic:
 
         sistema = (
             "Eres un asistente de desarrollo creativo. NO decides por el usuario: solo propones. "
-            "Responde SIEMPRE en español y SOLO con un JSON válido: "
-            '{"partes":[{"destino_campo":"<campo>","texto":"<texto>","modo":"reemplazar|anadir"}]}. '
+            "Responde SIEMPRE en español y SOLO con un JSON válido con la forma "
+            '{"partes":[...]}. '
+            "Para la tarea hacer_preguntas, cada parte es una pregunta: "
+            '{"tipo":"pregunta","pregunta":"<texto de la pregunta>"} (no rellenes respuesta). '
+            "Para proponer_campo y ordenar_notas, cada parte propone texto para un campo: "
+            '{"tipo":"campo","destino_campo":"<campo>","texto":"<texto>","modo":"reemplazar|anadir"}. '
             f"Campos válidos: {sorted(CAMPOS_VALIDOS)}. "
-            "Para hacer_preguntas usa destino_campo='notas' y modo='anadir' (una pregunta por parte). "
             "No inventes escenas, planos ni datos de otros proyectos."
         )
         tarea_txt = {
@@ -97,6 +113,9 @@ class Anthropic:
             datos = json.loads(texto[ini:fin])
             partes = []
             for p in datos.get("partes", []):
+                if p.get("tipo") == "pregunta" and p.get("pregunta"):
+                    partes.append(_parte(None, "", tipo="pregunta", pregunta=str(p["pregunta"]).strip()))
+                    continue
                 destino = p.get("destino_campo")
                 if destino in CAMPOS_VALIDOS and p.get("texto"):
                     partes.append(_parte(destino, str(p["texto"]).strip(), p.get("modo", "reemplazar")))

@@ -130,7 +130,7 @@ export default function Apertura() {
               onClick={() => navegar(retomar.ultima_ubicacion || `/p/${retomar.proyecto_id}/idea`)}
               className="group w-full rounded-panel bg-superficie p-8 text-left shadow-card transition-[box-shadow,transform] duration-[180ms] ease-suave hover:shadow-context focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
             >
-              <div className="flex items-center gap-2 text-[13px] leading-[18px] font-medium uppercase tracking-wide text-acento">
+              <div className="flex items-center gap-2 text-[13px] leading-[18px] font-medium text-acento">
                 <Play size={15} strokeWidth={2.2} /> Retomar
               </div>
               <div className="mt-3 text-[22px] leading-[30px] font-semibold text-tinta">
