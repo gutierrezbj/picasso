@@ -73,6 +73,11 @@ async def borrar_espacio(espacio_id: str):
     proyectos = await db.proyectos.find({"espacio_id": espacio_id}).to_list(1000)
     ids = [p["_id"] for p in proyectos]
     elementos = await db.elementos.find({"espacio_id": espacio_id}).to_list(2000)
+    piezas = await db.piezas.find({"proyecto_id": {"$in": ids}}).to_list(2000)
+    guiones = await db.guiones.find({"pieza_id": {"$in": [p["_id"] for p in piezas]}}).to_list(2000)
+    await db.escenas.delete_many({"guion_id": {"$in": [g["_id"] for g in guiones]}})
+    await db.guiones.delete_many({"pieza_id": {"$in": [p["_id"] for p in piezas]}})
+    await db.piezas.delete_many({"proyecto_id": {"$in": ids}})
     await db.reparto.delete_many({"proyecto_id": {"$in": ids}})
     await db.desarrollos.delete_many({"_id": {"$in": ids}})
     await db.fichas.delete_many({"elemento_id": {"$in": [e["_id"] for e in elementos]}})

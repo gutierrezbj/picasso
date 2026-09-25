@@ -171,6 +171,8 @@ class Desarrollo(BaseModel):
 class PeticionAsistente(BaseModel):
     campo: Optional[str] = None  # para proponer_campo
     clase: Optional[ClaseElemento] = None  # para detectar_elementos
+    pieza_id: Optional[str] = None  # para las tareas del guion
+    escena_id: Optional[str] = None  # para reescribir_escena
 
 
 class AceptarParte(BaseModel):
@@ -292,3 +294,105 @@ class Reparto(BaseModel):
     papel: Optional[str] = None
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
+
+
+# --- Pieza, Guion, Escena y Encargo de imagen (§3.1, §6.3) ---
+
+
+class PiezaCrear(BaseModel):
+    numero: Optional[int] = None
+    titulo: Optional[str] = None
+    de_que_va: Optional[str] = None
+
+
+class PiezaEditar(BaseModel):
+    numero: Optional[int] = None
+    titulo: Optional[str] = None
+    de_que_va: Optional[str] = None
+    updated_at: str
+
+
+class Pieza(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    proyecto_id: str
+    numero: Optional[int] = None
+    titulo: Optional[str] = None
+    de_que_va: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class EncargoImagen(BaseModel):
+    que_se_muestra: Optional[str] = None
+    composicion: Optional[str] = None
+    intencion: Optional[str] = None
+    elementos: list[str] = Field(default_factory=list)  # ids del reparto
+    referencias: list[str] = Field(default_factory=list)  # ids de medios
+    numero_imagenes: int = 1
+
+
+class Guion(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    pieza_id: str
+    clase: str = "escenas"  # escenas | encargo (tipo imagen, §3.1)
+    estado: str = "borrador"  # borrador | aprobado
+    aprobado_en: Optional[str] = None
+    revision: int = 0
+    revision_en_curso: Optional[dict] = None  # {creada_en}: copia en borrador de las escenas
+    encargo: Optional[EncargoImagen] = None  # versión aprobada (clase encargo)
+    encargo_borrador: Optional[EncargoImagen] = None  # copia de trabajo
+    historial_revisiones: list[dict] = Field(default_factory=list)
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class Dialogo(BaseModel):
+    hablante: str  # elemento_id | "narrador"
+    texto: str = ""
+
+
+class EscenaCrear(BaseModel):
+    titulo: Optional[str] = None
+
+
+class EscenaEditar(BaseModel):
+    titulo: Optional[str] = None
+    que_ocurre: Optional[str] = None
+    que_se_ve: Optional[str] = None
+    intencion: Optional[str] = None
+    elementos: Optional[list[str]] = None
+    dialogos: Optional[list[Dialogo]] = None
+    sonido_previsto: Optional[str] = None
+    duracion_orientativa_s: Optional[float] = None
+    updated_at: str
+
+
+class Escena(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    guion_id: str
+    orden: int
+    borrador: bool = True  # True: escena de trabajo; False: escena del guion aprobado
+    origen_id: Optional[str] = None  # escena aprobada de la que es copia
+    titulo: str = ""
+    que_ocurre: str = ""
+    que_se_ve: str = ""
+    intencion: str = ""
+    elementos: list[str] = Field(default_factory=list)  # ids del reparto
+    dialogos: list[Dialogo] = Field(default_factory=list)
+    sonido_previsto: Optional[str] = None
+    duracion_orientativa_s: Optional[float] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class EncargoEditar(BaseModel):
+    que_se_muestra: Optional[str] = None
+    composicion: Optional[str] = None
+    intencion: Optional[str] = None
+    elementos: Optional[list[str]] = None
+    referencias: Optional[list[str]] = None
+    numero_imagenes: Optional[int] = None
+
+
+class AprobarRevision(BaseModel):
+    marcas: dict[str, str]  # escena_id -> solo_texto | afecta_planos

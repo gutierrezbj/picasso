@@ -1,7 +1,7 @@
 """Estado derivado (§3.2): qué pasos están «listos». No se guarda a mano.
 
-Fase 3: además del paso de Idea, los pasos de elementos (P5).
-Los pasos de Guion, Lienzo y Montaje llegan en fases posteriores.
+Fase 4: el paso de Idea, los pasos de elementos (P5) y el Guion / Encargo de
+imagen / Capítulos (P6). Los pasos de Lienzo y Montaje llegan en fases posteriores.
 """
 from __future__ import annotations
 
@@ -53,5 +53,14 @@ async def completado_de(db, proyecto: dict) -> dict:
             if p.get("requiere_referencia"):
                 candidatas = [a for a in candidatas if a["ficha"].get("referencias")]
             completado[p["clave"]] = bool(candidatas)
+
+    if any(p["pantalla"] == "guion" for p in pasos):
+        piezas = await db.piezas.find({"proyecto_id": proyecto["id"]}).to_list(500)
+        ids = [p["_id"] for p in piezas]
+        guiones = await db.guiones.find({"pieza_id": {"$in": ids}}).to_list(500)
+        hay_aprobado = any(g["estado"] == "aprobado" for g in guiones)
+        for p in pasos:
+            if p["pantalla"] == "guion":
+                completado[p["clave"]] = hay_aprobado
 
     return completado

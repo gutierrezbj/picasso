@@ -7,6 +7,10 @@ export const ETIQUETA_CAMPO = {
   mundo: "Mundo",
   arco_general: "Arco general",
   notas: "Notas",
+  titulo: "Título",
+  que_ocurre: "Qué ocurre",
+  que_se_ve: "Qué se ve",
+  sonido_previsto: "Sonido previsto",
 };
 
 export const AYUDA_CAMPO = {

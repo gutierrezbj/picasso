@@ -6,10 +6,18 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 
 from app.api.formatos import formato_generico
+from app.api.guiones import _activas, _asegurar_trabajo, _guion_de_pieza, _guion_por_id
 from app.api.reparto import entradas_reparto
 from app.asistente import proveedor as prov
 from app.db import db, sin_id
-from app.dominio.modelos import AceptarParte, Elemento, FichaVersion, PeticionAsistente, Reparto
+from app.dominio.modelos import (
+    AceptarParte,
+    Elemento,
+    Escena,
+    FichaVersion,
+    PeticionAsistente,
+    Reparto,
+)
 
 router = APIRouter(prefix="/api", tags=["asistente"])
 
@@ -28,7 +36,7 @@ async def estado():
     return {"disponible": p is not None, "motivo": motivo, "modelo": modelo}
 
 
-async def _contexto(proyecto: dict, clase: str | None) -> dict:
+async def _contexto(proyecto: dict, clase: str | None, pieza_id: str | None = None, escena_id: str | None = None) -> dict:
     des = await db.desarrollos.find_one({"_id": proyecto["id"]})
     fmt = formato_generico(proyecto["tipo"])
     reparto = await entradas_reparto(proyecto["id"])
@@ -43,6 +51,16 @@ async def _contexto(proyecto: dict, clase: str | None) -> dict:
         if e["elemento"] and e["ficha"] and e["ficha"]["estado"] == "aprobada"
     ]
     nombres = [e["elemento"]["nombre"] for e in reparto if e["elemento"]]
+    escenas: list = []
+    escena = None
+    if pieza_id:
+        guion = await _guion_de_pieza(pieza_id)
+        escenas = await _activas(guion)
+        if escena_id:
+            escena = next((e for e in escenas if e["id"] == escena_id), None)
+            if escena is None:
+                aprobadas = [e for e in await _activas(guion)]
+                escena = next((e for e in aprobadas if e.get("origen_id") == escena_id), None)
     return {
         "tipo": proyecto["tipo"],
         "desarrollo": sin_id(des) if des else {},
@@ -51,6 +69,9 @@ async def _contexto(proyecto: dict, clase: str | None) -> dict:
         "clase": clase,
         "reparto": aprobados,
         "nombres_en_proyecto": nombres,
+        "pieza_id": pieza_id,
+        "escenas": escenas,
+        "escena": escena,
     }
 
 
@@ -66,13 +87,14 @@ async def proponer(proyecto_id: str, tarea: str, datos: PeticionAsistente):
     if proveedor is None:
         raise HTTPException(409, motivo)
     clase = datos.clase.value if datos.clase else None
-    contexto = await _contexto(sin_id(proy), clase)
+    contexto = await _contexto(sin_id(proy), clase, datos.pieza_id, datos.escena_id)
     partes = proveedor.proponer(contexto, tarea, datos.campo)
     _pid = uuid.uuid4().hex
     doc = {
         "_id": _pid,
         "id": _pid,
         "proyecto_id": proyecto_id,
+        "pieza_id": datos.pieza_id,
         "tarea": tarea,
         "proveedor": proveedor.id,
         "partes": partes,
@@ -115,6 +137,40 @@ async def _aceptar_elemento(proyecto_id: str, parte: dict, nombre: str) -> dict:
     return {"ok": True, "elemento_id": elemento_id}
 
 
+async def _aceptar_escena(pieza_id: str, titulo: str, que_ocurre: str) -> dict:
+    guion = await _asegurar_trabajo(await _guion_de_pieza(pieza_id))
+    if guion["clase"] == "encargo":
+        raise HTTPException(409, "Un encargo de imagen no tiene escenas.")
+    activas = await _activas(guion)
+    escena = Escena(
+        guion_id=guion["id"],
+        orden=len(activas) + 1,
+        borrador=True,
+        titulo=titulo,
+        que_ocurre=que_ocurre,
+    )
+    doc = escena.model_dump(mode="json")
+    doc["_id"] = doc["id"]
+    await db.escenas.insert_one(doc)
+    return {"ok": True, "escena_id": escena.id}
+
+
+async def _aceptar_escena_campo(pieza_id: str, escena_id: str, campo: str, texto: str) -> dict:
+    if campo not in prov.CAMPOS_ESCENA_VALIDOS:
+        raise HTTPException(400, "Campo de escena no válido.")
+    guion = await _asegurar_trabajo(await _guion_de_pieza(pieza_id))
+    activas = await _activas(guion)
+    destino = next((e for e in activas if e["id"] == escena_id), None)
+    if destino is None:
+        destino = next((e for e in activas if e.get("origen_id") == escena_id), None)
+    if destino is None:
+        raise HTTPException(404, "La escena de la propuesta ya no existe.")
+    await db.escenas.update_one(
+        {"_id": destino["id"]}, {"$set": {campo: texto, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"ok": True, "escena_id": destino["id"]}
+
+
 @router.post("/propuestas/{propuesta_id}/parte/{parte_id}")
 async def resolver_parte(propuesta_id: str, parte_id: str, datos: AceptarParte):
     prop = await db.propuestas.find_one({"_id": propuesta_id})
@@ -138,6 +194,31 @@ async def resolver_parte(propuesta_id: str, parte_id: str, datos: AceptarParte):
         if not nombre:
             raise HTTPException(400, "El elemento necesita un nombre.")
         resultado = await _aceptar_elemento(pid, parte, nombre)
+        parte["estado"] = "aceptada"
+        await db.propuestas.update_one({"_id": propuesta_id}, {"$set": {"partes": prop["partes"]}})
+        return resultado
+
+    # aceptar una escena propuesta o la reescritura de un campo de escena (§6.3)
+    if parte.get("tipo") == "escena":
+        if not prop.get("pieza_id"):
+            raise HTTPException(409, "La propuesta no sabe a qué pieza pertenece.")
+        titulo = (datos.texto or parte.get("nombre") or "").strip()
+        if not titulo:
+            raise HTTPException(400, "La escena necesita un título.")
+        # Con el proveedor simulado el texto es el aviso de que es simulado, no contenido.
+        que_ocurre = (parte.get("texto") or "") if prop["proveedor"] != "simulado" else ""
+        resultado = await _aceptar_escena(prop["pieza_id"], titulo, que_ocurre)
+        parte["estado"] = "aceptada"
+        await db.propuestas.update_one({"_id": propuesta_id}, {"$set": {"partes": prop["partes"]}})
+        return resultado
+
+    if parte.get("tipo") == "escena_campo":
+        if not prop.get("pieza_id") or not parte.get("escena_id"):
+            raise HTTPException(409, "La propuesta no sabe a qué escena pertenece.")
+        texto = (datos.texto if datos.texto is not None else parte["texto"]).strip()
+        resultado = await _aceptar_escena_campo(
+            prop["pieza_id"], parte["escena_id"], parte["destino_campo"], texto
+        )
         parte["estado"] = "aceptada"
         await db.propuestas.update_one({"_id": propuesta_id}, {"$set": {"partes": prop["partes"]}})
         return resultado

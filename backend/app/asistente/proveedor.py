@@ -7,7 +7,14 @@ import json
 import os
 import uuid
 
-TAREAS = {"hacer_preguntas", "proponer_campo", "ordenar_notas", "detectar_elementos"}
+TAREAS = {
+    "hacer_preguntas",
+    "proponer_campo",
+    "ordenar_notas",
+    "detectar_elementos",
+    "proponer_escenas",
+    "reescribir_escena",
+}
 
 CLASES_ELEMENTO = {"personaje", "producto", "objeto", "escenario"}
 
@@ -15,16 +22,29 @@ CLASES_ELEMENTO = {"personaje", "producto", "objeto", "escenario"}
 CAMPOS_VALIDOS = {"intencion", "publico", "mensaje", "tono", "premisa", "mundo", "arco_general", "notas"}
 
 
-def _parte(destino, texto, modo="reemplazar", tipo="campo", pregunta=None, clase=None, nombre=None):
+CAMPOS_ESCENA_VALIDOS = {"titulo", "que_ocurre", "que_se_ve", "intencion", "sonido_previsto"}
+
+
+def _parte(
+    destino,
+    texto,
+    modo="reemplazar",
+    tipo="campo",
+    pregunta=None,
+    clase=None,
+    nombre=None,
+    escena_id=None,
+):
     return {
         "id": uuid.uuid4().hex,
-        "tipo": tipo,  # campo | pregunta | elemento
+        "tipo": tipo,  # campo | pregunta | elemento | escena | escena_campo
         "pregunta": pregunta,
         "destino_campo": destino,
         "texto": texto,
         "modo": modo,
         "clase": clase,
         "nombre": nombre,
+        "escena_id": escena_id,
         "estado": "pendiente",
     }
 
@@ -110,6 +130,32 @@ class Simulado:
                 )
                 for n in nombres
             ]
+        if tarea == "proponer_escenas":
+            numero = len(contexto.get("escenas") or [])
+            return [
+                _parte(
+                    None,
+                    "Escena simulada: el proveedor simulado no escribe guion. "
+                    "Al aceptarla se crea una escena vacía con este título y la escribes tú.",
+                    tipo="escena",
+                    nombre=f"Escena {numero + i + 1} (propuesta simulada)",
+                )
+                for i in range(2)
+            ]
+        if tarea == "reescribir_escena":
+            escena = contexto.get("escena") or {}
+            destino = campo if campo in CAMPOS_ESCENA_VALIDOS else "que_ocurre"
+            if not escena.get("id"):
+                return []
+            return [
+                _parte(
+                    destino,
+                    f"Reescritura simulada de «{destino}». Texto de relleno evidente; "
+                    "conecta un modelo real (ProveedorTexto, §10) para reescrituras de verdad.",
+                    tipo="escena_campo",
+                    escena_id=escena["id"],
+                )
+            ]
         return []
 
 
@@ -134,7 +180,12 @@ class Anthropic:
             '{"tipo":"campo","destino_campo":"<campo>","texto":"<texto>","modo":"reemplazar|anadir"}. '
             'Para detectar_elementos, cada parte es un elemento que el desarrollo menciona: '
             '{"tipo":"elemento","nombre":"<nombre>","texto":"<por qué lo propones>"}. '
-            f"Campos válidos: {sorted(CAMPOS_VALIDOS)}. "
+            'Para proponer_escenas, cada parte es una escena nueva: '
+            '{"tipo":"escena","nombre":"<título>","texto":"<qué ocurre>"}. '
+            'Para reescribir_escena, cada parte reescribe un campo de la escena: '
+            '{"tipo":"escena_campo","destino_campo":"<campo de escena>","texto":"<texto>"}. '
+            f"Campos válidos del desarrollo: {sorted(CAMPOS_VALIDOS)}. "
+            f"Campos válidos de una escena: {sorted(CAMPOS_ESCENA_VALIDOS)}. "
             "No inventes escenas, planos ni datos de otros proyectos."
         )
         tarea_txt = {
@@ -144,6 +195,15 @@ class Anthropic:
             "detectar_elementos": (
                 f"Propón los elementos de clase «{contexto.get('clase')}» que el desarrollo menciona "
                 f"y que no están ya en el proyecto. Ya están: {contexto.get('nombres_en_proyecto')}."
+            ),
+            "proponer_escenas": (
+                "Propón como máximo 3 escenas nuevas coherentes con el desarrollo y con las escenas "
+                f"que ya hay: {[e.get('titulo') for e in (contexto.get('escenas') or [])]}. "
+                "No inventes elementos que no estén en el reparto."
+            ),
+            "reescribir_escena": (
+                f"Reescribe el campo «{campo}» de esta escena sin cambiar lo que cuenta: "
+                f"{contexto.get('escena')}."
             ),
         }[tarea]
         prompt = f"{tarea_txt}\n\nContexto del proyecto (JSON):\n{json.dumps(contexto, ensure_ascii=False)}"
@@ -160,9 +220,13 @@ class Anthropic:
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as ex:
                 texto = ex.submit(lambda: asyncio.run(_run())).result()
-        return self._parsear(texto, campo, contexto.get("clase"))
+        return self._parsear(
+            texto, campo, contexto.get("clase"), (contexto.get("escena") or {}).get("id")
+        )
 
-    def _parsear(self, texto: str, campo: str | None, clase: str | None = None) -> list[dict]:
+    def _parsear(
+        self, texto: str, campo: str | None, clase: str | None = None, contexto_escena_id: str | None = None
+    ) -> list[dict]:
         try:
             ini = texto.index("{")
             fin = texto.rindex("}") + 1
@@ -171,6 +235,28 @@ class Anthropic:
             for p in datos.get("partes", []):
                 if p.get("tipo") == "pregunta" and p.get("pregunta"):
                     partes.append(_parte(None, "", tipo="pregunta", pregunta=str(p["pregunta"]).strip()))
+                    continue
+                if p.get("tipo") == "escena" and p.get("nombre"):
+                    partes.append(
+                        _parte(
+                            None,
+                            str(p.get("texto") or "").strip(),
+                            tipo="escena",
+                            nombre=str(p["nombre"]).strip(),
+                        )
+                    )
+                    continue
+                if p.get("tipo") == "escena_campo" and p.get("texto"):
+                    destino = p.get("destino_campo")
+                    if destino in CAMPOS_ESCENA_VALIDOS:
+                        partes.append(
+                            _parte(
+                                destino,
+                                str(p["texto"]).strip(),
+                                tipo="escena_campo",
+                                escena_id=(contexto_escena_id or None),
+                            )
+                        )
                     continue
                 if p.get("tipo") == "elemento" and p.get("nombre"):
                     partes.append(

@@ -36,6 +36,10 @@ export const useReparto = (proyectoId, clase) =>
   });
 export const useBiblioteca = (espacioId) =>
   useQuery({ queryKey: ["biblioteca", espacioId], queryFn: () => api.biblioteca(espacioId), enabled: !!espacioId });
+export const usePiezas = (proyectoId) =>
+  useQuery({ queryKey: ["piezas", proyectoId], queryFn: () => api.piezas(proyectoId), enabled: !!proyectoId });
+export const useGuion = (piezaId) =>
+  useQuery({ queryKey: ["guion", piezaId], queryFn: () => api.guion(piezaId), enabled: !!piezaId });
 
 export function useCrearEspacio() {
   const qc = useQueryClient();

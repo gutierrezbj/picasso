@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Cabecera from "../componentes/Cabecera";
 import BarraRecorrido from "../componentes/BarraRecorrido";
 import SiguientePaso from "../componentes/SiguientePaso";
 import EstadoPaso from "../componentes/EstadoPaso";
 import { useProyecto } from "../api/hooks";
 import { api } from "../api/cliente";
+import { rutaPaso as rutaDePaso } from "../lib/rutas";
 
 export default function PasoMinimo({ pantalla }) {
   const { proyectoId, clave } = useParams();
@@ -58,6 +59,10 @@ export default function PasoMinimo({ pantalla }) {
 
   const indice = pasos.findIndex((p) => p.clave === paso.clave);
   const siguiente = pasos[indice + 1] || null;
+  // §4.2: el lienzo solo se abre con los pasos obligatorios listos y el guion aprobado.
+  const bloqueo = pasos
+    .slice(0, indice)
+    .filter((p) => p.obligatorio && p.estado !== "listo" && p.estado !== "no_hace_falta");
 
   return (
     <div className="min-h-full">
@@ -74,11 +79,40 @@ export default function PasoMinimo({ pantalla }) {
 
         <p className="mt-4 max-w-[68ch] text-[16px] leading-[24px] text-tinta2">{paso.construye}</p>
 
-        <div className="mt-8 rounded-card border border-linea bg-superficie2 px-5 py-4">
-          <p className="text-[14px] leading-[20px] text-tinta2" data-testid="aviso-fase">
-            Este paso se construye en la Fase {paso.fase}.
-          </p>
-        </div>
+        {pantalla === "lienzo" && bloqueo.length > 0 ? (
+          <div
+            className="mt-8 rounded-panel border border-linea bg-superficie px-6 py-5"
+            data-testid="lienzo-bloqueado"
+          >
+            <h2 className="text-[16px] leading-[24px] font-semibold text-tinta">
+              El lienzo todavía no se abre
+            </h2>
+            <p className="mt-2 text-[14px] leading-[20px] text-tinta2">
+              Se abre con todos los pasos obligatorios listos y el guion (o el encargo) aprobado.
+              Falta esto:
+            </p>
+            <ul className="mt-4 flex flex-col gap-2" data-testid="lista-falta">
+              {bloqueo.map((p) => (
+                <li key={p.clave}>
+                  <Link
+                    to={rutaDePaso(proyectoId, p)}
+                    data-testid={`falta-${p.clave}`}
+                    className="text-[16px] leading-[24px] text-acento underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+                  >
+                    {p.nombre}
+                  </Link>
+                  <span className="ml-2 text-[14px] leading-[20px] text-tinta2">{p.listo_cuando}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="mt-8 rounded-card border border-linea bg-superficie2 px-5 py-4">
+            <p className="text-[14px] leading-[20px] text-tinta2" data-testid="aviso-fase">
+              Este paso se construye en la Fase {paso.fase}.
+            </p>
+          </div>
+        )}
 
         <SiguientePaso proyectoId={proyectoId} paso={paso} siguiente={siguiente} />
       </main>

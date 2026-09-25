@@ -121,6 +121,32 @@ export const api = {
 
   biblioteca: (espacioId) => peticion(`/espacios/${espacioId}/biblioteca`),
   editarProyecto: (id, datos) => peticion(`/proyectos/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
+
+  // --- Fase 4: piezas, guion y escenas ---
+  piezas: (proyectoId) => peticion(`/proyectos/${proyectoId}/piezas`),
+  crearPieza: (proyectoId, datos) =>
+    peticion(`/proyectos/${proyectoId}/piezas`, { method: "POST", body: JSON.stringify(datos) }),
+  editarPieza: (id, datos) => peticion(`/piezas/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
+  borrarPieza: (id) => peticion(`/piezas/${id}`, { method: "DELETE" }),
+
+  guion: (piezaId) => peticion(`/piezas/${piezaId}/guion`),
+  crearEscena: (piezaId, datos) =>
+    peticion(`/piezas/${piezaId}/guion/escenas`, { method: "POST", body: JSON.stringify(datos) }),
+  editarEscena: (id, datos) => peticion(`/escenas/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
+  borrarEscena: (id) => peticion(`/escenas/${id}`, { method: "DELETE" }),
+  moverEscena: (id, datos) =>
+    peticion(`/escenas/${id}/mover`, { method: "POST", body: JSON.stringify(datos) }),
+  guardarEncargo: (piezaId, datos) =>
+    peticion(`/piezas/${piezaId}/guion/encargo`, { method: "PUT", body: JSON.stringify(datos) }),
+  aprobarGuion: (piezaId) => peticion(`/piezas/${piezaId}/guion/aprobar`, { method: "POST" }),
+  aprobarRevision: (piezaId, marcas) =>
+    peticion(`/piezas/${piezaId}/guion/revision/aprobar`, {
+      method: "POST",
+      body: JSON.stringify({ marcas }),
+    }),
+  descartarRevision: (piezaId) =>
+    peticion(`/piezas/${piezaId}/guion/revision/descartar`, { method: "POST" }),
+  crearRevision: (piezaId) => peticion(`/piezas/${piezaId}/guion/revision`, { method: "POST" }),
 };
 
 export { ErrorApi };

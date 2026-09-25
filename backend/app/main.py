@@ -12,7 +12,9 @@ from app.api import (
     espacios,
     estudio,
     formatos,
+    guiones,
     medios,
+    piezas,
     proyectos,
     reparto,
 )
@@ -38,6 +40,8 @@ app.include_router(medios.router)
 app.include_router(elementos.router)
 app.include_router(reparto.router)
 app.include_router(biblioteca.router)
+app.include_router(piezas.router)
+app.include_router(guiones.router)
 
 
 @app.get("/api/salud")

@@ -65,6 +65,69 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   tipo `imagen`. Resuelto por el usuario: el paso y su estado se llaman
   "Encargo de imagen", nunca "Guion". Aplicado en `recorridos.yaml`.
 
+## Fase 4 · Guion (P6)
+
+- **CONTRADICCIÓN EN EL DOCUMENTO (§14 F4 vs §6.3)**: El criterio de aceptación de la
+  F4 en el §14 dice «Editar después → vuelve a borrador. El lienzo está bloqueado
+  mientras esté en borrador», que es la regla **antigua**. El §6.3, que el usuario
+  reescribió el 25-09-2026, dice lo contrario: editar un guion aprobado **no** lo
+  desaprueba, crea una revisión en curso y el lienzo **sigue abierto**. Se ha construido
+  según el §6.3 (el usuario lo pidió expresamente). **Falta actualizar el criterio del
+  §14 F4** para que no se contradiga.
+
+- **PENDIENTE (§3.1, `revision_en_curso?`)**: El documento dice que es «copia en borrador
+  de las escenas mientras se edita un guion ya aprobado», pero no dice dónde vive esa
+  copia. Implementado así: las escenas son siempre filas de la colección `escenas` con un
+  campo `borrador`. Con `borrador: False` son las escenas del guion aprobado (intocables,
+  las que usará el lienzo); con `borrador: True` son la copia de la revisión en curso, y
+  cada copia guarda `origen_id` para poder calcular las diferencias. En el `Guion`,
+  `revision_en_curso` guarda solo `{creada_en}`.
+
+- **PENDIENTE (§3.1 Pieza vs §4.1 serie)**: El §4.1 pide que un capítulo tenga «número,
+  título y **de qué va**», pero el §3.1 solo define `numero?` y `titulo?`. Se ha añadido
+  `de_que_va?` a `Pieza`. Falta corregir uno de los dos apartados.
+
+- **PENDIENTE**: El documento no fija **requisitos mínimos para aprobar un guion**.
+  Decisión: al menos una escena, y todas con título y «qué ocurre». Para un **encargo de
+  imagen**: «qué se muestra» escrito y un número de imágenes mayor que cero. Cuando falta
+  algo, el botón está desactivado y al lado se explica exactamente qué falta.
+
+- **PENDIENTE (§6.3 en tipo imagen)**: Las revisiones del §6.3 están escritas en términos
+  de **escenas** (añadidas, editadas, eliminadas, reordenadas), y un **encargo de imagen**
+  no tiene escenas. Decisión: la revisión de un encargo muestra los campos que cambian con
+  su antes y después y se marca **una sola vez** («Solo texto» / «Afecta a las imágenes»).
+  Falta que el documento lo diga.
+
+- **PENDIENTE (§13, aplazado a la Fase 8)**: Al aprobar una revisión, los efectos del §13
+  todavía **no se aplican** porque no existen planos ni tomas hasta las Fases 5 y 6. Lo que
+  sí se hace ya es **guardar las marcas** de cada escena editada en
+  `guion.historial_revisiones`, para que la Fase 8 pueda aplicar las reglas sin volver a
+  preguntar. La interfaz del diálogo de revisión avisa de qué pasará con las escenas
+  eliminadas y reordenadas.
+
+- **PENDIENTE (§0.5 «nada se crea automáticamente»)**: Un corto, un anuncio y una imagen
+  tienen **una** pieza (§2). Esa pieza se crea sola al abrir el paso del guion, porque es
+  un contenedor vacío, no contenido: no fabrica idea, escenas ni material. En una **serie**
+  los capítulos los crea siempre el usuario. Falta confirmar que esta lectura es la
+  correcta.
+
+- **PENDIENTE (§3.1, incoherencia menor)**: En `Escena`, `elementos` son «ids del reparto»
+  (la fila de la tabla de relación) pero `dialogos.hablante` es un «elemento_id». Se ha
+  seguido el documento **al pie de la letra**, así que la pantalla resuelve las dos cosas
+  contra el reparto. Sería más limpio usar el mismo tipo de id en los dos sitios.
+
+- **PENDIENTE**: El `Encargo de imagen` (§4.1) pide «elementos» sin decir de qué tipo de id.
+  Se usan **ids del reparto**, igual que en `Escena`.
+
+- **Decisión de implementación**: al aprobar una revisión, cada escena que ya existía
+  **conserva su id**; solo las añadidas reciben uno nuevo. Así los planos que se construyan
+  en la Fase 5 seguirán apuntando a la misma escena después de cada revisión.
+
+- **PENDIENTE (§10, `proponer_escenas` con proveedor simulado)**: El proveedor simulado no
+  escribe guion. Propone escenas con un título marcado como simulado y, al aceptarlas, crea
+  la escena **vacía** para que la escribas tú. `reescribir_escena` devuelve un texto de
+  relleno evidente. El trabajo de verdad lo hará el proveedor real (§10) cuando lo actives.
+
 ## Fase 3 · Pasos de elementos, fichas, biblioteca y medios
 
 - **RESUELTO por el usuario (Fase 1 → hecho en Fase 3)**: Portada y logo del espacio.

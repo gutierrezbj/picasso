@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Sparkles } from "lucide-react";
 import Boton from "./Boton";
 import { AreaTexto, Entrada } from "./Campo";
@@ -24,12 +24,18 @@ export default function PanelAsistente({
   modo = "desarrollo",
   clase = null,
   preguntasFormato = [],
+  piezaId = null,
+  escenas = [],
+  peticionPendiente = null,
+  onPeticionConsumida,
 }) {
   const { data: estado } = useAsistenteEstado();
   const [items, setItems] = useState([]);
   const [campo, setCampo] = useState(CAMPOS_POR_TIPO[tipo]?.[0] || "intencion");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState(null);
+  const [claseGuion, setClaseGuion] = useState("personaje");
+  const pedirRef = useRef(null);
 
   const disponible = estado?.disponible;
   const campos = CAMPOS_POR_TIPO[tipo] || [];
@@ -45,7 +51,7 @@ export default function PanelAsistente({
     setCargando(true);
     setError(null);
     try {
-      const p = await api.proponer(proyectoId, tarea, extra);
+      const p = await api.proponer(proyectoId, tarea, { ...(extra || {}), pieza_id: piezaId });
       if (!p.partes.length) {
         setError(
           tarea === "detectar_elementos"
@@ -56,7 +62,7 @@ export default function PanelAsistente({
       const nuevos = p.partes.map((x) => ({
         ...x,
         propId: p.id,
-        edit: x.tipo === "elemento" ? x.nombre || "" : x.texto || "",
+        edit: x.tipo === "elemento" || x.tipo === "escena" ? x.nombre || "" : x.texto || "",
         destinoSel: x.destino_campo || destinos[0]?.valor || "notas",
       }));
       setItems((prev) => [...nuevos, ...prev]);
@@ -89,6 +95,17 @@ export default function PanelAsistente({
   const actualizar = (id, campos_) =>
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...campos_ } : x)));
 
+  pedirRef.current = pedir;
+
+  // Peticiones lanzadas desde fuera del panel (p. ej. «Pedir reescritura» en una escena).
+  useEffect(() => {
+    if (!peticionPendiente || !disponible) return;
+    const { tarea, ...extra } = peticionPendiente;
+    pedirRef.current(tarea, extra);
+    onPeticionConsumida?.();
+    // eslint-disable-next-line
+  }, [peticionPendiente, disponible]);
+
   return (
     <aside
       data-testid="panel-asistente"
@@ -109,7 +126,44 @@ export default function PanelAsistente({
           </p>
 
           <div className="mt-4 flex flex-col gap-2">
-            {modo === "elementos" ? (
+            {modo === "guion" ? (
+              <>
+                <Boton
+                  pequeno
+                  variante="secundario"
+                  data-testid="btn-proponer-escenas"
+                  disabled={cargando}
+                  onClick={() => pedir("proponer_escenas")}
+                >
+                  Proponer escenas
+                </Boton>
+                <div className="flex gap-2">
+                  <Selector
+                    data-testid="select-clase-detectar"
+                    valor={claseGuion}
+                    onChange={setClaseGuion}
+                    opciones={[
+                      { valor: "personaje", texto: "Personajes" },
+                      { valor: "objeto", texto: "Objetos" },
+                      { valor: "producto", texto: "Productos" },
+                      { valor: "escenario", texto: "Escenarios" },
+                    ]}
+                  />
+                  <Boton
+                    pequeno
+                    data-testid="btn-detectar-elementos"
+                    disabled={cargando}
+                    onClick={() => pedir("detectar_elementos", { clase: claseGuion })}
+                  >
+                    Detectar
+                  </Boton>
+                </div>
+                <p className="text-[13px] leading-[18px] text-tinta2">
+                  {escenas.length} escena{escenas.length === 1 ? "" : "s"} en el guion. Pide una
+                  reescritura desde cada escena.
+                </p>
+              </>
+            ) : modo === "elementos" ? (
               <Boton
                 pequeno
                 variante="secundario"
@@ -191,6 +245,34 @@ export default function PanelAsistente({
                       <AreaTexto
                         className="!min-h-[60px] text-[14px]"
                         placeholder="Tu respuesta…"
+                        value={item.edit}
+                        onChange={(e) => actualizar(item.id, { edit: e.target.value })}
+                      />
+                    </>
+                  )}
+
+                  {item.tipo === "escena" && (
+                    <>
+                      <div className="mb-2 text-[13px] font-medium text-tinta2">Escena propuesta</div>
+                      <Entrada
+                        data-testid="propuesta-titulo-escena"
+                        value={item.edit}
+                        onChange={(e) => actualizar(item.id, { edit: e.target.value })}
+                      />
+                      {item.texto && (
+                        <p className="mt-2 text-[13px] leading-[18px] text-tinta2">{item.texto}</p>
+                      )}
+                    </>
+                  )}
+
+                  {item.tipo === "escena_campo" && (
+                    <>
+                      <div className="mb-2 text-[13px] font-medium text-tinta2">
+                        Reescritura · {ETIQUETA_CAMPO[item.destino_campo] || item.destino_campo}
+                      </div>
+                      <AreaTexto
+                        className="!min-h-[60px] text-[14px]"
+                        data-testid="propuesta-reescritura"
                         value={item.edit}
                         onChange={(e) => actualizar(item.id, { edit: e.target.value })}
                       />
