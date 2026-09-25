@@ -1,0 +1,36 @@
+{
+  "summary": "Verificadas las 5 correcciones pedidas por el usuario (C1..C5) + regresión Fase 3 + limpieza. Todo el trabajo se hizo EXCLUSIVAMENTE en el espacio «Pruebas del constructor». Espacio 1 y Proyecto 1 del usuario quedaron intactos (0 elementos, 0 medios, Paso 1 · Idea) y la tarjeta «Retomar» vuelve a apuntar a «Espacio 1 · Proyecto 1 · Paso 1 de 7 · Idea» tras la limpieza mongosh. No se crearon nuevos espacios; no se borró ningún espacio existente. Todos los data-testid solicitados están presentes y funcionan.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "results_per_correction": {
+    "C1_aislamiento": "OK — Retomar → Espacio 1 · Proyecto 1 · Paso 1 · Idea. Espacio SIM 2 no existe. Pruebas del constructor tiene sus 2 proyectos. Biblioteca de Espacio 1 vacía: pestana-elementos (0) + elementos-vacio + pestana-medios (0) + medios-vacio. Verificado antes de todos los tests y de nuevo al final.",
+    "C2a_personajes": "OK — btn-aprobar-ficha DESACTIVADO con aviso 'Para aprobar la versión, añade al menos una imagen de referencia.'; tras subir con subir-referencia-input, se HABILITA y el aviso pasa a 'Al aprobarla queda congelada; es la que usará la producción.' Aprobación exitosa.",
+    "C2b_productos": "OK — mismo comportamiento en Anuncio de pruebas → paso Producto (aprobar deshabilitado sin referencia, habilitado tras subir).",
+    "C2c_escenarios_objetos": "OK — En mundo/escenarios y en objetos, btn-aprobar-ficha HABILITADO sin referencia; ambos aprobados correctamente sin subir ninguna imagen.",
+    "C3_estas_aqui": "OK — En Personajes: único marcador estas-aqui-personajes dentro de paso-personajes con texto 'ESTÁS AQUÍ'. Al navegar a Guion → único marcador estas-aqui-guion. En Idea → único marcador estas-aqui-idea. En cada vista sólo el botón visitado tiene ring; el paso_actual (p.ej. Mundo/Guion 'En curso') aparece con su estado-en_curso pero sin ring ni marcador. Sólo existe UN elemento cuyo data-testid empieza por 'estas-aqui-' en cada vista.",
+    "C4_visor_referencia": "OK — referencia-abrir-0 abre visor-referencia con visor-referencia-imagen class que contiene 'object-contain'. Título con el nombre de archivo (ref1.png) y línea 'Imagen completa, sin recortar · 200×150'. Miniatura del listado sigue con object-cover. Cerrado con cerrar-dialogo y con Escape funciona correctamente.",
+    "C5a_titulo_biblioteca": "OK — page.title() en /e/{id}/biblioteca = 'Biblioteca · Pruebas del constructor · Picasso'. Al volver a / el título vuelve a 'Estudio'.",
+    "C5b_plural_versiones": "OK — Elemento con 2 versiones muestra '2 versiones'; elementos con 1 versión muestran '1 versión'. Búsqueda de 'versiónes' (con tilde en la ó) devolvió 0 coincidencias en la biblioteca."
+  },
+  "regression_summary": "OK — btn-traer-biblioteca abre dialogo-traer-elemento; info-version-fijada + aviso-version-nueva + btn-actualizar-version presentes tras crear v2 (visible en pantalla); btn-preparar-referencias desactivado con el texto 'Disponible cuando esté el motor (Fase 6)'; btn-detectar-elementos presente en el asistente; paso opcional Objetos con btn-no-hace-falta y btn-recuperar-paso funcionales; subir-medio-biblioteca-input funciona (subida completada, contador pasó a Medios (3)); borrado bloqueado de medio en uso muestra error-biblioteca con texto 'No se puede borrar: se usa como referencia en TEST_PersC2a.'.",
+  "notes": [
+    "select-destino-respuesta no aparece en la vista Idea del Corto en el momento de la comprobación (el asistente muestra 'Ordenar mis notas' + 'Proponer' con select 'Intención', no 'Responder en'). Puede que ese select-destino-respuesta aparezca en otro modo del asistente (Hacer preguntas). No es un fallo de las 5 correcciones ni bloqueante; ya se validó en la iteration_3.",
+    "Selector de rol y botón de quitar de referencia: sólo son visibles en versiones editables (no-aprobadas). En una v1 ya aprobada aparecen ocultos por diseño. Se validó igualmente que las miniaturas de referencia siguen mostrándose (object-cover) tras cerrar el visor y que se pueden abrir de nuevo.",
+    "Al pulsar la tarjeta Retomar la ruta abre directamente el proyecto del usuario, por lo que Proyecto 1 tiene ultimo_acceso reciente. No se ha modificado su contenido: 0 elementos, 0 versiones, 0 medios, sin paso_actual, sin pasos_completados. Cumple con la regla del usuario."
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "5/5 correcciones + regresión + limpieza OK"},
+  "test_credentials": "N/A (app sin autenticación)",
+  "seed_data_creation": "Creados en el espacio 'Pruebas del constructor' (baf5a93a0b08431cb00b1da5c9fbabc1) los elementos TEST_PersC2a (personaje, v1 y v2 aprobadas, 2 referencias), TEST_EscC2c (escenario aprobado sin referencia), TEST_ObjC2c (objeto aprobado sin referencia) y TEST_ProdC2b (producto v1 aprobado con 1 referencia). Biblioteca del espacio de pruebas: 4 elementos y 2 medios (ref1.png, ref2.png). Espacio 1 del usuario intacto.",
+  "cleanup": "Ejecutado mongosh updateMany para dejar ultimo_acceso de los proyectos de prueba en 2020-01-01, de modo que la tarjeta Retomar en / vuelva a apuntar a 'Espacio 1 · Proyecto 1 · Paso 1 de 7 · Idea'. Verificado en UI.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Las 5 correcciones (aislamiento de datos, aprobar exige referencia sólo en personajes/productos, marcador 'Estás aquí' unicó por vista, visor de referencia object-contain con 'sin recortar', título de biblioteca y plural 'versiones') están correctamente implementadas. El espacio del usuario 'Espacio 1' quedó intacto y la limpieza de ultimo_acceso está aplicada. Datos TEST_* creados en el espacio de pruebas 'Pruebas del constructor'."
+}

@@ -78,6 +78,20 @@ Validada por testing agent (iteration_3: frontend 100%, sin fallos) + verificaci
   (destinos `formato:<clave>`); la barra del recorrido queda fija bajo la cabecera.
 - Bug corregido: TDZ en `Desarrollo.jsx` («Cannot access 'recorrido' before initialization»).
 
+### Revisión de la Fase 3 por el usuario (25-09-2026 · verificada en iteration_4, 5/5)
+- **Aislamiento de datos**: las pruebas del constructor van solo en el espacio
+  «Pruebas del constructor». «Espacio 1 · Proyecto 1» queda limpio (Paso 1 · Idea, sin
+  elementos, sin versiones, sin medios) y «Retomar» refleja la última visita del usuario.
+  Borrado «Espacio SIM 2». Ids en `memory/test_credentials.md`.
+- **§4.3 (cambio escrito por decisión del usuario)**: para aprobar una versión de ficha,
+  personajes y productos exigen al menos una imagen de referencia; escenarios y objetos no.
+  El botón `Aprobar versión` queda desactivado y al lado se explica qué falta.
+- **§5.3**: el paso que se está viendo lleva el marcador fuerte «Estás aquí»; el paso actual
+  del proyecto se distingue solo por su estado «En curso».
+- **§22**: la miniatura de una referencia puede recortarse, pero al pulsarla se abre la
+  imagen completa sin recortar en un visor.
+- Biblioteca: título de pestaña «Biblioteca · <espacio> · Picasso» y plural «versiones».
+
 ## Backlog (orden del maestro §14)
 - P1 FASE 4 — Guion (P6): escenas, aprobación, lectura continua, encargo de imagen, capítulos.
   Incluye las **revisiones del guion** ya escritas por el usuario en §3.1, §6.3 y §13
