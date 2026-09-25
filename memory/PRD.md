@@ -92,13 +92,39 @@ Validada por testing agent (iteration_3: frontend 100%, sin fallos) + verificaci
   imagen completa sin recortar en un visor.
 - Biblioteca: título de pestaña «Biblioteca · <espacio> · Picasso» y plural «versiones».
 
+### ✅ FASE 4 — Guion (P6) (COMPLETADA · 25-09-2026)
+Validada por testing agent (iteration_5: 13/13 flujos; iteration_6: retest de 2 correcciones, 0 fallos)
++ backend verificado de extremo a extremo con los scripts de `/app/scripts_pruebas`.
+- **Texto del usuario aplicado al documento maestro** (§3.1 `Guion` con `revision_en_curso?`,
+  §6.3 revisiones, §13 «Aprobar una revisión del guion», moneda USD en §3.1 Ajustes y §9.4,
+  «Nombre del producto: Picasso» en la cabecera). Además se quitó el selector de moneda de
+  Ajustes: «Moneda · USD» como dato fijo.
+- **P6 Guion** (`/p/:proyecto/guion[/:pieza]`): lista vertical de escenas editables en sitio con
+  autoguardado; título, qué ocurre, qué se ve, intención, sonido previsto, duración orientativa.
+- **Reordenar** arrastrando o con `Subir`/`Bajar` (accesibles por teclado); la numeración se recalcula.
+- **Elementos de la escena**: chips del reparto del proyecto y nada más. **Diálogos**: hablante
+  (narrador o elemento del reparto) + texto.
+- **Leer guion completo**: el guion como documento continuo, solo lectura.
+- **Aprobación y revisiones (§6.3)**: la primera aprobación abre el lienzo. Editar un guion aprobado
+  NO lo desaprueba: `Editar el guion` abre una **revisión en curso** (copia en borrador de las
+  escenas) y el guion aprobado sigue vigente. `Aprobar revisión` lista escenas añadidas, editadas,
+  eliminadas y reordenadas con sus diferencias y exige marcar en cada escena editada `Solo texto`
+  o `Afecta a los planos`; al confirmar, `revision` sube en uno y las marcas quedan guardadas en
+  `historial_revisiones` para la Fase 8. `Descartar revisión` vuelve al guion aprobado.
+- **Encargo de imagen** (tipo imagen): mismo ciclo borrador/aprobado, con qué se muestra,
+  composición, intención, elementos del reparto, referencias y número de imágenes.
+- **Capítulos** (serie): lista de capítulos (número, título, de qué va), cada uno con su guion;
+  el paso queda listo con un capítulo aprobado.
+- **Crear un elemento que falta sin salir del guion (§4.2)**: panel con clase, nombre, descripción
+  y referencias; se aprueba su ficha v1 y entra en el reparto.
+- **Lienzo bloqueado y explicado (§4.2)**: lista de lo que falta con un enlace a cada paso.
+- **Asistente del guion (§10)**: `proponer_escenas` y `reescribir_escena` (además de
+  `detectar_elementos`), aceptables una a una. El proveedor simulado no escribe guion.
+- Los planos NO se definen aquí (llegan en el lienzo, Fase 5).
+
 ## Backlog (orden del maestro §14)
-- P1 FASE 4 — Guion (P6): escenas, aprobación, lectura continua, encargo de imagen, capítulos.
-  Incluye las **revisiones del guion** ya escritas por el usuario en §3.1, §6.3 y §13
-  (25-09-2026): editar un guion aprobado crea una `revision_en_curso` sin desaprobarlo;
-  `Aprobar revisión` lista escenas añadidas/editadas/eliminadas/reordenadas y por cada
-  escena editada el usuario marca `Solo texto` o `Afecta a los planos`; `Descartar revisión`.
-- P2 FASE 5 — Lienzo (P7) sin producción (React Flow).
+- P1 FASE 5 — Lienzo (P7) sin producción (React Flow): estructura desde el guion, grupos,
+  fichas contextuales, dirección, vista previa del prompt, persistencia del layout.
 - P2 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
   inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina).
 - P2 FASE 7 — Montaje (P8) + exportación ZIP/FCPXML.
@@ -112,3 +138,7 @@ Validada por testing agent (iteration_3: frontend 100%, sin fallos) + verificaci
 - §3.1 vs §6.2: `ambiente`/`distribucion` de escenario no están en la lista del §3.1.
 - Catálogo de voces del personaje (depende de Fase 9).
 - El almacén local no está garantizado como persistente en el entorno de previsualización.
+- §14 F4: el criterio de aceptación sigue diciendo «Editar después → vuelve a borrador», que
+  contradice el §6.3 reescrito. Se construyó según el §6.3. Falta actualizar el §14.
+- §3.1: `Pieza` no lista `de_que_va`, que sí pide el §4.1 para los capítulos (añadido).
+- §6.3 no dice cómo son las revisiones de un encargo de imagen (una sola marca).

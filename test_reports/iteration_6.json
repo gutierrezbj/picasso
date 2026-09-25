@@ -1,0 +1,27 @@
+{
+  "summary": "Retest de las dos correcciones de la Fase 4 (Guion P6) reportadas en iteration_5, en el espacio 'Pruebas del constructor'. Ambas correcciones VERIFICADAS por interfaz. Espacio 1 / Proyecto 1 del usuario intactos. Cleanup mongosh ejecutado; 'Retomar' vuelve a apuntar a Espacio 1 · Proyecto 1 · Paso 1 · Idea.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "results_per_flow": {
+    "correccion_1_diferencias_fantasma": "OK — En 'Corto de pruebas' (guion aprobado rev 3): btn-editar-aprobado activa revisión (estado 'Aprobado · revisión 3 · revisión en curso'). Con edits fantasma (type+Backspace en escena-sonido_previsto-1 y escena-intencion-1 + espera 2s para autoguardado) y luego btn-abrir-revision → aparece 'revision-sin-cambios' con texto EXACTO 'La revisión no tiene ningún cambio respecto al guion aprobado.' y revision-editadas count=0. Cerrado el diálogo, edité SOLO escena-que_ocurre-1 (append ' EDIT_REAL'), esperé autoguardado, abrí diálogo: revision-editadas listó EXACTAMENTE 1 escena y 1 campo ('Qué ocurre' con Antes y Ahora). Solo apareció UNA marca marca-<id>-solo_texto; btn-confirmar-revision disabled='' antes de marcar, disabled=None tras marcar. Confirmé: estado-guion pasó de 'Aprobado · revisión 3' a 'Aprobado · revisión 4'.",
+    "correccion_2_encargo_textos": "OK — En 'Imagen de pruebas' (encargo aprobado rev 2): btn-editar-aprobado, cambié SOLO encargo-numero de 5 a 6, esperé autoguardado, abrí diálogo. (a) revision-encargo mostró SOLO la línea 'Número de imágenes — Antes 5 · Ahora 6', sin líneas fantasma de Intención ni Composición. (b) marca-encargo-afecta_planos etiqueta EXACTA 'Afecta a las imágenes' (no 'planos'). (c) aviso-marcas texto EXACTO 'Marca si el cambio del encargo es solo de texto o si afecta a las imágenes.' Marca solo_texto + Confirmar → 'Aprobado · revisión 3'.",
+    "regresion_revisiones": "OK — Antes de btn-editar-aprobado: 0 textareas escribibles (sólo lectura). Después: 12 textareas escribibles (3 escenas × 4 campos). btn-anadir-escena añade escena (3→4). Edit real que_ocurre-1 dispara editadas. bajar-escena-1 dispara reordenadas. Borrar la nueva escena dispara ambos añadidas/eliminadas=0 (se cancelan, correcto). Diálogo muestra revision-anadidas=0, revision-editadas=1, revision-eliminadas=0, revision-reordenadas=1. btn-confirmar-revision permanece disabled='' mientras editadas sin marcar. btn-descartar-revision-directo revierte a 'Aprobado · revisión 4' sin cambios pendientes.",
+    "regresion_resto_fase4": "OK — Sin errores de consola en la pantalla del guion. btn-leer-guion abre leer-guion con 3 leer-escena-*. Asistente muestra btn-proponer-escenas y btn-detectar-elementos. En 'Serie de pruebas' /guion carga lista-capitulos correctamente.",
+    "aislamiento_espacio1": "OK — Espacio 1 (0779d8d3bd92462fa9b687be29203a61) intacto: Proyecto 1 sin paso_actual, pasos_omitidos=[]; 0 elementos y 0 medios.",
+    "cleanup_retomar": "OK — mongosh updateMany(espacio_id='baf5a93a0b08431cb00b1da5c9fbabc1', ultimo_acceso='2020-01-01') matched=4, modified=3. tarjeta-retomar en / muestra 'Espacio 1 · Proyecto 1 · Paso 1 de 7 · Idea'."
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "_valor() en /app/backend/app/api/guiones.py normaliza correctamente None, '' y [] al mismo valor, resolviendo el bug de diferencias fantasma raíz.",
+    "DialogoRevision.jsx acepta segundaEtiqueta y adapta aviso-marcas al tipo (encargo vs guion); copy diferenciado verificado."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped)", "frontend": "4/4 flujos re-verificados"},
+  "test_credentials": "N/A (app sin autenticación)",
+  "seed_data_creation": "Se avanzaron las revisiones aprobadas de dos proyectos de pruebas (esperado por el retest): 'Corto de pruebas' rev 3 → rev 4; 'Imagen de pruebas' rev 2 → rev 3. Cleanup ultimo_acceso aplicado. Espacio 1 y Proyecto 1 del usuario intactos.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Las dos correcciones del retest están verificadas: (1) None/''/[] se tratan como iguales en _valor(); (2) DialogoRevision usa etiqueta 'Afecta a las imágenes' y aviso genérico para encargos. Los proyectos de pruebas ahora están en 'Corto de pruebas' rev 4 y 'Imagen de pruebas' rev 3 (aprobadas, sin revisión en curso). Serie/Anuncio no tocados.",
+  "rca of the issue": "Fix aplicado y comprobado end-to-end via UI: al normalizar None, '' y [] al mismo valor en _valor(), _diferencias() y _diferencias_encargo() dejan de reportar diferencias fantasma para campos Optional[str]. El componente Marca en DialogoRevision permite personalizar la etiqueta secundaria y aviso-marcas por tipo (guion vs encargo)."
+}
