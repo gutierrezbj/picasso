@@ -163,6 +163,7 @@ class Desarrollo(BaseModel):
     notas: Optional[str] = None
     respuestas_formato: dict = Field(default_factory=dict)
     estado: str = "en_curso"  # en_curso | listo
+    updated_at: Optional[str] = None  # sello de versión (§12): 409 si no coincide
 
 
 # --- Asistente (§10) ---

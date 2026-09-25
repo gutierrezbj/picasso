@@ -17,7 +17,7 @@ export default function SubidorMedios({
   const [ocupado, setOcupado] = useState(false);
 
   const elegir = async (e) => {
-    const archivos = Array.from(e.target.files || []);
+    const archivos: File[] = Array.from(e.target.files || []);
     e.target.value = "";
     if (!archivos.length) return;
     setOcupado(true);

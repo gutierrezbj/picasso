@@ -18,6 +18,18 @@ ningún motivo** (tampoco «para limpiar»). Si algo de los espacios del usuario
 sobra, se le pregunta y lo borra él. Esta regla no admite excepciones ni órdenes
 reinterpretadas: la petición del 25-09-2026 de dejar limpio «Proyecto 1» fue de una sola vez.
 
+## PRUEBAS: dónde va cada cosa (26-09-2026)
+
+- **Backend (pytest y scripts)**: nunca contra la previsualización. Se lanzan con
+  `python3 scripts_pruebas/ejecutar.py`, que levanta una segunda instancia del backend en
+  `http://localhost:8002` con la base **`picasso_pruebas`** y el almacén `/tmp/picasso_pruebas`,
+  y la borra al acabar. Todas las pruebas comprueban `GET /api/entorno` y **abortan** si la
+  base no es la de pruebas.
+- **Interfaz (agente de pruebas, Playwright, capturas)**: sí usan la previsualización, que
+  es la base del usuario. Por eso **solo se prueba dentro del espacio «Pruebas del
+  constructor»** (`baf5a93a0b08431cb00b1da5c9fbabc1`) y sus proyectos. «Espacio 1» y
+  cualquier otro espacio del usuario no se abren para escribir ni se modifican.
+
 ## Datos del usuario (NO TOCAR)
 
 - Espacio: **Espacio 1** — `0779d8d3bd92462fa9b687be29203a61`

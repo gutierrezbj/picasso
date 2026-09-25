@@ -5,7 +5,7 @@ import os
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://recorridos.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("API", "http://localhost:8002").rstrip("/")
 API = f"{BASE}/api"
 
 
@@ -149,7 +149,9 @@ def test_asistente_hacer_preguntas_simulado(s, proyectos):
     assert prop["tarea"] == "hacer_preguntas"
     assert len(prop["partes"]) >= 1
     for p in prop["partes"]:
-        assert p["destino_campo"] == "notas"
+        # El destino lo elige el usuario en «Responder en» (Fase 3), así que la
+        # propuesta llega sin destino fijado.
+        assert p["destino_campo"] is None
         assert p["estado"] == "pendiente"
 
 
@@ -193,8 +195,13 @@ def test_descartar_parte_no_escribe(s, proyectos):
     assert (r3.json().get("premisa") or "") == ""
 
 
-# --- Asistente Claude live (una sola llamada) --------------------------------
+# --- Asistente Claude live (§15.5: marca `integracion`, se ejecuta a mano) ----
 
+@pytest.mark.skipif(
+    os.environ.get("PRUEBAS_INTEGRACION") != "1",
+    reason="Llama a Claude de verdad. Ejecuta con PRUEBAS_INTEGRACION=1.",
+)
+@pytest.mark.integracion
 def test_asistente_claude_live_una_vez(s, proyectos):
     s.put(f"{API}/ajustes", json={"modelo_asistente": "claude-sonnet-5"})
     pid = proyectos["anuncio"]

@@ -5,7 +5,7 @@ import os
 import pytest
 import requests
 
-BASE = os.environ.get("REACT_APP_BACKEND_URL", "https://recorridos.preview.emergentagent.com").rstrip("/")
+BASE = os.environ.get("API", "http://localhost:8002").rstrip("/")
 API = f"{BASE}/api"
 
 

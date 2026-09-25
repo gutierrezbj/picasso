@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from cli import req  # noqa: E402
+from comun import req
 
 CORTO = os.environ["CORTO"]
 PZ = os.environ["PZ"]
@@ -20,5 +20,5 @@ print("reescribir_escena:", [(x["tipo"], x["destino_campo"], x["escena_id"] == e
 r2 = req("POST", f"/api/propuestas/{p2['id']}/parte/{p2['partes'][0]['id']}", {"accion": "aceptar", "texto": "Se ve el muelle entre la niebla."})
 print("aceptar reescritura:", r2)
 g = req("GET", f"/api/piezas/{PZ}/guion")
-print("que_se_ve ahora:", [e["que_se_ve"] for e in g["escenas"]][0])
+print("que_se_ve ahora:", next(e["que_se_ve"] for e in g["escenas"]))
 print("descartar revisión:", req("POST", f"/api/piezas/{PZ}/guion/revision/descartar")["hay_revision_en_curso"])

@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from cli import req  # noqa: E402
+from comun import req
 
 PZ = os.environ["PZ"]
 
@@ -21,7 +21,7 @@ req("PATCH", f"/api/escenas/{e1['id']}", {"que_ocurre": "Ahora ocurre otra cosa.
 req("DELETE", f"/api/escenas/{e3['id']}")
 req("POST", f"/api/piezas/{PZ}/guion/escenas", {"titulo": "Escena nueva de la revisión"})
 g = req("GET", f"/api/piezas/{PZ}/guion")
-nueva = [e for e in g["escenas"] if not e["origen_id"]][0]
+nueva = next(e for e in g["escenas"] if not e["origen_id"])
 req("PATCH", f"/api/escenas/{nueva['id']}", {"que_ocurre": "Lo que pasa en la nueva.", "updated_at": nueva["updated_at"]})
 g = req("GET", f"/api/piezas/{PZ}/guion")
 req("POST", f"/api/escenas/{g['escenas'][-1]['id']}/mover", {"a": 0})

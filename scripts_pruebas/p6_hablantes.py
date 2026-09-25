@@ -1,13 +1,16 @@
 """Prueba del §6.3: quien habla es el narrador o un personaje que esté en los
-elementos de esa escena. Solo en «Pruebas del constructor»."""
+elementos de esa escena. Solo contra la base de pruebas (cerrojo en comun.py)."""
 import os
 import sys
 
 import requests
 
-API = os.environ["API"].rstrip("/") + "/api"
-PIEZA = "a828efd5e9d94a448e96513b9ff11041"  # Corto de pruebas
-PROYECTO = "5f3d0d6ff0e94725aec5b390b4f172ac"
+sys.path.insert(0, os.path.dirname(__file__))
+from comun import API as BASE
+
+API = BASE.rstrip("/") + "/api"
+PIEZA = os.environ["PZ"]
+PROYECTO = os.environ["CORTO"]
 
 
 def ok(c, m):

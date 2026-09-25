@@ -17,6 +17,7 @@ from app.dominio.modelos import (
     FichaVersion,
     PeticionAsistente,
     Reparto,
+    ahora,
 )
 
 router = APIRouter(prefix="/api", tags=["asistente"])
@@ -250,6 +251,7 @@ async def resolver_parte(propuesta_id: str, parte_id: str, datos: AceptarParte):
         des[campo] = texto
     des.pop("_id", None)
     des["_id"] = pid
+    des["updated_at"] = ahora()
     await db.desarrollos.replace_one({"_id": pid}, des, upsert=True)
     parte["estado"] = "aceptada"
     await db.propuestas.update_one({"_id": propuesta_id}, {"$set": {"partes": prop["partes"]}})

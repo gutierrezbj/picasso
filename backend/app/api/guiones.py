@@ -294,6 +294,14 @@ async def crear_escena(pieza_id: str, datos: EscenaCrear):
     return await _respuesta(await _guion_por_id(guion["id"]))
 
 
+@router.get("/escenas/{escena_id}")
+async def obtener_escena(escena_id: str):
+    doc = await db.escenas.find_one({"_id": escena_id})
+    if not doc:
+        raise HTTPException(404, "Escena no encontrada")
+    return sin_id(doc)
+
+
 @router.patch("/escenas/{escena_id}")
 async def editar_escena(escena_id: str, datos: EscenaEditar):
     doc = await db.escenas.find_one({"_id": escena_id})

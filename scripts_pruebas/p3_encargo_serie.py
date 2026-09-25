@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from cli import req  # noqa: E402
+from comun import req
 
 EP = os.environ["EP"]
 

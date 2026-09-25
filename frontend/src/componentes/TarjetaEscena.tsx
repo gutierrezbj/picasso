@@ -44,7 +44,24 @@ export default function TarjetaEscena({
       updated.current = guardada.updated_at;
       onCambiada?.();
     },
-    { activo: editable }
+    {
+      activo: editable,
+      // Conflicto de versión (§12).
+      recargar: async () => {
+        await onCambiada?.();
+      },
+      sobrescribir: async () => {
+        const fresca = await api.escena(escena.id);
+        const guardada = await api.editarEscena(escena.id, {
+          ...datos,
+          duracion_orientativa_s:
+            datos.duracion_orientativa_s === "" ? null : Number(datos.duracion_orientativa_s),
+          updated_at: fresca.updated_at,
+        });
+        updated.current = guardada.updated_at;
+        await onCambiada?.();
+      },
+    }
   );
 
   const set = (k, v) => setDatos((d) => ({ ...d, [k]: v }));

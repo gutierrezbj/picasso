@@ -61,7 +61,23 @@ export default function FichaElemento({
       updatedFicha.current = guardada.updated_at;
       onCambiada?.({ recargarLista: false });
     },
-    { activo: editable }
+    {
+      activo: editable,
+      // Conflicto de versión (§12).
+      recargar: async () => {
+        await onCambiada?.({ recargarLista: true });
+      },
+      sobrescribir: async () => {
+        const el = await api.elemento(elemento.id);
+        const fresca = el.fichas.find((f) => f.id === ficha.id);
+        const guardada = await api.editarFicha(ficha.id, {
+          ...datos,
+          updated_at: fresca?.updated_at,
+        });
+        updatedFicha.current = guardada.updated_at;
+        await onCambiada?.({ recargarLista: true });
+      },
+    }
   );
 
   useAutoguardado(

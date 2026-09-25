@@ -3,6 +3,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import config
+
 from app.api import (
     ajustes,
     asistente,
@@ -47,3 +49,11 @@ app.include_router(guiones.router)
 @app.get("/api/salud")
 async def salud():
     return {"estado": "ok"}
+
+
+@app.get("/api/entorno")
+async def entorno():
+    """Qué base de datos está usando esta instancia. Los tests y los scripts lo
+    comprueban antes de escribir: solo escriben si es la base de pruebas."""
+    nombre = config.DB_NAME
+    return {"db_name": nombre, "es_pruebas": nombre == config.DB_NAME_PRUEBAS}

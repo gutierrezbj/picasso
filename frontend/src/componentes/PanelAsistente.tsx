@@ -16,6 +16,20 @@ const NOMBRE_CLASE = {
 
 // Panel del asistente (§10). Propone; nada se escribe sin que el usuario acepte.
 // Las propuestas se ACUMULAN: pedir algo nuevo no borra las pendientes.
+interface PropsPanelAsistente {
+  proyectoId: string;
+  tipo: string;
+  desActual?: any;
+  onAplicado?: () => void | Promise<unknown>;
+  modo?: string;
+  clase?: string | null;
+  preguntasFormato?: any[];
+  piezaId?: string | null;
+  escenas?: any[];
+  peticionPendiente?: any;
+  onPeticionConsumida?: () => void;
+}
+
 export default function PanelAsistente({
   proyectoId,
   tipo,
@@ -28,7 +42,7 @@ export default function PanelAsistente({
   escenas = [],
   peticionPendiente = null,
   onPeticionConsumida,
-}) {
+}: PropsPanelAsistente) {
   const { data: estado } = useAsistenteEstado();
   const [items, setItems] = useState([]);
   const [campo, setCampo] = useState(CAMPOS_POR_TIPO[tipo]?.[0] || "intencion");
@@ -47,7 +61,7 @@ export default function PanelAsistente({
     ...preguntasFormato.map((q) => ({ valor: `formato:${q.clave}`, texto: `Formato · ${q.pregunta}` })),
   ];
 
-  const pedir = async (tarea, extra) => {
+  const pedir = async (tarea: string, extra?: Record<string, unknown>) => {
     setCargando(true);
     setError(null);
     try {

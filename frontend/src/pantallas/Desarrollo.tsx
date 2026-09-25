@@ -12,6 +12,7 @@ import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import { useProyecto, useDesarrollo, useFormato } from "../api/hooks";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
+import { useGuardado } from "../estado/GuardadoContext";
 import { ETIQUETA_CAMPO, AYUDA_CAMPO, CAMPOS_POR_TIPO, REQUERIDOS, ES_AREA } from "../lib/campos";
 
 export default function Desarrollo() {
@@ -24,10 +25,14 @@ export default function Desarrollo() {
 
   const [des, setDes] = useState(null);
   const cargado = useRef(false);
+  const sello = useRef<string | null>(null); // updated_at guardado (§12)
+  const g = useGuardado();
 
   useEffect(() => {
     if (desInicial && !cargado.current) {
-      setDes({ respuestas_formato: {}, ...desInicial });
+      const { updated_at, ...resto } = desInicial as any;
+      sello.current = updated_at ?? null;
+      setDes({ respuestas_formato: {}, ...resto });
       cargado.current = true;
     }
   }, [desInicial]);
@@ -47,10 +52,32 @@ export default function Desarrollo() {
   useAutoguardado(
     des,
     async () => {
-      await api.guardarDesarrollo(proyectoId, des);
-      qc.setQueryData(["desarrollo", proyectoId], des);
+      const guardado = await api.guardarDesarrollo(proyectoId, {
+        ...des,
+        updated_at: sello.current,
+      });
+      sello.current = guardado.updated_at ?? null;
+      qc.setQueryData(["desarrollo", proyectoId], guardado);
     },
-    { activo: !!des }
+    {
+      activo: !!des,
+      // Conflicto de versión (§12): recargar lo guardado o sobrescribirlo con lo
+      // que hay en pantalla. Nunca se pierde lo escrito sin decirlo.
+      recargar: async () => {
+        await recargarDesarrollo();
+        g.guardado();
+      },
+      sobrescribir: async () => {
+        const fresco = await api.desarrollo(proyectoId);
+        const guardado = await api.guardarDesarrollo(proyectoId, {
+          ...des,
+          updated_at: (fresco as any).updated_at ?? null,
+        });
+        sello.current = guardado.updated_at ?? null;
+        qc.setQueryData(["desarrollo", proyectoId], guardado);
+        g.guardado();
+      },
+    }
   );
 
   if (!data || !des) {
@@ -78,14 +105,19 @@ export default function Desarrollo() {
   const marcarListo = async () => {
     const nuevo = { ...des, estado: "listo" };
     setDes(nuevo);
-    await api.guardarDesarrollo(proyectoId, nuevo);
+    const guardado = await api.guardarDesarrollo(proyectoId, {
+      ...nuevo,
+      updated_at: sello.current,
+    });
+    sello.current = guardado.updated_at ?? null;
     qc.invalidateQueries({ queryKey: ["proyecto", proyectoId] });
   };
 
   const recargarDesarrollo = async () => {
     const fresco = await api.desarrollo(proyectoId);
-    cargado.current = false;
-    setDes({ respuestas_formato: {}, ...fresco });
+    const { updated_at, ...resto } = fresco as any;
+    sello.current = updated_at ?? null;
+    setDes({ respuestas_formato: {}, ...resto });
     qc.setQueryData(["desarrollo", proyectoId], fresco);
   };
 

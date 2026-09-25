@@ -1,6 +1,13 @@
 import React from "react";
 
-export function Campo({ etiqueta, ayuda, children, htmlFor }) {
+interface PropsCampo {
+  etiqueta?: string;
+  ayuda?: React.ReactNode;
+  children?: React.ReactNode;
+  htmlFor?: string;
+}
+
+export function Campo({ etiqueta, ayuda, children, htmlFor }: PropsCampo) {
   return (
     <div className="flex flex-col gap-2">
       {etiqueta && (
@@ -14,7 +21,10 @@ export function Campo({ etiqueta, ayuda, children, htmlFor }) {
   );
 }
 
-export function Entrada({ className = "", ...props }) {
+export function Entrada({
+  className = "",
+  ...props
+}: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       className={
@@ -28,7 +38,10 @@ export function Entrada({ className = "", ...props }) {
   );
 }
 
-export function AreaTexto({ className = "", ...props }) {
+export function AreaTexto({
+  className = "",
+  ...props
+}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <textarea
       className={

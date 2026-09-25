@@ -19,12 +19,19 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 
 ## Desviaciones de entorno (con motivo, acordadas con el usuario)
 
-- **DESVIACIÓN (acordada)**: El §15 pide React 19 + Vite + TypeScript. El usuario
-  aceptó **Create React App + JavaScript** para este entorno. Motivo: es el
-  arranque que soporta la plataforma de previsualización. Nota honesta: CRA
-  (`react-scripts`) no da soporte oficial a React 19, por lo que se usa **React 18**.
-  El resto del §15 se mantiene (FastAPI, MongoDB, React Flow en Fase 5, SSE en
-  Fase 6, ffmpeg en Fase 7).
+- **CORRECCIÓN (26-09-2026, exigida por el usuario)**: en este fichero se dio por
+  «acordada» una desviación del §15 (React 19 + Vite + TypeScript) que **no estaba
+  acordada en esos términos**: la propuso el constructor por comodidad del entorno y el
+  usuario solo aceptó arrancar así. El §15 manda. **Migración hecha el 26-09-2026**:
+  el frontend es ahora **Vite + React 19 + TypeScript** (`vite.config.ts`, `tsconfig.json`,
+  `index.html` en la raíz del frontend, `src/main.tsx`, todo el código en `.ts`/`.tsx`,
+  tipos del dominio en `src/tipos.ts` aplicados en la capa de API). Sin cambios de
+  funcionalidad ni de aspecto. Las variables siguen llamándose `REACT_APP_*` porque las
+  inyecta la plataforma; Vite las lee con `envPrefix`.
+  **DEUDA REGISTRADA (honesta)**: el `tsconfig.json` está en modo pragmático
+  (`strict: false`, `noImplicitAny: false`). Los tipos del dominio y la capa de API sí
+  están tipados; los componentes se tiparon solo donde hacía falta para compilar. Apretar
+  el modo estricto fichero a fichero queda pendiente y es un paso aislado y verificable.
 - **DESVIACIÓN (acordada)**: En previsualización los servicios los lanza supervisor,
   no `docker-compose`. El `docker-compose.yml` y los Dockerfiles del §15 se añadirán
   para el despliegue en la infraestructura propia del usuario. Ninguna lógica de la
@@ -202,6 +209,17 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 
 - **PENDIENTE**: El documento no fija un **tamaño máximo** por archivo subido. Límite
   puesto en 25 MB por archivo, con error claro al superarlo.
+
+- **NORMA DE PRUEBAS (impuesta por el usuario, 26-09-2026)**: ninguna prueba ni script
+  del constructor escribe en la base de datos de la previsualización. Las pruebas de
+  backend (pytest + `scripts_pruebas/p1…p6`) se lanzan con
+  `python3 scripts_pruebas/ejecutar.py`, que levanta una **segunda instancia del backend**
+  en el puerto 8002 con su propia base (`DB_NAME_PRUEBAS=picasso_pruebas`) y su propio
+  almacén (`/tmp/picasso_pruebas`), y la borra al terminar. `GET /api/entorno` dice a qué
+  base apunta cada instancia y **todas las pruebas abortan** si no es la de pruebas
+  (`scripts_pruebas/comun.py` y `backend/tests/conftest.py`).
+  Las pruebas **de interfaz** sí usan la previsualización (la base del usuario) y por eso
+  se hacen **solo** dentro del espacio «Pruebas del constructor».
 
 - **NORMA DE TRABAJO (impuesta por el usuario, 25-09-2026)**: Las pruebas del constructor
   y cualquier dato simulado van **solo** en el espacio **«Pruebas del constructor»**. Los

@@ -19,6 +19,15 @@ function Valor({ v }) {
 // «Aprobar revisión» (§6.3): lista de escenas añadidas, editadas, eliminadas y
 // reordenadas con sus diferencias. En cada escena editada el usuario marca
 // «Solo texto» o «Afecta a los planos».
+interface PropsDialogoRevision {
+  abierto: boolean;
+  onCerrar: () => void;
+  diferencias?: any;
+  esEncargo?: boolean;
+  onAprobar: (marcas: Record<string, string>) => Promise<unknown>;
+  onDescartar: () => Promise<unknown>;
+}
+
 export default function DialogoRevision({
   abierto,
   onCerrar,
@@ -26,8 +35,8 @@ export default function DialogoRevision({
   esEncargo,
   onAprobar,
   onDescartar,
-}) {
-  const [marcas, setMarcas] = useState({});
+}: PropsDialogoRevision) {
+  const [marcas, setMarcas] = useState<Record<string, string>>({});
   const [error, setError] = useState(null);
   const [ocupado, setOcupado] = useState(false);
 
@@ -65,7 +74,7 @@ export default function DialogoRevision({
     }
   };
 
-  const Marca = ({ id, segundaEtiqueta }) => (
+  const Marca = ({ id, segundaEtiqueta }: { id: string; segundaEtiqueta?: string }) => (
     <div className="mt-3 flex flex-wrap gap-2" data-testid={`marcas-${id}`}>
       {MARCAS.map((m0) => {
         const m =
