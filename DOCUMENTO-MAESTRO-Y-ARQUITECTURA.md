@@ -236,7 +236,7 @@ Todos los pasos de elementos usan la misma pantalla con la clase correspondiente
 1. **Elegir o crear.** Se ve la biblioteca del espacio filtrada por esa clase. El usuario elige elementos existentes (se añaden al reparto con su versión de ficha) o crea uno nuevo. Nunca se muestran elementos de otros espacios.
 2. **Definir la ficha.** Descripción, rasgos fijos, rasgos variables, referencias subidas, y según la clase: personalidad y voz (personaje), materiales y colores (producto), ambiente y distribución (escenario).
 3. **Preparar las referencias** (opcional, con coste visible): hoja de personaje (varias vistas del mismo personaje), photobook de producto (vistas + recorte), lámina del escenario. Se prepara como operación del motor (§9), se revisan las tomas y el usuario elige cuáles pasan a ser referencias.
-4. **Aprobar la ficha.** Queda congelada como versión; es lo que usará la producción.
+4. **Aprobar la ficha.** Queda congelada como versión; es lo que usará la producción. En personajes y productos hace falta al menos una imagen de referencia para poder aprobar; en escenarios y objetos no se exige.
 
 ---
 

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
 
-export default function Dialogo({ abierto, onCerrar, titulo, children, "data-testid": testid }) {
+export default function Dialogo({ abierto, onCerrar, titulo, children, ancho = "max-w-[540px]", "data-testid": testid }) {
   useEffect(() => {
     if (!abierto) return;
     const alTecla = (e) => e.key === "Escape" && onCerrar();
@@ -17,7 +17,7 @@ export default function Dialogo({ abierto, onCerrar, titulo, children, "data-tes
     >
       <div
         data-testid={testid}
-        className="w-full max-w-[540px] rounded-panel bg-superficie shadow-context p-8"
+        className={`w-full ${ancho} rounded-panel bg-superficie shadow-context p-8`}
         style={{ animation: "aparece var(--motion-context) var(--motion-easing)" }}
         onMouseDown={(e) => e.stopPropagation()}
       >

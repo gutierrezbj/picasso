@@ -155,6 +155,9 @@ async def editar_ficha(ficha_id: str, datos: FichaEditar):
     return sin_id(doc)
 
 
+CLASES_CON_REFERENCIA = {"personaje", "producto"}
+
+
 @router.post("/fichas/{ficha_id}/aprobar")
 async def aprobar_ficha(ficha_id: str):
     doc = await db.fichas.find_one({"_id": ficha_id})
@@ -164,6 +167,12 @@ async def aprobar_ficha(ficha_id: str):
         return sin_id(doc)
     if not (doc.get("descripcion") or "").strip():
         raise HTTPException(400, "La ficha necesita una descripción para poder aprobarla.")
+    el = await db.elementos.find_one({"_id": doc["elemento_id"]})
+    if el and el["clase"] in CLASES_CON_REFERENCIA and not doc.get("referencias"):
+        raise HTTPException(
+            400,
+            f"Un {el['clase']} necesita al menos una imagen de referencia para poder aprobar la ficha.",
+        )
     momento = ahora()
     await db.fichas.update_one(
         {"_id": ficha_id},

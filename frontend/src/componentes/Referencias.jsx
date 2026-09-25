@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Images } from "lucide-react";
+import { X, Images, Maximize2 } from "lucide-react";
 import Boton from "./Boton";
 import Dialogo from "./Dialogo";
 import Selector from "./Selector";
@@ -25,6 +25,7 @@ export default function Referencias({
   onMediosNuevos,
 }) {
   const [picker, setPicker] = useState(false);
+  const [visor, setVisor] = useState(null);
   const porId = Object.fromEntries(medios.map((m) => [m.id, m]));
   const yaUsados = new Set(referencias.map((r) => r.medio_id));
   const disponibles = medios.filter((m) => m.clase === "imagen" && !yaUsados.has(m.id));
@@ -52,11 +53,21 @@ export default function Referencias({
               >
                 <div className="aspect-[4/3] w-full bg-superficie2">
                   {m ? (
-                    <img
-                      src={api.urlMedio(r.medio_id)}
-                      alt={m.nombre_original || "Referencia"}
-                      className="h-full w-full object-cover"
-                    />
+                    <button
+                      data-testid={`referencia-abrir-${i}`}
+                      onClick={() => setVisor(r.medio_id)}
+                      aria-label={`Ver completa ${m.nombre_original || "la referencia"}`}
+                      className="group relative block h-full w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+                    >
+                      <img
+                        src={api.urlMedio(r.medio_id)}
+                        alt={m.nombre_original || "Referencia"}
+                        className="h-full w-full object-cover"
+                      />
+                      <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-control bg-superficie/90 text-tinta2 opacity-0 transition-opacity duration-[120ms] ease-suave group-hover:opacity-100">
+                        <Maximize2 size={15} strokeWidth={1.9} />
+                      </span>
+                    </button>
                   ) : (
                     <div className="flex h-full items-center justify-center p-2 text-center text-[13px] text-tinta3">
                       Medio no encontrado
@@ -115,6 +126,29 @@ export default function Referencias({
           </Boton>
         </div>
       )}
+
+      <Dialogo
+        abierto={!!visor}
+        onCerrar={() => setVisor(null)}
+        ancho="max-w-[1000px]"
+        titulo={(porId[visor] || {}).nombre_original || "Referencia"}
+        data-testid="visor-referencia"
+      >
+        {visor && (
+          <>
+            <img
+              src={api.urlMedio(visor)}
+              alt={(porId[visor] || {}).nombre_original || "Referencia"}
+              className="max-h-[70vh] w-full object-contain"
+              data-testid="visor-referencia-imagen"
+            />
+            <p className="mt-4 text-[13px] leading-[18px] text-tinta2">
+              Imagen completa, sin recortar
+              {porId[visor]?.ancho ? ` · ${porId[visor].ancho}×${porId[visor].alto}` : ""}.
+            </p>
+          </>
+        )}
+      </Dialogo>
 
       <Dialogo
         abierto={picker}

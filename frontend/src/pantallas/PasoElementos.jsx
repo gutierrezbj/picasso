@@ -145,7 +145,7 @@ export default function PasoElementos() {
     return (
       <div className="min-h-full">
         <Cabecera migas={migas} gasto={gasto} moneda={moneda} />
-        <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} />
+        <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} claveVista={clave} />
         <main className="mx-auto w-full max-w-[880px] px-6 py-12 md:px-10">
           <p className="text-tinta2">Este paso no forma parte del recorrido de este proyecto.</p>
         </main>
@@ -209,7 +209,7 @@ export default function PasoElementos() {
   return (
     <div className="min-h-full">
       <Cabecera migas={migas} gasto={gasto} moneda={moneda} />
-      <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} />
+      <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} claveVista={clave} />
 
       <main className="mx-auto w-full max-w-[1440px] px-6 py-10 md:px-10" data-testid="paso-elementos">
         <div className="flex flex-wrap items-center gap-4">

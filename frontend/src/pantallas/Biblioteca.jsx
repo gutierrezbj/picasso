@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
@@ -67,6 +67,13 @@ export default function Biblioteca() {
   };
 
   const espacio = data?.espacio;
+
+  useEffect(() => {
+    if (espacio) document.title = `Biblioteca · ${espacio.nombre} · Picasso`;
+    return () => {
+      document.title = "Estudio";
+    };
+  }, [espacio]);
   const elementos = ordenar(
     (data?.elementos || []).filter((e) => claseEl === "todas" || e.clase === claseEl),
     orden,
@@ -180,8 +187,8 @@ export default function Biblioteca() {
                         </div>
                         <div className="mt-1 text-[13px] leading-[18px] text-tinta2">
                           {el.clase} · v{el.ficha_vigente} ·{" "}
-                          {el.ficha ? el.ficha.estado : "sin ficha"} · {el.num_versiones} versión
-                          {el.num_versiones === 1 ? "" : "es"}
+                          {el.ficha ? el.ficha.estado : "sin ficha"} · {el.num_versiones}{" "}
+                          {el.num_versiones === 1 ? "versión" : "versiones"}
                         </div>
                         <div className="mt-1 text-[13px] leading-[18px] text-tinta2">
                           {el.proyectos.length

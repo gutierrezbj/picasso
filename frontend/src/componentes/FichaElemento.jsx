@@ -8,6 +8,8 @@ import { Campo, Entrada, AreaTexto } from "./Campo";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
 
+const CLASES_CON_REFERENCIA = ["personaje", "producto"];
+
 const TEXTO_PREPARAR = {
   personaje: "Crear hoja de personaje",
   producto: "Crear photobook del producto",
@@ -89,6 +91,17 @@ export default function FichaElemento({
   };
 
   const hayVersionNueva = ultimaAprobada && versionFijada && ultimaAprobada > versionFijada;
+
+  // §4.3 (decisión del usuario): personajes y productos necesitan al menos una imagen
+  // de referencia para poder aprobar la versión. Escenarios y objetos no lo exigen.
+  const exigeReferencia = CLASES_CON_REFERENCIA.includes(elemento.clase);
+  const faltan = [];
+  if (!datos.descripcion.trim()) faltan.push("escribe la descripción");
+  if (exigeReferencia && datos.referencias.length === 0)
+    faltan.push("añade al menos una imagen de referencia");
+  const faltaParaAprobar = faltan.length
+    ? `Para aprobar la versión, ${faltan.join(" y ")}.`
+    : null;
 
   return (
     <section className="flex flex-col gap-6" data-testid="ficha-elemento">
@@ -292,7 +305,14 @@ export default function FichaElemento({
         </>
       )}
 
-      <Campo etiqueta="Referencias" ayuda="Imágenes del espacio que fijan el aspecto de este elemento.">
+      <Campo
+        etiqueta="Referencias"
+        ayuda={
+          exigeReferencia
+            ? "Imágenes del espacio que fijan el aspecto. Hace falta al menos una para aprobar la versión."
+            : "Imágenes del espacio que fijan el aspecto de este elemento."
+        }
+      >
         <Referencias
           referencias={datos.referencias}
           medios={medios}
@@ -335,17 +355,11 @@ export default function FichaElemento({
 
       {editable && (
         <div className="flex flex-wrap items-center gap-3">
-          <Boton
-            data-testid="btn-aprobar-ficha"
-            disabled={!datos.descripcion.trim()}
-            onClick={() => accion(() => api.aprobarFicha(ficha.id))}
-          >
+          <Boton data-testid="btn-aprobar-ficha" disabled={!!faltaParaAprobar} onClick={() => accion(() => api.aprobarFicha(ficha.id))}>
             Aprobar versión
           </Boton>
-          <span className="text-[13px] leading-[18px] text-tinta2">
-            {datos.descripcion.trim()
-              ? "Al aprobarla queda congelada; es la que usará la producción."
-              : "Escribe la descripción para poder aprobar la versión."}
+          <span className="text-[13px] leading-[18px] text-tinta2" data-testid="aviso-aprobar">
+            {faltaParaAprobar || "Al aprobarla queda congelada; es la que usará la producción."}
           </span>
         </div>
       )}

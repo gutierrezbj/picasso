@@ -116,10 +116,11 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   del reparto: bloqueado si algún plano lo usa"): se **bloquea** y se listan los
   elementos que lo usan. Igual con **borrar un Elemento** que está en algún reparto.
 
-- **PENDIENTE**: El documento no fija **requisitos mínimos para aprobar** una
-  `FichaVersion`. Decisión: se exige **descripción no vacía**; el resto de campos son
-  opcionales. Si debe exigirse más (por ejemplo una referencia en todas las clases),
-  hay que escribirlo.
+- **RESUELTO por el usuario (25-09-2026) · cambio del §4.3**: Para **aprobar** una
+  `FichaVersion` se exige **descripción no vacía** siempre y, además, **al menos una imagen
+  de referencia en personajes y productos**. Escenarios y objetos no la exigen. Escrito en
+  el §4.3 punto 4 del documento maestro. Cuando falta algo, el botón `Aprobar versión` está
+  desactivado y al lado se explica exactamente qué falta.
 
 - **PENDIENTE (§10, `detectar_elementos`)**: Con el proveedor `simulado` la tarea no
   puede "entender" el desarrollo: extrae **literalmente** las palabras con mayúscula
@@ -135,6 +136,21 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
 
 - **PENDIENTE**: El documento no fija un **tamaño máximo** por archivo subido. Límite
   puesto en 25 MB por archivo, con error claro al superarlo.
+
+- **NORMA DE TRABAJO (impuesta por el usuario, 25-09-2026)**: Las pruebas del constructor
+  y cualquier dato simulado van **solo** en el espacio **«Pruebas del constructor»**. Los
+  espacios del usuario no se tocan. Al terminar de probar, el `ultimo_acceso` de los
+  proyectos de prueba se deja anterior al del usuario para que «Retomar» refleje la última
+  visita del usuario y no la del constructor.
+
+- **PENDIENTE (§22)**: El documento no dice cómo se ve una referencia a tamaño completo.
+  Decisión del usuario: la miniatura puede recortarse, pero al pulsarla se abre la imagen
+  completa **sin recortar**. Construido como visor sobre la pantalla.
+
+- **PENDIENTE (§5.3)**: El documento dice "el paso actual se distingue claramente", sin
+  separar «el paso que estoy viendo» de «el paso actual del proyecto». Decisión del usuario:
+  el paso que se está viendo lleva el marcador fuerte **«Estás aquí»** (recuadro y nombre en
+  negrita) y el paso actual del proyecto se distingue solo por su estado **«En curso»**.
 
 - **NO CONSTRUIDO A PROPÓSITO (Fase 6)**: `Preparar referencias` (hoja de personaje,
   photobook del producto, lámina del escenario, §4.3.3 y §6.2). El botón se muestra

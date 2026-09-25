@@ -98,7 +98,11 @@ export default function Desarrollo() {
   return (
     <div className="min-h-full">
       <Cabecera migas={migas} gasto={gasto} moneda={moneda} />
-      <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} />
+      <BarraRecorrido
+        proyectoId={proyectoId}
+        recorrido={recorrido}
+        claveVista={(recorrido.pasos.find((p) => p.pantalla === "idea") || {}).clave}
+      />
 
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-8 px-6 py-10 md:px-10 lg:flex-row">
         <div className="min-w-0 flex-1">
