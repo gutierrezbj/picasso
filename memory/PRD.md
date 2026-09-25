@@ -22,6 +22,8 @@ DaVinci Resolve o CapCut.
   TanStack Query + lucide-react. Tipos del dominio en `frontend/src/tipos.ts`, aplicados en
   la capa de API. `tsconfig.json` en modo pragmático (`strict: false`): apretar el modo
   estricto fichero a fichero queda como deuda registrada en PREGUNTAS.md.
+  **Compromiso**: el código de la Fase 5 va tipado sin `any`, y `noImplicitAny: true` se
+  activa antes de empezar la Fase 6.
 - Backend: FastAPI + MongoDB (motor async), estructura §15.2 (api → dominio → motor/…).
 - Datos de recorrido en `backend/data/recorridos.yaml`.
 - Pruebas de backend **aisladas**: `python3 scripts_pruebas/ejecutar.py` levanta una segunda

@@ -7,3 +7,11 @@ credentials.json
 *.pem
 *.key
 .credentials
+
+# Dependencias y artefactos: no van al repositorio
+node_modules/
+frontend/build/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/

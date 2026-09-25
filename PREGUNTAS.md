@@ -32,6 +32,14 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   (`strict: false`, `noImplicitAny: false`). Los tipos del dominio y la capa de API sí
   están tipados; los componentes se tiparon solo donde hacía falta para compilar. Apretar
   el modo estricto fichero a fichero queda pendiente y es un paso aislado y verificable.
+- **COMPROMISO DE TIPADO (exigido por el usuario, 26-09-2026)**:
+  1. **Todo el código nuevo de la Fase 5 (lienzo) va tipado, sin `any`**: tipos explícitos
+     para planos, nodos, aristas, encargos de generación, props y respuestas de API
+     (declarados en `frontend/src/tipos.ts` y en los modelos del backend).
+  2. **`noImplicitAny: true` se activa antes de empezar la Fase 6**, tipando los ficheros
+     heredados de las Fases 1 a 4 que lo necesiten. `yarn build` (que ejecuta
+     `tsc --noEmit && vite build`) tiene que pasar sin errores con la bandera puesta.
+  3. Mientras esa deuda exista, queda escrita aquí y en `memory/PRD.md`.
 - **DESVIACIÓN (acordada)**: En previsualización los servicios los lanza supervisor,
   no `docker-compose`. El `docker-compose.yml` y los Dockerfiles del §15 se añadirán
   para el despliegue en la infraestructura propia del usuario. Ninguna lógica de la
