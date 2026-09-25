@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.db import db, sin_id
 from app.dominio import recorridos
+from app.dominio.estado import completado_de
 
 router = APIRouter(prefix="/api", tags=["estudio"])
 
@@ -23,7 +24,7 @@ async def estudio():
         e = sin_id(d)
         mapa_espacio[e["id"]] = e
         proyectos = await db.proyectos.find({"espacio_id": e["id"]}).to_list(1000)
-        en_curso = sum(1 for p in proyectos if recorridos.calcular(p)["paso_actual"] is not None)
+        en_curso = sum(1 for p in proyectos if recorridos.calcular(p, await completado_de(db, p))["paso_actual"] is not None)
         espacios.append({**e, "num_proyectos": len(proyectos), "num_en_curso": en_curso})
 
     todos = await db.proyectos.find().sort("ultimo_acceso", -1).to_list(1000)
@@ -31,7 +32,7 @@ async def estudio():
     for p in todos:
         p = sin_id(p)
         esp = mapa_espacio.get(p["espacio_id"])
-        estado = recorridos.calcular(p)
+        estado = recorridos.calcular(p, await completado_de(db, p))
         clave_actual = estado["paso_actual"]
         falta = None
         if clave_actual:

@@ -46,6 +46,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ ultima_ubicacion: ruta }),
     }),
+
+  desarrollo: (pid) => peticion(`/proyectos/${pid}/desarrollo`),
+  guardarDesarrollo: (pid, datos) =>
+    peticion(`/proyectos/${pid}/desarrollo`, { method: "PUT", body: JSON.stringify(datos) }),
+  formatos: (tipo) => peticion(`/formatos?tipo=${tipo}`),
+  asistenteEstado: () => peticion("/asistente/estado"),
+  proponer: (pid, tarea, datos) =>
+    peticion(`/proyectos/${pid}/asistente/${tarea}`, { method: "POST", body: JSON.stringify(datos || {}) }),
+  resolverParte: (propId, parteId, datos) =>
+    peticion(`/propuestas/${propId}/parte/${parteId}`, { method: "POST", body: JSON.stringify(datos) }),
 };
 
 export { ErrorApi };

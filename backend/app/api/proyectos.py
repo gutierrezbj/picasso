@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.db import db, sin_id
 from app.dominio import recorridos
+from app.dominio.estado import completado_de
 from app.dominio.modelos import (
     Proyecto,
     ProyectoCrear,
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/api", tags=["proyectos"])
 
 
 async def _resumen_proyecto(p: dict) -> dict:
-    estado = recorridos.calcular(p)
+    estado = recorridos.calcular(p, await completado_de(db, p))
     return {
         **p,
         "paso_actual": estado["paso_actual"],
@@ -56,7 +57,7 @@ async def obtener_proyecto(proyecto_id: str):
         raise HTTPException(404, "Proyecto no encontrado")
     p = sin_id(doc)
     esp = await db.espacios.find_one({"_id": p["espacio_id"]})
-    estado = recorridos.calcular(p)
+    estado = recorridos.calcular(p, await completado_de(db, p))
     return {
         "proyecto": p,
         "espacio": sin_id(esp) if esp else None,

@@ -1,0 +1,36 @@
+# Formatos semilla (§3, §6.1). UNA guía genérica por tipo, sin contenido creativo.
+# Solo estructura de trabajo neutra; el usuario responde lo que quiera.
+
+- id: generico-corto
+  nombre: Genérico (corto)
+  tipos_aplicables: [corto]
+  origen: sistema
+  preguntas_desarrollo:
+    - {clave: objetivo, pregunta: "¿Qué quieres que sienta o entienda quien lo vea?", ayuda: "En una frase."}
+    - {clave: duracion, pregunta: "¿Duración aproximada que buscas?", ayuda: "Orientativa."}
+  estructura_guion: []
+
+- id: generico-anuncio
+  nombre: Genérico (anuncio)
+  tipos_aplicables: [anuncio]
+  origen: sistema
+  preguntas_desarrollo:
+    - {clave: accion, pregunta: "¿Qué quieres que haga quien lo vea?", ayuda: "Llamada a la acción."}
+    - {clave: canal, pregunta: "¿Dónde se va a ver?", ayuda: "Contexto de uso."}
+  estructura_guion: []
+
+- id: generico-imagen
+  nombre: Genérico (imagen)
+  tipos_aplicables: [imagen]
+  origen: sistema
+  preguntas_desarrollo:
+    - {clave: uso, pregunta: "¿Para qué se usará la imagen?", ayuda: "Dónde y cómo."}
+  estructura_guion: []
+
+- id: generico-serie
+  nombre: Genérico (serie)
+  tipos_aplicables: [serie]
+  origen: sistema
+  preguntas_desarrollo:
+    - {clave: episodios, pregunta: "¿Cuántos capítulos imaginas y de qué tratan en conjunto?", ayuda: "Visión general."}
+  estructura_guion: []

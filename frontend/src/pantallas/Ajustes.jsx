@@ -4,7 +4,7 @@ import Cabecera from "../componentes/Cabecera";
 import Tarjeta from "../componentes/Tarjeta";
 import { Campo, Entrada } from "../componentes/Campo";
 import Selector from "../componentes/Selector";
-import { useAjustes } from "../api/hooks";
+import { useAjustes, useAsistenteEstado } from "../api/hooks";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
 
@@ -17,26 +17,31 @@ const MONEDAS = [
 export default function Ajustes() {
   const qc = useQueryClient();
   const { data, isLoading } = useAjustes();
+  const { data: asis } = useAsistenteEstado();
   const [moneda, setMoneda] = useState("USD");
   const [presupuesto, setPresupuesto] = useState("0");
+  const [modelo, setModelo] = useState("claude-sonnet-5");
   const [listo, setListo] = useState(false);
 
   useEffect(() => {
     if (data && !listo) {
       setMoneda(data.moneda);
       setPresupuesto(String(data.presupuesto_por_defecto ?? 0));
+      setModelo(data.modelo_asistente || "claude-sonnet-5");
       setListo(true);
     }
   }, [data, listo]);
 
   useAutoguardado(
-    { moneda, presupuesto },
+    { moneda, presupuesto, modelo },
     async () => {
       const guardado = await api.guardarAjustes({
         moneda,
         presupuesto_por_defecto: Number(presupuesto) || 0,
+        modelo_asistente: modelo,
       });
       qc.setQueryData(["ajustes"], guardado);
+      qc.invalidateQueries({ queryKey: ["asistente-estado"] });
     },
     { activo: listo }
   );
@@ -63,9 +68,22 @@ export default function Ajustes() {
                 onChange={(e) => setPresupuesto(e.target.value)}
               />
             </Campo>
+            <Campo etiqueta="Modelo del asistente" ayuda="«simulado» no gasta créditos; Claude usa la clave configurada.">
+              <Selector
+                data-testid="select-modelo-asistente"
+                valor={modelo}
+                onChange={setModelo}
+                opciones={[
+                  { valor: "simulado", texto: "Simulado (sin coste)" },
+                  { valor: "claude-sonnet-5", texto: "Claude Sonnet 5" },
+                ]}
+              />
+              <span className="text-[13px] text-tinta2" data-testid="asistente-estado">
+                {asis?.disponible ? `Disponible · ${asis.modelo}` : `No disponible — ${asis?.motivo || ""}`}
+              </span>
+            </Campo>
             <p className="text-[13px] leading-[18px] text-tinta2">
-              Los proveedores, sus claves y el modelo del asistente se configuran en fases
-              posteriores.
+              Los proveedores de producción y sus claves se configuran en fases posteriores.
             </p>
           </Tarjeta>
         )}

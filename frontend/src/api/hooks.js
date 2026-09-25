@@ -10,6 +10,12 @@ export const useProyectos = (espacioId) =>
   useQuery({ queryKey: ["proyectos", espacioId], queryFn: () => api.proyectos(espacioId), enabled: !!espacioId });
 export const useProyecto = (id) =>
   useQuery({ queryKey: ["proyecto", id], queryFn: () => api.proyecto(id), enabled: !!id });
+export const useDesarrollo = (id) =>
+  useQuery({ queryKey: ["desarrollo", id], queryFn: () => api.desarrollo(id), enabled: !!id });
+export const useFormato = (tipo) =>
+  useQuery({ queryKey: ["formato", tipo], queryFn: () => api.formatos(tipo), enabled: !!tipo });
+export const useAsistenteEstado = () =>
+  useQuery({ queryKey: ["asistente-estado"], queryFn: api.asistenteEstado });
 
 export function useCrearEspacio() {
   const qc = useQueryClient();

@@ -120,3 +120,31 @@ class AjustesEditar(BaseModel):
     moneda: Optional[str] = None
     presupuesto_por_defecto: Optional[float] = None
     modelo_asistente: Optional[str] = None
+
+
+# --- Desarrollo (uno por proyecto) ---
+
+
+class Desarrollo(BaseModel):
+    intencion: Optional[str] = None
+    publico: Optional[str] = None
+    mensaje: Optional[str] = None
+    tono: Optional[str] = None
+    premisa: Optional[str] = None
+    mundo: Optional[str] = None
+    arco_general: Optional[str] = None
+    notas: Optional[str] = None
+    respuestas_formato: dict = Field(default_factory=dict)
+    estado: str = "en_curso"  # en_curso | listo
+
+
+# --- Asistente (§10) ---
+
+
+class PeticionAsistente(BaseModel):
+    campo: Optional[str] = None  # para proponer_campo
+
+
+class AceptarParte(BaseModel):
+    accion: str  # aceptar | descartar
+    texto: Optional[str] = None  # texto editado por el usuario al aceptar

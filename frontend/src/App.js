@@ -5,6 +5,7 @@ import Espacio from "./pantallas/Espacio";
 import BibliotecaMinima from "./pantallas/BibliotecaMinima";
 import Ajustes from "./pantallas/Ajustes";
 import PasoMinimo from "./pantallas/PasoMinimo";
+import Desarrollo from "./pantallas/Desarrollo";
 
 export default function App() {
   return (
@@ -13,7 +14,7 @@ export default function App() {
       <Route path="/e/:espacioId" element={<Espacio />} />
       <Route path="/e/:espacioId/biblioteca" element={<BibliotecaMinima />} />
       <Route path="/ajustes" element={<Ajustes />} />
-      <Route path="/p/:proyectoId/idea" element={<PasoMinimo pantalla="idea" />} />
+      <Route path="/p/:proyectoId/idea" element={<Desarrollo />} />
       <Route path="/p/:proyectoId/paso/:clave" element={<PasoMinimo pantalla="elementos" />} />
       <Route path="/p/:proyectoId/guion" element={<PasoMinimo pantalla="guion" />} />
       <Route path="/p/:proyectoId/lienzo" element={<PasoMinimo pantalla="lienzo" />} />
