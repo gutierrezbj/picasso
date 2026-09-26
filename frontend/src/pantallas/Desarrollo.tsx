@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2 } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
+import { resumenProyecto } from "../lib/formato";
 import BarraRecorrido from "../componentes/BarraRecorrido";
 import SiguientePaso from "../componentes/SiguientePaso";
 import EstadoPaso from "../componentes/EstadoPaso";
@@ -125,7 +126,7 @@ export default function Desarrollo() {
   const migas = [
     { texto: "Estudio", a: "/" },
     { texto: espacio?.nombre || "Espacio", a: `/e/${proyecto.espacio_id}` },
-    { texto: proyecto.nombre },
+    { texto: proyecto.nombre, insignia: resumenProyecto(proyecto) },
   ];
 
   return (

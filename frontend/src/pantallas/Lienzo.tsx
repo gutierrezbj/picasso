@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Cabecera from "../componentes/Cabecera";
+import { resumenProyecto } from "../lib/formato";
 import BarraRecorrido from "../componentes/BarraRecorrido";
 import SuperficieLienzo from "../componentes/lienzo/SuperficieLienzo";
 import { api } from "../api/cliente";
@@ -63,7 +64,7 @@ export default function Lienzo() {
   const migas = [
     { texto: "Estudio", a: "/" },
     { texto: espacio?.nombre || "Espacio", a: `/e/${proyecto.espacio_id}` },
-    { texto: proyecto.nombre, a: `/p/${proyectoId}/guion` },
+    { texto: proyecto.nombre, a: `/p/${proyectoId}/guion`, insignia: resumenProyecto(proyecto) },
     { texto: "Lienzo" },
   ];
   const rutaGuion = pieza && proyecto.tipo === "serie"

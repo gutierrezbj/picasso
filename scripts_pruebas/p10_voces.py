@@ -182,4 +182,16 @@ pieza = req("GET", f"/api/piezas/{PZ}/voces")
 ok(any(v["id"] == ids[0] for v in pieza["sin_dialogo"]), "la voz de un diálogo borrado se conserva como «sin diálogo»")
 ok(all(v["dialogo_id"] != ids[0] for v in pieza["voces"]), "y ya no aparece entre las voces del guion")
 
+# --- fps del proyecto (§3.1) -------------------------------------------------------
+esp_id = req("GET", f"/api/proyectos/{CORTO}")["proyecto"]["espacio_id"]
+p24 = req("POST", f"/api/espacios/{esp_id}/proyectos",
+          {"nombre": "Corto a 24", "tipo": "corto", "formato_video": "9:16", "fps": 24})
+ok(p24["proyecto"]["fps"] == 24 if "proyecto" in p24 else p24.get("fps") == 24, "un proyecto se crea a 24 fps")
+defecto = req("POST", f"/api/espacios/{esp_id}/proyectos",
+              {"nombre": "Corto por defecto", "tipo": "corto", "formato_video": "16:9"})
+ok((defecto.get("proyecto") or defecto).get("fps") == 25, "sin decir nada, 25 fps")
+ok(estado_http("POST", f"/api/espacios/{esp_id}/proyectos",
+               {"nombre": "Raro", "tipo": "corto", "formato_video": "16:9", "fps": 23}) == 422,
+   "solo 24, 25 o 30 fps (422 con 23)")
+
 print("\nVoces por diálogo: todo en orden.")

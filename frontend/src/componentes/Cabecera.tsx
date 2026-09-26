@@ -9,6 +9,8 @@ import { formatoMoneda } from "../lib/formato";
 interface Miga {
   texto: string;
   a?: string;
+  /** Qué es (p. ej. «Corto · 16:9 · 25 fps»), junto al nombre del proyecto. */
+  insignia?: string;
 }
 
 interface Props {
@@ -49,6 +51,14 @@ export default function Cabecera({
                   className={`truncate px-1 ${ultimo ? "font-semibold text-tinta" : "text-tinta2"}`}
                 >
                   {m.texto}
+                </span>
+              )}
+              {m.insignia && (
+                <span
+                  data-testid="insignia-proyecto"
+                  className="ml-1 shrink-0 whitespace-nowrap rounded-full bg-acentoSuave px-3 py-0.5 text-[13px] leading-[18px] text-acento"
+                >
+                  {m.insignia}
                 </span>
               )}
             </span>

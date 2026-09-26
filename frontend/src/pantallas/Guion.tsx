@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, BookOpen, Check, Pencil, Trash2 } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
+import { resumenProyecto } from "../lib/formato";
 import BarraRecorrido from "../componentes/BarraRecorrido";
 import SiguientePaso from "../componentes/SiguientePaso";
 import EstadoPaso from "../componentes/EstadoPaso";
@@ -365,7 +366,7 @@ export default function Guion() {
   const migas = [
     { texto: "Estudio", a: "/" },
     { texto: espacio?.nombre || "Espacio", a: `/e/${proyecto.espacio_id}` },
-    { texto: proyecto.nombre, a: `/p/${proyectoId}/guion` },
+    { texto: proyecto.nombre, a: `/p/${proyectoId}/guion`, insignia: resumenProyecto(proyecto) },
     ...(pieza && esSerie ? [{ texto: pieza.titulo || `Capítulo ${pieza.numero || ""}` }] : []),
   ];
 

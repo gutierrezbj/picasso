@@ -31,6 +31,7 @@ export interface Proyecto {
   tipo: TipoProyecto;
   formato_id: string | null;
   formato_video: string;
+  fps?: 24 | 25 | 30;
   duracion_objetivo_s: number | null;
   presupuesto_max: number | null;
   pasos_omitidos: string[];

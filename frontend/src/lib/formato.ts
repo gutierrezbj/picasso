@@ -10,6 +10,11 @@ export function formatoMoneda(valor: number | null | undefined, moneda: string):
   return `${n} ${simboloMoneda(moneda)}`;
 }
 
+/** «Corto · 16:9 · 25 fps»: qué es el proyecto, visible en la cabecera. */
+export function resumenProyecto(p: { tipo: string; formato_video: string; fps?: number }): string {
+  return [NOMBRE_TIPO[p.tipo] || p.tipo, p.formato_video, `${p.fps || 25} fps`].join(" · ");
+}
+
 export const NOMBRE_TIPO: Record<string, string> = {
   corto: "Corto",
   anuncio: "Anuncio",
