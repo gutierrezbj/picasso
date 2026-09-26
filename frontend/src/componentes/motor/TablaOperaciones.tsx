@@ -69,6 +69,22 @@ export default function TablaOperaciones({
                   {op.modelo_visible || op.modelo}
                   {op.precio_simulado ? " · precio simulado" : ""}
                 </span>
+                {op.correccion_texto && (
+                  <span
+                    data-testid={`motivo-correccion-${op.id}`}
+                    className="mt-1 block text-[12px] leading-[16px] text-tinta2"
+                  >
+                    Corrección: {op.correccion_texto}
+                  </span>
+                )}
+                {op.es_exploracion && (
+                  <span
+                    data-testid={`motivo-exploracion-${op.id}`}
+                    className="mt-1 block text-[12px] leading-[16px] text-tinta2"
+                  >
+                    Exploración
+                  </span>
+                )}
               </td>
               <td className="py-2 pr-3 text-tinta2">{op.proveedor}</td>
               <td className="py-2 pr-3 tabular text-tinta2">

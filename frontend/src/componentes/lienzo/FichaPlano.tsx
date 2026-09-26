@@ -83,8 +83,7 @@ export default function FichaPlano({
   });
   const [nuevaCorreccion, setNuevaCorreccion] = useState("");
   const [historial, setHistorial] = useState(false);
-  const [produciendo, setProduciendo] = useState<string | null>(null);
-  const [errorCorreccion, setErrorCorreccion] = useState<string | null>(null);
+  const [correccionPendiente, setCorreccionPendiente] = useState<string | null>(null);
   const sello = useRef(plano.updated_at);
   const g = useGuardado();
 
@@ -375,10 +374,23 @@ export default function FichaPlano({
         </div>
       )}
 
-      {pestana === "producir" && <PanelProducir plano={plano} onCambiado={onCambiado} />}
+      {pestana === "producir" && (
+        <PanelProducir
+          plano={plano}
+          correccionId={correccionPendiente}
+          onCorreccionAtendida={() => setCorreccionPendiente(null)}
+          onCambiado={onCambiado}
+        />
+      )}
 
       {pestana === "tomas" && (
-        <PanelTomas plano={plano} relacion={relacion} moneda={moneda} onCambiado={onCambiado} />
+        <PanelTomas
+          plano={plano}
+          relacion={relacion}
+          moneda={moneda}
+          onPreparada={() => setPestana("producir")}
+          onCambiado={onCambiado}
+        />
       )}
 
       {pestana === "continuidad" && (
@@ -447,15 +459,11 @@ export default function FichaPlano({
             Guardar corrección
           </Boton>
           <p className="mt-2 text-[12px] leading-[16px] text-tinta2">
-            Al producirla se convierte en una operación con coste: sale una toma nueva, la
-            original se conserva y la corrección se marca «Hecha» al elegirla.
+            «Producir la corrección» la deja preparada en la pestaña Producir, con lo que se le
+            pide al modelo a la vista y el coste delante: nada se envía hasta que pulses
+            «Producir por…». Sale una toma nueva, la original se conserva y la corrección se
+            marca «Hecha» al elegirla.
           </p>
-
-          {errorCorreccion && (
-            <p data-testid="error-correccion" className="mt-2 text-[13px] leading-[18px] text-aviso">
-              {errorCorreccion}
-            </p>
-          )}
 
           <ul className="mt-5 flex flex-col gap-3" data-testid="lista-correcciones">
             {pendientes.length === 0 && (
@@ -477,25 +485,9 @@ export default function FichaPlano({
                   <Boton
                     pequeno
                     data-testid={`producir-correccion-${c.id}`}
-                    disabled={produciendo === c.id}
-                    onClick={async () => {
-                      setProduciendo(c.id);
-                      setErrorCorreccion(null);
-                      try {
-                        const prep = await api.prepararCorreccion(c.id, {
-                          destino_id: plano.id,
-                          accion: plano.modalidad === "video" ? "generar_video" : "editar_imagen",
-                          modelo: plano.modalidad === "video" ? "sim-video" : "sim-editar",
-                        });
-                        await api.autorizarOperacion(prep.operacion.id, true);
-                        await onCambiado();
-                      } catch (e) {
-                        setErrorCorreccion(
-                          e instanceof Error ? e.message : "No se ha podido producir la corrección."
-                        );
-                      } finally {
-                        setProduciendo(null);
-                      }
+                    onClick={() => {
+                      setCorreccionPendiente(c.id);
+                      setPestana("producir");
                     }}
                   >
                     <Wand2 size={14} strokeWidth={1.9} /> Producir la corrección

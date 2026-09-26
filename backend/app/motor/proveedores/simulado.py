@@ -201,8 +201,6 @@ class ProveedorSimulado:
         m = cat.modelo(op.modelo)
         estimado = cat.estimar(m, op) if m else None
         if estimado is not None and salidas > 1:
-            estimado = (estimado / Decimal(salidas) * Decimal(producidas)).quantize(
-                Decimal("0.0001")
-            )
+            estimado = cat.a_centimos(estimado / Decimal(salidas) * Decimal(producidas))
         trabajo.coste_real = estimado  # en el modelo sin precio, también None
         trabajo.estado = EstadoRemotoNombre.completado

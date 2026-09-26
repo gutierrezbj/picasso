@@ -33,6 +33,7 @@ def esperar(op_id, estados, limite=60):
 catalogo = req("GET", "/api/catalogo")
 por_id = {m["id"]: m for m in catalogo}
 ok(por_id["sim-imagen"]["coste"]["valor"] == "0.04", "sim-imagen a 0,04 $/imagen")
+ok(por_id["sim-editar"]["coste"]["unidad"] == "operacion", "sim-editar se cobra por operación")
 ok(por_id["sim-video"]["coste"]["unidad"] == "segundo", "sim-video se cobra por segundo")
 ok(por_id["sim-voz"]["coste"]["unidad"] == "caracter", "sim-voz se cobra por carácter")
 ok(por_id["sim-sin-precio"]["coste"]["valor"] is None, "sim-sin-precio: coste sin verificar")
@@ -238,6 +239,24 @@ prep = req(
     {"destino_id": DESTINO, "accion": "editar_imagen", "modelo": "sim-editar"},
 )
 ok(prep["operacion"]["correccion_id"] == correccion["id"], "la operación queda enlazada a la corrección")
+ok(
+    prep["operacion"]["estado"] == "presupuestada" and prep["operacion"]["autorizada_en"] is None,
+    "la corrección se queda preparada: no se envía nada hasta autorizar",
+)
+ok(
+    prep["operacion"]["prompt_visible"] and "luz" in prep["operacion"]["prompt_visible"],
+    "el texto de la corrección se ve y se puede editar antes de producir",
+)
+editada = req(
+    "PATCH",
+    f"/api/operaciones/{prep['operacion']['id']}",
+    {"instruccion": "más luz en la cara, sin quemar la piel"},
+)
+ok(
+    "sin quemar" in editada["operacion"]["prompt_visible"]
+    and editada["operacion"]["estado"] == "presupuestada",
+    "editar la operación preparada recalcula y no envía nada",
+)
 req("POST", f"/api/operaciones/{prep['operacion']['id']}/autorizar", {})
 esperar(prep["operacion"]["id"], ("completada",))
 plano_ahora = req("GET", f"/api/piezas/{PZ}/lienzo")
@@ -285,9 +304,30 @@ voz = req(
     {"destino_id": plano2["id"], "accion": "generar_voz", "modelo": "sim-voz",
      "texto": "Hola, soy Marta y esto es una prueba."},
 )
-ok(voz["operacion"]["coste_estimado"] == round(0.002 * 37, 4),
-   f"voz: 0,002 $ × caracteres = {voz['operacion']['coste_estimado']}")
+ok(voz["operacion"]["coste_estimado"] == 0.07,
+   f"voz: 0,002 $ × 37 caracteres redondeado a céntimos = {voz['operacion']['coste_estimado']}")
 req("DELETE", f"/api/operaciones/{voz['operacion']['id']}")
+
+# --- duración: solo las que admite el modelo -------------------------------
+
+mala = req(
+    "POST",
+    "/api/operaciones",
+    {"destino_id": plano2["id"], "accion": "generar_video", "modelo": "sim-video",
+     "duracion_s": 4},
+)
+ok(
+    "solo admite duraciones" in str(mala.get("detail") or ""),
+    "una duración que el modelo no admite se rechaza diciendo cuáles valen",
+)
+buena = req(
+    "POST",
+    "/api/operaciones",
+    {"destino_id": plano2["id"], "accion": "generar_video", "modelo": "sim-video-cine",
+     "duracion_s": 5},
+)
+ok(buena["operacion"]["coste_estimado"] == 15.0, "vídeo de cine: 5 s × 3 $/s = 15 $")
+req("DELETE", f"/api/operaciones/{buena['operacion']['id']}")
 
 # --- planos sin escena (§13) ------------------------------------------------
 
@@ -308,10 +348,73 @@ ok(movido["escena_id"] == escena["id"], "«Mover a escena» lo devuelve al guion
 
 # --- registro (§9.5) --------------------------------------------------------
 
+# --- preparar referencias de una ficha (§6.2) ------------------------------
+
+reparto = req("GET", f"/api/proyectos/{CORTO}/reparto")
+personaje = next(
+    (r for r in reparto if r["elemento"]["clase"] == "personaje"), reparto[0] if reparto else None
+)
+if personaje:
+    fichas = personaje["fichas"]
+    ficha = next((f for f in fichas if f["estado"] == "borrador"), None)
+    if ficha is None:
+        ficha = req("POST", f"/api/elementos/{personaje['elemento_id']}/fichas")
+    lamina = req(
+        "POST",
+        f"/api/fichas/{ficha['id']}/preparar-referencias",
+        {"destino_id": ficha["id"], "proyecto_id": CORTO, "accion": "generar_imagen",
+         "modelo": "sim-imagen", "n_variantes": 4},
+    )
+    ok(lamina["operacion"]["coste_estimado"] == 0.16, "la lámina son 4 vistas: 4 × 0,04 $")
+    ok(
+        lamina["operacion"]["destino"]["tipo"] == "ficha"
+        and lamina["operacion"]["estado"] == "presupuestada",
+        "la lámina es una operación del motor y se queda preparada",
+    )
+    req("POST", f"/api/operaciones/{lamina['operacion']['id']}/autorizar", {})
+    for _ in range(120):
+        o = req("GET", f"/api/operaciones?destino_id={ficha['id']}")[0]
+        if o["estado"] in ("completada", "fallida"):
+            break
+        time.sleep(0.5)
+    ok(o["estado"] == "completada", "lámina de referencias producida")
+    tomas_ficha = req("GET", f"/api/fichas/{ficha['id']}/tomas")["tomas"]
+    ok(len(tomas_ficha) == 4, f"{len(tomas_ficha)} tomas para revisar")
+    ok(
+        all(t["exploracion"] and t["exploracion"]["encuadre"] for t in tomas_ficha),
+        "cada toma dice qué vista es",
+    )
+    antes_refs = len(ficha.get("referencias") or [])
+    nueva_ficha = req("POST", f"/api/tomas/{tomas_ficha[0]['id']}/pasar-a-ficha", {"rol": "frontal"})
+    ok(
+        len(nueva_ficha["referencias"]) == antes_refs + 1,
+        "solo pasa a la ficha la toma que elige el usuario",
+    )
+    repetida = req("POST", f"/api/tomas/{tomas_ficha[0]['id']}/pasar-a-ficha", {"rol": "frontal"})
+    ok(repetida.get("detail"), "la misma toma no se añade dos veces")
+
 registro = req("GET", f"/api/operaciones?proyecto_id={CORTO}")
 ok(len(registro) >= 8, f"{len(registro)} operaciones en el registro del proyecto")
 ok(all(o["destino_etiqueta"] for o in registro), "cada operación dice a qué plano va")
+correcciones_en_registro = [o for o in registro if o.get("correccion_texto")]
+ok(
+    correcciones_en_registro and "luz" in correcciones_en_registro[0]["correccion_texto"],
+    "el registro dice de qué corrección viene cada operación",
+)
+ok(any(o["es_exploracion"] for o in registro), "el registro marca las exploraciones")
+suma = round(
+    sum(
+        (o["coste_real"] if o["coste_real"] is not None else 0)
+        for o in registro
+        if o["estado"] == "completada"
+    ),
+    2,
+)
 totales = req("GET", f"/api/registro/totales?proyecto_id={CORTO}")
+ok(
+    abs(totales["total"] - suma) < 0.005,
+    f"los totales cuadran con la suma de las filas: {totales['total']} vs {suma}",
+)
 ok(totales["total"] > 0 and totales["moneda"] == "USD", f"totales del registro: {totales['total']} USD")
 ok(totales["por_proyecto"][0]["nombre"], "totales por proyecto con nombre")
 

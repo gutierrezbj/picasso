@@ -65,9 +65,9 @@ async def gasto(proyecto_id: str) -> dict[str, Any]:
             else:
                 sin_verificar += 1
     return {
-        "real": round(real, 4),
-        "reservado": round(reservado, 4),
-        "total": round(real + reservado, 4),
+        "real": round(real, 2),
+        "reservado": round(reservado, 2),
+        "total": round(real + reservado, 2),
         "sin_verificar": sin_verificar,
     }
 
@@ -79,7 +79,7 @@ async def presupuesto(proyecto_id: str, coste_estimado: Optional[float]) -> dict
     if maximo is None:
         maximo = (aj or {}).get("presupuesto_por_defecto") or None
     detalle = await gasto(proyecto_id)
-    restante = None if not maximo else round(float(maximo) - detalle["total"], 4)
+    restante = None if not maximo else round(float(maximo) - detalle["total"], 2)
     supera = bool(
         restante is not None and coste_estimado is not None and coste_estimado > restante
     )
@@ -114,6 +114,14 @@ async def _con_coste(op_doc: dict[str, Any], entradas: EntradaOperacion) -> dict
             f"«{modelo.nombre_visible}» no tiene ningún proveedor configurado. "
             "Las claves se leen de variables de entorno."
         )
+    if modelo.duraciones_s and entradas.accion.value == "generar_video":
+        admitidas = list(modelo.duraciones_s)
+        if not any(abs((entradas.duracion_s or 0) - d) < 0.001 for d in admitidas):
+            texto = ", ".join(f"{d:g}" for d in admitidas)
+            raise ValueError(
+                f"«{modelo.nombre_visible}» solo admite duraciones de {texto} s. "
+                "Elige una de esas."
+            )
     if entradas.simular_resultado.value != "normal" and proveedor != "simulado":
         raise ValueError("«Prueba · simular resultado» solo existe con el proveedor simulado.")
     estimado = cat.estimar(modelo, entradas)

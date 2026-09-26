@@ -478,6 +478,25 @@ export interface Toma {
   accion?: Accion | null;
 }
 
+export interface EntradasOperacion {
+  accion: Accion;
+  modelo: string;
+  prompt: string | null;
+  negativos: string | null;
+  instruccion: string | null;
+  duracion_s: number | null;
+  relacion_aspecto: string | null;
+  resolucion: string | null;
+  texto: string | null;
+  n_variantes: number;
+  referencias: { medio_id: string; ruta: string; rol: string }[];
+  primer_fotograma: { medio_id: string; ruta: string } | null;
+  imagen_entrada: { medio_id: string; ruta: string } | null;
+  variantes: { encuadre: string | null; angulo: string | null }[];
+  etiqueta_destino: string | null;
+  simular_resultado: SimulacionPrueba;
+}
+
 export interface Operacion {
   id: string;
   proyecto_id: string;
@@ -486,6 +505,7 @@ export interface Operacion {
   accion: Accion;
   modelo: string;
   proveedor: string | null;
+  entradas: EntradasOperacion;
   prompt_visible: string;
   coste_estimado: number | null;
   coste_unidad: string;
@@ -506,6 +526,7 @@ export interface Operacion {
   modelo_visible?: string;
   precio_simulado?: boolean;
   destino_etiqueta?: string | null;
+  correccion_texto?: string | null;
   proyecto_nombre?: string | null;
   espacio_nombre?: string | null;
   numero_intentos?: number;

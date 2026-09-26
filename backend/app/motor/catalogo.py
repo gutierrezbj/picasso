@@ -7,7 +7,7 @@ falla. Nada se ignora en silencio.
 from __future__ import annotations
 
 import os
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Optional
 
@@ -140,9 +140,18 @@ def elegible(m: ModeloCatalogo) -> bool:
     return not m.plantilla and proveedor_de(m) is not None
 
 
+CENTIMO = Decimal("0.01")
+
+
+def a_centimos(valor: Decimal) -> Decimal:
+    """Todo el dinero del estudio va en céntimos: lo que se estima es lo que se
+    reserva, lo que se cobra y lo que se suma."""
+    return valor.quantize(CENTIMO, rounding=ROUND_HALF_UP)
+
+
 def estimar(m: ModeloCatalogo, entradas: EntradaOperacion) -> Optional[Decimal]:
-    """Coste estimado según la unidad. `None` = «coste sin verificar»: nunca 0
-    por desconocido."""
+    """Coste estimado según la unidad, redondeado a céntimos. `None` = «coste sin
+    verificar»: nunca 0 por desconocido."""
     valor = m.coste.valor
     if valor is None:
         return None
@@ -153,4 +162,4 @@ def estimar(m: ModeloCatalogo, entradas: EntradaOperacion) -> Optional[Decimal]:
         unidades = Decimal(str(entradas.duracion_s or 0))
     elif m.coste.unidad == "caracter":
         unidades = Decimal(len(entradas.texto or ""))
-    return (valor * unidades).quantize(Decimal("0.0001"))
+    return a_centimos(valor * unidades)

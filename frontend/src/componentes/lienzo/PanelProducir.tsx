@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Play, RefreshCw, Search, Grid2X2 } from "lucide-react";
+import { AlertTriangle, Play, RefreshCw, Search, Grid2X2, Trash2 } from "lucide-react";
 import Boton from "../Boton";
 import Selector from "../Selector";
 import { Campo, Entrada, AreaTexto } from "../Campo";
@@ -14,10 +14,20 @@ import {
   costeEstimado,
   textoCoste,
 } from "../motor/comun";
-import type { Accion, ModeloCatalogo, Operacion, Plano, SimulacionPrueba } from "../../tipos";
+import type {
+  Accion,
+  ModeloCatalogo,
+  Operacion,
+  Plano,
+  SimulacionPrueba,
+  VistaOperacion,
+} from "../../tipos";
 
 interface Props {
   plano: Plano;
+  /** Corrección que hay que preparar al abrir (§7.7d). */
+  correccionId?: string | null;
+  onCorreccionAtendida?: () => void;
   onCambiado: () => void | Promise<unknown>;
 }
 
@@ -31,7 +41,18 @@ const SIMULACIONES: { valor: SimulacionPrueba; texto: string }[] = [
   { valor: "timeout", texto: "Que se pierda el seguimiento" },
 ];
 
-export default function PanelProducir({ plano, onCambiado }: Props) {
+const masCercana = (valor: number, admitidas: number[]): number =>
+  admitidas.reduce((a, b) => (Math.abs(b - valor) < Math.abs(a - valor) ? b : a), admitidas[0]);
+
+const listaDuraciones = (admitidas: number[]): string =>
+  admitidas.map((d) => `${d}`.replace(".", ",")).join(", ");
+
+export default function PanelProducir({
+  plano,
+  correccionId = null,
+  onCorreccionAtendida,
+  onCambiado,
+}: Props) {
   const modalidad = plano.modalidad;
   const [accion, setAccion] = useState<Accion>(
     modalidad === "video" ? "generar_video" : "generar_imagen"
@@ -43,9 +64,17 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
   const [texto, setTexto] = useState("");
   const [variantes, setVariantes] = useState("4");
   const [simular, setSimular] = useState<SimulacionPrueba>("normal");
-  const [aviso, setAviso] = useState<{ coste: number | null; exploracion: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [trabajando, setTrabajando] = useState(false);
+  const [aviso, setAviso] = useState<{
+    coste: number | null;
+    ejecutar: (confirmado: boolean) => Promise<void>;
+  } | null>(null);
+
+  // Operación preparada (correcciones): se ve el coste y el prompt antes de producir.
+  const [preparada, setPreparada] = useState<VistaOperacion | null>(null);
+  const [borrador, setBorrador] = useState("");
+  const [duracionPreparada, setDuracionPreparada] = useState<string>("");
 
   const { data: catalogo } = useQuery({ queryKey: ["catalogo"], queryFn: () => api.catalogo() });
   const { data: produccion, refetch } = useQuery({
@@ -65,19 +94,45 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
   const gasto = produccion?.presupuesto.gasto;
   const restante = produccion?.presupuesto.presupuesto_restante ?? null;
 
+  // Duración: parte de la del plano; si el modelo no la admite, se dice y se
+  // produce (y se cobra) una admitida.
+  const admitidas = modelo?.duraciones_s || [];
+  const pedida = duracion === "" ? null : Number(duracion);
+  const duracionEfectiva =
+    admitidas.length === 0
+      ? pedida
+      : pedida === null
+        ? admitidas[0]
+        : masCercana(pedida, admitidas);
+  const duracionCambiada =
+    accion === "generar_video" &&
+    admitidas.length > 0 &&
+    pedida !== null &&
+    Math.abs((duracionEfectiva || 0) - pedida) > 0.001;
+
   const coste = costeEstimado(modelo, {
-    duracion_s: duracion === "" ? null : Number(duracion),
+    duracion_s: accion === "generar_video" ? duracionEfectiva : null,
     texto,
     variantes: 1,
   });
   const costeExploracion = costeEstimado(modelo, { variantes: Number(variantes) || 4 });
   const supera = (c: number | null) => restante !== null && c !== null && c > restante;
 
+  const conAviso = (c: number | null, ejecutar: (confirmado: boolean) => Promise<void>) => {
+    if (supera(c)) setAviso({ coste: c, ejecutar });
+    else void ejecutar(false);
+  };
+
+  const tras = async () => {
+    await refetch();
+    await onCambiado();
+  };
+
   const cuerpo = (exploracion: boolean) => ({
     destino_id: plano.id,
     accion,
     modelo: modelo?.id,
-    duracion_s: duracion === "" ? null : Number(duracion),
+    duracion_s: accion === "generar_video" ? duracionEfectiva : null,
     texto: accion === "generar_voz" ? texto : null,
     n_variantes: exploracion ? Number(variantes) || 4 : 1,
     simular_resultado: simular,
@@ -92,8 +147,7 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
         ? await api.explorarEncuadres(plano.id, cuerpo(true))
         : await api.prepararOperacion(cuerpo(false));
       await api.autorizarOperacion(prep.operacion.id, confirmado);
-      await refetch();
-      await onCambiado();
+      await tras();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido producir.");
     } finally {
@@ -102,10 +156,93 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
     }
   };
 
-  const pedir = (exploracion: boolean) => {
-    const c = exploracion ? costeExploracion : coste;
-    if (supera(c)) setAviso({ coste: c, exploracion });
-    else producir(exploracion, false);
+  // --- corrección: se prepara al abrir y se produce con su propio botón ---
+  useEffect(() => {
+    if (!correccionId || !catalogo) return;
+    let cancelado = false;
+    const preparar = async () => {
+      const accionCorreccion: Accion =
+        modalidad === "video" ? "generar_video" : "editar_imagen";
+      const candidatos = catalogo.filter(
+        (m) => m.elegible && m.acciones.includes(accionCorreccion)
+      );
+      const elegido = candidatos[0];
+      if (!elegido) {
+        setError(
+          `No hay ningún modelo disponible para «${ETIQUETA_ACCION[accionCorreccion]}» en el catálogo.`
+        );
+        onCorreccionAtendida?.();
+        return;
+      }
+      const dur =
+        accionCorreccion === "generar_video"
+          ? elegido.duraciones_s.length > 0
+            ? masCercana(plano.duracion_s || elegido.duraciones_s[0], elegido.duraciones_s)
+            : plano.duracion_s
+          : null;
+      try {
+        const prep = await api.prepararCorreccion(correccionId, {
+          destino_id: plano.id,
+          accion: accionCorreccion,
+          modelo: elegido.id,
+          duracion_s: dur,
+        });
+        if (cancelado) return;
+        setPreparada(prep);
+        setBorrador(prep.operacion.prompt_visible);
+        setDuracionPreparada(dur === null ? "" : String(dur));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "No se ha podido preparar la corrección.");
+      } finally {
+        onCorreccionAtendida?.();
+      }
+    };
+    void preparar();
+    return () => {
+      cancelado = true;
+    };
+    // eslint-disable-next-line
+  }, [correccionId, catalogo]);
+
+  const modelosPreparada = preparada
+    ? (catalogo || []).filter((m) => m.acciones.includes(preparada.operacion.accion))
+    : [];
+  const modeloPreparada = preparada
+    ? modelosPreparada.find((m) => m.id === preparada.operacion.modelo) || null
+    : null;
+  const admitidasPreparada = modeloPreparada?.duraciones_s || [];
+
+  const actualizarPreparada = async (cambios: Record<string, unknown>) => {
+    if (!preparada) return;
+    setError(null);
+    try {
+      const nueva = await api.editarOperacion(preparada.operacion.id, cambios);
+      setPreparada(nueva);
+      setBorrador(nueva.operacion.prompt_visible);
+      setDuracionPreparada(
+        nueva.operacion.entradas.duracion_s === null
+          ? ""
+          : String(nueva.operacion.entradas.duracion_s)
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se ha podido recalcular el coste.");
+    }
+  };
+
+  const producirPreparada = async (confirmado: boolean) => {
+    if (!preparada) return;
+    setTrabajando(true);
+    setError(null);
+    try {
+      await api.autorizarOperacion(preparada.operacion.id, confirmado);
+      setPreparada(null);
+      await tras();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se ha podido producir.");
+    } finally {
+      setTrabajando(false);
+      setAviso(null);
+    }
   };
 
   const accionOperacion = async (op: Operacion, que: "comprobar" | "reintentar" | "fallida") => {
@@ -114,8 +251,7 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
       if (que === "comprobar") await api.comprobarOperacion(op.id);
       if (que === "reintentar") await api.reintentarOperacion(op.id);
       if (que === "fallida") await api.marcarFallida(op.id);
-      await refetch();
-      await onCambiado();
+      await tras();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido.");
     }
@@ -125,6 +261,108 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
 
   return (
     <div className="mt-4 flex flex-col gap-4" data-testid="panel-producir">
+      {preparada && (
+        <div
+          data-testid="operacion-preparada"
+          className="rounded-card border border-acento bg-acentoSuave p-3"
+        >
+          <p className="text-[14px] leading-[20px] font-semibold text-tinta">
+            {preparada.operacion.correccion_id
+              ? "Corrección preparada"
+              : "Operación preparada"}
+          </p>
+          <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
+            Todavía no se ha enviado nada. Repasa lo que se le pide al modelo y produce cuando
+            quieras.
+          </p>
+
+          <Campo etiqueta="Modelo" ayuda="Cambiarlo solo recalcula el coste.">
+            <Selector
+              data-testid="preparada-modelo"
+              valor={preparada.operacion.modelo}
+              opciones={modelosPreparada.map((m) => ({
+                valor: m.id,
+                texto: `${m.nombre_visible}${m.elegible ? "" : " — no disponible"}`,
+              }))}
+              onChange={(v) => actualizarPreparada({ modelo: v })}
+            />
+          </Campo>
+
+          <Campo
+            etiqueta={
+              preparada.operacion.accion === "editar_imagen"
+                ? "Qué hay que cambiar"
+                : "Lo que se le pide al modelo"
+            }
+            ayuda="Puedes editarlo antes de producir."
+          >
+            <AreaTexto
+              data-testid="preparada-prompt"
+              value={borrador}
+              onChange={(e) => setBorrador(e.target.value)}
+              onBlur={() => {
+                if (borrador === preparada.operacion.prompt_visible) return;
+                void actualizarPreparada(
+                  preparada.operacion.accion === "editar_imagen"
+                    ? { instruccion: borrador }
+                    : { prompt_manual: borrador }
+                );
+              }}
+              className="min-h-[96px]"
+            />
+          </Campo>
+
+          {preparada.operacion.accion === "generar_video" && admitidasPreparada.length > 0 && (
+            <Campo etiqueta="Duración (s)">
+              <Selector
+                data-testid="preparada-duracion"
+                valor={duracionPreparada || String(admitidasPreparada[0])}
+                opciones={admitidasPreparada.map((d) => ({
+                  valor: String(d),
+                  texto: `${d} s`,
+                }))}
+                onChange={(v) => {
+                  setDuracionPreparada(v);
+                  void actualizarPreparada({ duracion_s: Number(v) });
+                }}
+              />
+            </Campo>
+          )}
+
+          <p className="mt-2 text-[13px] leading-[18px] text-tinta2">
+            Coste: {textoCoste(preparada.operacion.coste_estimado, moneda)}
+            {modeloPreparada?.precio_simulado ? " · precio simulado" : ""}
+          </p>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Boton
+              data-testid="btn-producir-preparada"
+              disabled={trabajando}
+              onClick={() =>
+                conAviso(preparada.operacion.coste_estimado, producirPreparada)
+              }
+            >
+              <Play size={15} strokeWidth={1.9} />
+              {preparada.operacion.coste_estimado === null
+                ? "Producir (coste sin verificar)"
+                : `Producir por ${formatoMoneda(preparada.operacion.coste_estimado, moneda)}`}
+            </Boton>
+            <Boton
+              pequeno
+              variante="texto"
+              data-testid="btn-descartar-preparada"
+              onClick={async () => {
+                await api.descartarOperacion(preparada.operacion.id);
+                setPreparada(null);
+                await tras();
+              }}
+            >
+              <Trash2 size={14} strokeWidth={1.9} /> Descartar
+            </Boton>
+          </div>
+        </div>
+      )}
+
       <Campo etiqueta="Qué se produce">
         <Selector
           data-testid="producir-accion"
@@ -158,12 +396,19 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
       </Campo>
 
       {accion === "generar_video" && (
-        <Campo etiqueta="Duración (s)">
-          {modelo && modelo.duraciones_s.length > 0 ? (
+        <Campo
+          etiqueta="Duración (s)"
+          ayuda={
+            plano.duracion_s
+              ? `El plano dura ${plano.duracion_s} s.`
+              : "Este plano no tiene duración puesta."
+          }
+        >
+          {admitidas.length > 0 ? (
             <Selector
               data-testid="producir-duracion"
-              valor={duracion || String(modelo.duraciones_s[0])}
-              opciones={modelo.duraciones_s.map((d) => ({ valor: String(d), texto: `${d} s` }))}
+              valor={String(duracionEfectiva)}
+              opciones={admitidas.map((d) => ({ valor: String(d), texto: `${d} s` }))}
               onChange={setDuracion}
             />
           ) : (
@@ -175,6 +420,12 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
               value={duracion}
               onChange={(e) => setDuracion(e.target.value)}
             />
+          )}
+          {duracionCambiada && modelo && (
+            <p data-testid="aviso-duracion" className="mt-1 text-[12px] leading-[16px] text-aviso">
+              «{modelo.nombre_visible}» solo admite {listaDuraciones(admitidas)} s. Se producirá
+              y se cobrará {duracionEfectiva} s.
+            </p>
           )}
         </Campo>
       )}
@@ -233,7 +484,7 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
         <Boton
           data-testid="btn-producir"
           disabled={!modelo?.elegible || trabajando || (accion === "generar_voz" && !texto.trim())}
-          onClick={() => pedir(false)}
+          onClick={() => conAviso(coste, (c) => producir(false, c))}
         >
           <Play size={15} strokeWidth={1.9} />
           {coste === null
@@ -268,7 +519,7 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
               variante="secundario"
               data-testid="btn-explorar-encuadres"
               disabled={!modelo?.elegible || trabajando}
-              onClick={() => pedir(true)}
+              onClick={() => conAviso(costeExploracion, (c) => producir(true, c))}
             >
               <Grid2X2 size={15} strokeWidth={1.9} />
               {costeExploracion === null
@@ -308,6 +559,13 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
                   {op.posicion_cola ? ` · en cola, posición ${op.posicion_cola}` : ""}
                 </span>
               </div>
+              {op.correccion_texto && (
+                <p className="mt-1 text-tinta2">Corrección: {op.correccion_texto}</p>
+              )}
+              {op.es_exploracion && <p className="mt-1 text-tinta2">Exploración</p>}
+              {op.entradas.instruccion && !op.correccion_texto && (
+                <p className="mt-1 text-tinta2">Ajuste: {op.entradas.instruccion}</p>
+              )}
               <p className="mt-1 text-tinta2">
                 {op.coste_real !== null
                   ? `Cobrado ${formatoMoneda(op.coste_real, moneda)}`
@@ -354,18 +612,20 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
                   )}
                 </div>
               )}
-              {op.estado === "presupuestada" && op.autorizada_en === null && (
+              {(op.estado === "presupuestada" || op.estado === "preparada") && (
                 <Boton
                   pequeno
                   className="mt-2"
                   data-testid={`autorizar-${op.id}`}
-                  onClick={async () => {
-                    await api.autorizarOperacion(op.id, true);
-                    await refetch();
-                    await onCambiado();
-                  }}
+                  onClick={() =>
+                    conAviso(op.coste_estimado, async (confirmado) => {
+                      await api.autorizarOperacion(op.id, confirmado);
+                      await tras();
+                      setAviso(null);
+                    })
+                  }
                 >
-                  Autorizar por {textoCoste(op.coste_estimado, moneda)}
+                  Producir por {textoCoste(op.coste_estimado, moneda)}
                 </Boton>
               )}
             </li>
@@ -385,7 +645,7 @@ export default function PanelProducir({ plano, onCambiado }: Props) {
             : ""
         }
         etiquetaConfirmar="Sí, producir"
-        onConfirmar={() => aviso && producir(aviso.exploracion, true)}
+        onConfirmar={() => aviso && void aviso.ejecutar(true)}
         onCerrar={() => setAviso(null)}
       />
     </div>

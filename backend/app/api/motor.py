@@ -34,6 +34,7 @@ from app.dominio.modelos import (
     Medio,
     MedioEntrada,
     MoverAEscena,
+    PasarAFicha,
     PrepararOperacion,
     ReferenciaEntrada,
     SimulacionPrueba,
@@ -300,10 +301,164 @@ async def _construir_entradas(
 # --- preparar, editar y autorizar (§9.4) ------------------------------------
 
 
+VISTAS_POR_CLASE: dict[str, tuple[str, ...]] = {
+    "personaje": ("de frente", "de perfil", "de tres cuartos", "de cuerpo entero"),
+    "producto": ("de frente", "de lado", "de tres cuartos", "detalle"),
+    "escenario": ("vista general", "desde la entrada", "detalle del espacio", "al fondo"),
+    "mundo": ("vista general", "desde la entrada", "detalle del espacio", "al fondo"),
+    "objeto": ("de frente", "de lado", "de tres cuartos", "detalle"),
+}
+
+ENCARGO_POR_CLASE: dict[str, str] = {
+    "personaje": "Hoja de personaje: varias vistas del mismo personaje, fondo limpio y luz neutra.",
+    "producto": "Photobook del producto: vistas del producto recortado sobre fondo limpio.",
+    "escenario": "Lámina del escenario: vistas del espacio, sin personajes.",
+    "mundo": "Lámina del mundo: vistas del espacio, sin personajes.",
+    "objeto": "Lámina de referencia del objeto: vistas sobre fondo limpio.",
+}
+
+
+async def _ficha_y_elemento(ficha_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    ficha = await db.fichas.find_one({"_id": ficha_id})
+    if not ficha:
+        raise HTTPException(404, "Ficha no encontrada")
+    elemento = await db.elementos.find_one({"_id": ficha["elemento_id"]})
+    if not elemento:
+        raise HTTPException(404, "Elemento no encontrado")
+    return sin_id(ficha), sin_id(elemento)
+
+
+async def _entradas_de_ficha(
+    ficha: dict[str, Any],
+    elemento: dict[str, Any],
+    proyecto: dict[str, Any],
+    datos: PrepararOperacion,
+) -> tuple[EntradaOperacion, str]:
+    modelo = cat.modelo(datos.modelo)
+    if modelo is None:
+        raise HTTPException(422, f"El modelo «{datos.modelo}» no está en el catálogo.")
+    clase = elemento["clase"]
+    vistas = VISTAS_POR_CLASE.get(clase, ("vista 1", "vista 2", "vista 3", "vista 4"))
+    cuantas = max(1, min(len(vistas), datos.n_variantes or 4))
+    partes = [
+        ENCARGO_POR_CLASE.get(clase, "Lámina de referencia."),
+        f"{clase.capitalize()}: {elemento['nombre']}.",
+    ]
+    if ficha.get("descripcion"):
+        partes.append(ficha["descripcion"])
+    for etiqueta, campo in (
+        ("Rasgos fijos", "rasgos_fijos"),
+        ("Rasgos variables", "rasgos_variables"),
+    ):
+        valores = ficha.get(campo) or []
+        if valores:
+            partes.append(f"{etiqueta}: " + "; ".join(valores) + ".")
+    for etiqueta, campo in (
+        ("Materiales y colores", "materiales_colores"),
+        ("Ambiente", "ambiente"),
+        ("Distribución", "distribucion"),
+    ):
+        if ficha.get(campo):
+            partes.append(f"{etiqueta}: {ficha[campo]}.")
+    prompt = datos.prompt_manual if datos.prompt_manual is not None else "\n".join(partes)
+
+    referencias: list[ReferenciaEntrada] = []
+    if modelo.admite.referencias:
+        for r in ficha.get("referencias") or []:
+            medio = await _medio(r.get("medio_id"))
+            if medio:
+                referencias.append(
+                    ReferenciaEntrada(
+                        medio_id=medio["id"], ruta=_ruta(medio), rol=r.get("rol") or "otra"
+                    )
+                )
+        referencias = referencias[: modelo.admite.referencias]
+
+    accion = (
+        Accion.imagen_con_referencias
+        if referencias and Accion.imagen_con_referencias in modelo.acciones
+        else Accion.generar_imagen
+    )
+    relacion = "1:1" if "1:1" in modelo.relaciones else (modelo.relaciones[0] if modelo.relaciones else "16:9")
+    ancho, alto = ficheros.medidas(relacion, modelo.formato.png_lado_largo)
+    entradas = EntradaOperacion(
+        accion=accion,
+        modelo=modelo.id,
+        prompt=prompt,
+        referencias=tuple(referencias),
+        relacion_aspecto=relacion,
+        resolucion=f"{ancho}x{alto}",
+        n_variantes=cuantas,
+        variantes=tuple(VarianteEncuadre(encuadre=v) for v in vistas[:cuantas]),
+        etiqueta_destino=f"{elemento['nombre']} · v{ficha['version']}",
+        rotulos=(ENCARGO_POR_CLASE.get(clase, "Lámina de referencia."),),
+        simular_resultado=datos.simular_resultado,
+    )
+    return entradas, prompt
+
+
+@router.post("/fichas/{ficha_id}/preparar-referencias", status_code=201)
+async def preparar_referencias(ficha_id: str, datos: PrepararOperacion):
+    """§6.2: «Crear hoja de personaje», «Crear photobook del producto» o «Crear
+    lámina del escenario». Prepara una operación del motor con coste visible; no
+    envía nada hasta autorizar."""
+    ficha, elemento = await _ficha_y_elemento(ficha_id)
+    if not datos.proyecto_id:
+        raise HTTPException(422, "Falta el proyecto en el que se prepara la lámina.")
+    proy = await db.proyectos.find_one({"_id": datos.proyecto_id})
+    if not proy:
+        raise HTTPException(404, "Proyecto no encontrado")
+    try:
+        entradas, prompt = await _entradas_de_ficha(ficha, elemento, sin_id(proy), datos)
+        return await ops.crear_operacion(
+            proyecto_id=datos.proyecto_id,
+            espacio_id=elemento["espacio_id"],
+            destino_tipo="ficha",
+            destino_id=ficha_id,
+            entradas=entradas,
+            prompt_visible=prompt,
+        )
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+
+
+@router.get("/fichas/{ficha_id}/tomas")
+async def tomas_de_ficha(ficha_id: str):
+    docs = await db.tomas.find({"ficha_version_id": ficha_id}).sort("numero", 1).to_list(500)
+    return {"tomas": [await _vista_toma(d) for d in docs]}
+
+
+@router.post("/tomas/{toma_id}/pasar-a-ficha")
+async def pasar_toma_a_ficha(toma_id: str, datos: PasarAFicha):
+    """El usuario elige qué tomas de la lámina pasan a ser referencias (§6.2)."""
+    doc = await db.tomas.find_one({"_id": toma_id})
+    if not doc or not doc.get("ficha_version_id"):
+        raise HTTPException(404, "Toma de referencias no encontrada")
+    ficha = await db.fichas.find_one({"_id": doc["ficha_version_id"]})
+    if not ficha:
+        raise HTTPException(404, "Ficha no encontrada")
+    if ficha["estado"] == "aprobada":
+        raise HTTPException(409, "Una versión aprobada no se edita. Crea una versión nueva.")
+    referencias = list(ficha.get("referencias") or [])
+    if any(r["medio_id"] == doc["medio_id"] for r in referencias):
+        raise HTTPException(409, "Esa toma ya es referencia de la ficha.")
+    referencias.append({"medio_id": doc["medio_id"], "rol": datos.rol})
+    await db.fichas.update_one(
+        {"_id": ficha["_id"]},
+        {"$set": {"referencias": referencias, "updated_at": ahora()}},
+    )
+    await db.tomas.update_one(
+        {"_id": toma_id}, {"$set": {"valoracion": "buena", "updated_at": ahora()}}
+    )
+    return sin_id(await db.fichas.find_one({"_id": ficha["_id"]}))
+
+
 @router.post("/operaciones", status_code=201)
 async def preparar_operacion(datos: PrepararOperacion):
+    if datos.destino_tipo == "ficha":
+        return await preparar_referencias(datos.destino_id, datos)
     if datos.destino_tipo != "plano":
-        raise HTTPException(422, "En esta versión el destino de una operación es un plano.")
+        raise HTTPException(422, "El destino de una operación es un plano o una ficha.")
     plano = await _plano(datos.destino_id)
     _, proy = await _pieza_proyecto(plano["pieza_id"])
     correccion_texto = None
@@ -350,9 +505,31 @@ async def editar_operacion(operacion_id: str, datos: EditarOperacion):
     if not doc:
         raise HTTPException(404, "Operación no encontrada")
     op = sin_id(doc)
+    previas = EntradaOperacion(**op["entradas"])
+    if op["destino"]["tipo"] == "ficha":
+        ficha, elemento = await _ficha_y_elemento(op["destino"]["id"])
+        proyecto = await db.proyectos.find_one({"_id": op["proyecto_id"]})
+        peticion = PrepararOperacion(
+            destino_tipo="ficha",
+            destino_id=op["destino"]["id"],
+            proyecto_id=op["proyecto_id"],
+            accion=previas.accion,
+            modelo=datos.modelo or op["modelo"],
+            n_variantes=datos.n_variantes or previas.n_variantes,
+            prompt_manual=datos.prompt_manual if datos.prompt_manual is not None else previas.prompt,
+            simular_resultado=datos.simular_resultado or previas.simular_resultado,
+        )
+        try:
+            entradas, prompt = await _entradas_de_ficha(
+                ficha, elemento, sin_id(proyecto) if proyecto else {}, peticion
+            )
+            return await ops.editar(operacion_id, entradas, prompt)
+        except estados.TransicionNoPermitida as e:
+            raise _error_estado(e) from e
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
     plano = await _plano(op["destino"]["id"])
     _, proy = await _pieza_proyecto(plano["pieza_id"])
-    previas = EntradaOperacion(**op["entradas"])
     correccion_texto = None
     if op.get("correccion_id"):
         correccion = next(
@@ -683,11 +860,26 @@ async def _vista_operacion(doc: dict[str, Any]) -> dict[str, Any]:
         plano = await db.planos.find_one({"_id": op["destino"]["id"]})
         if plano:
             destino_etiqueta = await etiqueta_plano(sin_id(plano))
+    elif op["destino"]["tipo"] == "ficha":
+        destino_etiqueta = op["entradas"].get("etiqueta_destino") or "ficha"
     proy = await db.proyectos.find_one({"_id": op["proyecto_id"]})
     esp = await db.espacios.find_one({"_id": op["espacio_id"]})
     tomas = await db.tomas.find({"operacion_id": op["id"]}).sort("numero", 1).to_list(50)
+    correccion_texto = None
+    if op.get("correccion_id"):
+        con = await db.planos.find_one({"correcciones.id": op["correccion_id"]})
+        if con:
+            correccion_texto = next(
+                (
+                    c["texto"]
+                    for c in con.get("correcciones") or []
+                    if c["id"] == op["correccion_id"]
+                ),
+                None,
+            )
     return {
         **op,
+        "correccion_texto": correccion_texto,
         "modelo_visible": modelo.nombre_visible if modelo else op["modelo"],
         "precio_simulado": (not modelo.coste.verificado) if modelo else True,
         "destino_etiqueta": destino_etiqueta,

@@ -660,8 +660,8 @@ class EntradaOperacion(BaseModel):
         for campo in _PROHIBE[accion]:
             if getattr(self, campo):
                 raise ValueError(f"«{accion}» no lleva «{campo}».")
-        if self.n_variantes > 1 and accion != "generar_imagen":
-            raise ValueError("Las variantes solo se piden en «generar_imagen» (§8).")
+        if self.n_variantes > 1 and accion not in ("generar_imagen", "imagen_con_referencias"):
+            raise ValueError("Las variantes solo se piden al generar imágenes (§8, §6.2).")
         if self.n_variantes != max(1, len(self.variantes) or self.n_variantes):
             raise ValueError("El número de variantes no cuadra con la lista de variantes.")
         return self
@@ -739,6 +739,7 @@ class PrepararOperacion(BaseModel):
 
     destino_tipo: str = "plano"
     destino_id: str
+    proyecto_id: Optional[str] = None  # obligatorio cuando el destino es una ficha
     accion: Accion
     modelo: str
     duracion_s: Optional[float] = None
@@ -781,6 +782,12 @@ class FijarExploracion(BaseModel):
 
 class MoverAEscena(BaseModel):
     escena_id: str
+
+
+class PasarAFicha(BaseModel):
+    """Una toma de la lámina de referencias pasa a ser referencia de la ficha (§6.2)."""
+
+    rol: str = "otra"
 
 
 class LayoutLienzo(BaseModel):

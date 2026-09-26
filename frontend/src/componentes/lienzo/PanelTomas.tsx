@@ -7,16 +7,25 @@ import { Campo, Entrada } from "../Campo";
 import { api } from "../../api/cliente";
 import { formatoMoneda } from "../../lib/formato";
 import { VistaMedio, costeEstimado, textoCoste } from "../motor/comun";
+import ComparadorTomas from "./ComparadorTomas";
 import type { ModeloCatalogo, Plano, Toma } from "../../tipos";
 
 interface Props {
   plano: Plano;
   relacion: string;
   moneda: string;
+  /** Un ajuste deja la operación preparada: se termina en «Producir». */
+  onPreparada?: () => void;
   onCambiado: () => void | Promise<unknown>;
 }
 
-export default function PanelTomas({ plano, relacion, moneda, onCambiado }: Props) {
+export default function PanelTomas({
+  plano,
+  relacion,
+  moneda,
+  onPreparada,
+  onCambiado,
+}: Props) {
   const [comparar, setComparar] = useState<string[]>([]);
   const [ajustando, setAjustando] = useState<string | null>(null);
   const [instruccion, setInstruccion] = useState("");
@@ -58,17 +67,16 @@ export default function PanelTomas({ plano, relacion, moneda, onCambiado }: Prop
     if (!modelo || !instruccion.trim()) return;
     setError(null);
     try {
-      const prep = await api.ajustarToma(toma.id, {
+      await api.ajustarToma(toma.id, {
         destino_id: plano.id,
         accion: "editar_imagen",
         modelo: modelo.id,
         instruccion: instruccion.trim(),
       });
-      await api.autorizarOperacion(prep.operacion.id, true);
       setAjustando(null);
       setInstruccion("");
-      await refetch();
       await onCambiado();
+      onPreparada?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se ha podido ajustar.");
     }
@@ -230,11 +238,12 @@ export default function PanelTomas({ plano, relacion, moneda, onCambiado }: Prop
             onClick={() => ajustar(toma)}
           >
             {costeAjuste === null
-              ? "Ajustar (coste sin verificar)"
-              : `Ajustar por ${formatoMoneda(costeAjuste, moneda)}`}
+              ? "Preparar el ajuste (coste sin verificar)"
+              : `Preparar el ajuste · ${formatoMoneda(costeAjuste, moneda)}`}
           </Boton>
           <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
-            El resultado es una toma nueva. La original se conserva.
+            Se prepara y se produce desde «Producir», con el coste delante. El resultado es una
+            toma nueva: la original se conserva.
           </p>
         </div>
       )}
@@ -246,41 +255,22 @@ export default function PanelTomas({ plano, relacion, moneda, onCambiado }: Prop
       {error && <p className="mb-2 text-[13px] leading-[18px] text-aviso">{error}</p>}
 
       {comparadas.length === 2 && (
-        <div className="mb-4" data-testid="comparacion-tomas">
-          <h3 className="text-[14px] leading-[20px] font-semibold text-tinta">
-            Comparar tomas {comparadas[0].numero} y {comparadas[1].numero}
-          </h3>
-          <div className="mt-2 grid grid-cols-2 gap-3">
-            {comparadas.map((t) => (
-              <div key={t.id}>
-                <VistaMedio
-                  medio={t.medio}
-                  url={api.urlMedio}
-                  relacion={relacion}
-                  testid={`comparar-medio-${t.numero}`}
-                />
-                <Boton
-                  pequeno
-                  className="mt-2 w-full"
-                  data-testid={`elegir-comparada-${t.numero}`}
-                  disabled={t.id === elegidaId}
-                  onClick={() => elegir(t)}
-                >
-                  Elegir la {t.numero}
-                </Boton>
-              </div>
-            ))}
-          </div>
-          <Boton
-            pequeno
-            variante="texto"
-            className="mt-2"
-            data-testid="cerrar-comparacion"
-            onClick={() => setComparar([])}
-          >
-            Cerrar la comparación
-          </Boton>
-        </div>
+        <ComparadorTomas
+          relacion={relacion}
+          tomas={comparadas}
+          elegidaId={elegidaId}
+          onElegir={async (t) => {
+            await elegir(t);
+            setComparar([]);
+          }}
+          onCerrar={() => setComparar([])}
+        />
+      )}
+
+      {comparar.length === 1 && (
+        <p data-testid="aviso-comparar" className="mb-2 text-[13px] leading-[18px] text-tinta2">
+          Marca otra toma para verlas a pantalla completa, lado a lado.
+        </p>
       )}
 
       <ul className="flex flex-col gap-3" data-testid="lista-tomas">

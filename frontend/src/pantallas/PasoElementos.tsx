@@ -313,6 +313,7 @@ export default function PasoElementos() {
                 key={`${entrada.elemento_id}-${fichaMostrada.id}`}
                 elemento={entrada.elemento}
                 ficha={fichaMostrada}
+                proyectoId={proyectoId}
                 versiones={entrada.fichas}
                 versionFijada={entrada.version_ficha}
                 ultimaAprobada={entrada.ultima_aprobada}

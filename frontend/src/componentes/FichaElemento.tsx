@@ -1,9 +1,10 @@
 import React, { useRef, useState } from "react";
-import { CheckCircle2, FilePlus2, Wrench } from "lucide-react";
+import { CheckCircle2, FilePlus2 } from "lucide-react";
 import Boton from "./Boton";
 import Selector from "./Selector";
 import ListaTextos from "./ListaTextos";
 import Referencias from "./Referencias";
+import PanelReferencias from "./motor/PanelReferencias";
 import { Campo, Entrada, AreaTexto } from "./Campo";
 import { api } from "../api/cliente";
 import { useAutoguardado } from "../estado/useAutoguardado";
@@ -38,6 +39,7 @@ const EJEMPLO_VARIABLES: Record<string, string> = {
 interface PropsFichaElemento {
   elemento: Elemento;
   ficha: FichaVersion;
+  proyectoId: string;
   versiones: FichaVersion[];
   versionFijada?: number | null;
   ultimaAprobada?: number | null;
@@ -53,6 +55,7 @@ interface PropsFichaElemento {
 export default function FichaElemento({
   elemento,
   ficha,
+  proyectoId,
   versiones,
   versionFijada,
   ultimaAprobada,
@@ -371,19 +374,16 @@ export default function FichaElemento({
         />
       </Campo>
 
-      <div className="rounded-card border border-linea bg-superficie2 p-4">
-        <div className="text-[14px] leading-[20px] font-medium text-tinta">Preparar referencias</div>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <Boton pequeno variante="secundario" data-testid="btn-preparar-referencias" disabled>
-            <Wrench size={16} strokeWidth={1.9} />{" "}
-            {TEXTO_PREPARAR[elemento.clase] || "Preparar referencias"}
-          </Boton>
-          <span className="text-[13px] leading-[18px] text-tinta2">
-            No entra en el alcance acordado de la Fase 6: queda pendiente de decidir cuándo se
-            construye.
-          </span>
-        </div>
-      </div>
+      <PanelReferencias
+        ficha={ficha}
+        clase={elemento.clase}
+        proyectoId={proyectoId}
+        etiquetaBoton={TEXTO_PREPARAR[elemento.clase] || "Preparar referencias"}
+        editable={editable}
+        onCambiada={async () => {
+          await onCambiada?.();
+        }}
+      />
 
       {editable && (
         <Campo etiqueta="Nota de cambio" ayuda="Por qué existe esta versión." htmlFor="ficha-nota">

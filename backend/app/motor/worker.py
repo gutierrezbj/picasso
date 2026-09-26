@@ -346,7 +346,24 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
         medios.append((_indice_de_url(url), medio))
 
     tomas: list[dict[str, Any]] = []
-    if op["destino"]["tipo"] == "plano":
+    if op["destino"]["tipo"] == "ficha":
+        # Lámina de referencias de una ficha (§6.2): las tomas se revisan y el
+        # usuario elige cuáles pasan a la ficha.
+        numero = await db.tomas.count_documents({"ficha_version_id": op["destino"]["id"]})
+        for orden, (indice, medio) in enumerate(medios):
+            variante = entradas.variantes[indice] if indice < len(entradas.variantes) else None
+            toma = Toma(
+                ficha_version_id=op["destino"]["id"],
+                medio_id=medio["id"],
+                operacion_id=op_id,
+                numero=numero + orden + 1,
+                exploracion=variante,
+            )
+            doc = toma.model_dump(mode="json")
+            doc["_id"] = doc["id"]
+            await db.tomas.insert_one(doc)
+            tomas.append(sin_id(doc))
+    elif op["destino"]["tipo"] == "plano":
         plano = await db.planos.find_one({"_id": op["destino"]["id"]})
         if plano:
             numero = await db.tomas.count_documents(
@@ -408,7 +425,12 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
     )
     eventos.publicar(
         op["proyecto_id"],
-        {"tipo": "tomas", "plano_id": op["destino"]["id"], "tomas": tomas},
+        {
+            "tipo": "tomas",
+            "destino_tipo": op["destino"]["tipo"],
+            "plano_id": op["destino"]["id"],
+            "tomas": tomas,
+        },
     )
     return await ops.vista(sin_id(await db.operaciones.find_one({"_id": op_id})))
 
@@ -439,6 +461,10 @@ async def retomar() -> None:
         id_remoto = (intento or {}).get("id_remoto")
         if id_remoto:
             asyncio.create_task(_seguir(doc["_id"], id_remoto))
+            continue
+        if doc["estado"] == "autorizada" and intento is None:
+            # Autorizada y nunca enviada: no hay riesgo de duplicado, vuelve a la cola.
+            await encolar(sin_id(doc))
             continue
         try:
             await ops.guardar_estado(

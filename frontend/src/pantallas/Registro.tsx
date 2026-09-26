@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
@@ -23,6 +23,13 @@ const ESTADOS = [
 /** Registro (P9, §9.5): todas las operaciones del estudio, filtrables, con
  * totales por proyecto y por espacio y exportación a CSV. */
 export default function Registro() {
+  useEffect(() => {
+    document.title = "Registro · Picasso";
+    return () => {
+      document.title = "Estudio";
+    };
+  }, []);
+
   const [espacioId, setEspacioId] = useState("");
   const [proyectoId, setProyectoId] = useState("");
   const [estado, setEstado] = useState("");

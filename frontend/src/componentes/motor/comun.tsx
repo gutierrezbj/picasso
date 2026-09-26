@@ -11,13 +11,14 @@ export function costeEstimado(
   if (!modelo || modelo.coste.valor === null) return null;
   const valor = Number(modelo.coste.valor);
   const variantes = Math.max(1, datos.variantes || 1);
-  if (modelo.coste.unidad === "imagen") return round4(valor * variantes);
-  if (modelo.coste.unidad === "segundo") return round4(valor * Number(datos.duracion_s || 0));
-  if (modelo.coste.unidad === "caracter") return round4(valor * (datos.texto || "").length);
-  return round4(valor * variantes);
+  if (modelo.coste.unidad === "imagen") return aCentimos(valor * variantes);
+  if (modelo.coste.unidad === "segundo") return aCentimos(valor * Number(datos.duracion_s || 0));
+  if (modelo.coste.unidad === "caracter") return aCentimos(valor * (datos.texto || "").length);
+  return aCentimos(valor * variantes);
 }
 
-const round4 = (n: number): number => Math.round(n * 10000) / 10000;
+/** Todo el dinero va en céntimos: lo que se ve es lo que se reserva y se cobra. */
+const aCentimos = (n: number): number => Math.round(n * 100) / 100;
 
 export function textoCoste(coste: number | null, moneda: string): string {
   return coste === null ? "coste sin verificar" : formatoMoneda(coste, moneda);

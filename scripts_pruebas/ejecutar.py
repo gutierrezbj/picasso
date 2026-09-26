@@ -40,6 +40,7 @@ SCRIPTS = [
     "p6_hablantes",
     "p7_lienzo",
     "p8_motor",
+    "p9_reinicio",
 ]
 
 

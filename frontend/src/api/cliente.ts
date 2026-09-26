@@ -330,6 +330,18 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ escena_id: escenaId }),
     }),
+  prepararReferencias: (fichaId: string, datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>(`/fichas/${fichaId}/preparar-referencias`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  tomasDeFicha: (fichaId: string) =>
+    peticion<{ tomas: Toma[] }>(`/fichas/${fichaId}/tomas`),
+  pasarTomaAFicha: (tomaId: string, rol: string) =>
+    peticion<FichaVersion>(`/tomas/${tomaId}/pasar-a-ficha`, {
+      method: "POST",
+      body: JSON.stringify({ rol }),
+    }),
   operaciones: (filtros: Record<string, string>) =>
     peticion<Operacion[]>(`/operaciones?${new URLSearchParams(filtros).toString()}`),
   totalesRegistro: (filtros: Record<string, string>) =>
