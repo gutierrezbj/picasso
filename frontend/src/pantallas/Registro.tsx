@@ -106,18 +106,20 @@ export default function Registro() {
               onChange={setEstado}
             />
           </Campo>
-          <Campo etiqueta="Desde">
+          <Campo etiqueta="Desde" ayuda="día/mes/año">
             <Entrada
               data-testid="filtro-desde"
               type="date"
+              lang="es-ES"
               value={desde}
               onChange={(e) => setDesde(e.target.value)}
             />
           </Campo>
-          <Campo etiqueta="Hasta">
+          <Campo etiqueta="Hasta" ayuda="día/mes/año">
             <Entrada
               data-testid="filtro-hasta"
               type="date"
+              lang="es-ES"
               value={hasta}
               onChange={(e) => setHasta(e.target.value)}
             />

@@ -1,0 +1,65 @@
+{
+  "summary": "Fase 6 (motor de producción con proveedor simulado, tomas §7.6, correcciones-operación §7.7d, lámina de encuadres §8, planos sin escena §13, Registro §9.5) probada end-to-end desde la UI en previsualización real. Solo se escribió dentro del espacio «Pruebas del constructor» / proyecto «Corto de pruebas» (5f3d0d6ff0e94725aec5b390b4f172ac). Ni «Espacio 1» ni «Proyecto 1» se abrieron para escribir. Todos los flujos del review pasan; se detecta 1 problema menor de refresco (header) y 1 detalle de i18n en el filtro de fechas de /registro.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Cabecera / indicador-gasto",
+        "issue": "El indicador Gasto de la cabecera NO se actualiza en vivo tras completarse una operación (queda en '0,00 $' mientras el Panel Registro y la ficha del plano ya reflejan el coste). Solo se refresca al recargar (F5) o navegar entre pantallas. El review dice literalmente 'el Gasto de la cabecera (indicador-gasto) sube a 0,04 $'. Tras F5 muestra los totales correctos (0,04 → 0,08 → 0,12 → 0,28 → 1,09).",
+        "selector": "[data-testid=indicador-gasto]",
+        "priority": "MEDIUM"
+      },
+      {
+        "component": "NodoPlano / FichaPlano contador de tomas",
+        "issue": "Los contadores 'N tomas' de la tarjeta del plano ('resuelto · 2 tomas') y 'Tomas (N)' de la pestaña quedan desfasados durante la misma sesión tras producir/ajustar/explorar: hacen falta F5 o cambiar de pestaña. Ejemplo: tras la operación incierta comprobada, la lista de tomas mostraba 3 pero la tarjeta seguía en '2 tomas'.",
+        "selector": "[data-testid^=estado-plano-]",
+        "priority": "LOW"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "/registro",
+        "issues": [
+          "Los filtros «Desde» y «Hasta» usan <input type=date> con placeholder nativo 'mm/dd/yyyy' (formato US). La app está en español; sería preferible un placeholder/formato dd/mm/aaaa o un DatePicker localizado. Es lo único que rompe la coherencia visual de la pantalla."
+        ]
+      }
+    ]
+  },
+  "results_per_flow": {
+    "anadir_plano_dirigir": "OK — anadir-plano-1 crea nodo-plano-E1·P1. Dirigir abre ficha-plano; se rellenó plano-que-se-muestra='Un gato en la ventana', modalidad=Imagen, direccion-encuadre y direccion-angulo. estado-plano-E1·P1='dirigido' y la tarjeta muestra 'sin toma'.",
+    "producir_selector_modelo_y_coste_previo": "OK — producir-modelo lista: 'Simulado · imagen', 'Simulado · imagen sin precio', 'Simulado · falla' y 3 plantillas no elegibles. Con 'Simulado · imagen sin precio' presupuesto-plano dice 'Coste de esta operación: coste sin verificar' y btn-producir='Producir (coste sin verificar)'. Con 'Simulado · imagen' btn-producir='Producir por 0,04 $'. El coste se ve ANTES de producir, correcto.",
+    "producir_dos_tomas": "OK — 2 producciones con sim-imagen → 2 operaciones completadas con 1 intento cada una, 2 tomas visibles (medio-toma-1 y medio-toma-2). Tras F5 Gasto=0,08 $ (en vivo no refresca — ver ui_bug).",
+    "comparar_y_elegir": "OK — comparar-toma-1 + comparar-toma-2 abre comparacion-tomas con las dos imágenes al completo. elegir-comparada-2 marca Toma 2 · elegida y estado-plano='resuelto · 2 tomas'. El botón elegir-comparada-2 queda disabled tras elegir (marca 'elegida').",
+    "incierta_comprobar_no_reenvia": "OK — con producir-simular='incierto' la operación queda 'incierta'; tras 3s pulsar comprobar-<id> hace que pase a 'completada' manteniendo '1 intento' y aparece UNA sola toma nueva (Tomas total: 2→3).",
+    "fallo_reintentar_autorizar": "OK — con sim-inestable la operación queda 'fallida' con reintentar-<id> visible. Al pulsarlo pasa a 'presupuestada' con autorizar-<id> visible ('Autorizar por 0,04 $') — no se envía nada solo, se requiere reautorización.",
+    "explorar_encuadres_4x": "OK — con 'Cuántas'=4, btn-explorar-encuadres='Explorar por 0,16 $'. Al ejecutar aparece lista-exploraciones con 4 exploraciones; cada una con botones fijar-N y usar-como-toma-N. 'fijar-1' cambia direccion-encuadre en la pestaña Dirección a 'Plano general'. 'usar-como-toma-2' añade una toma normal (lista-tomas 3→4).",
+    "ajustar_toma": "OK — ajustar-toma-1 abre el formulario; con ajuste-instruccion='baja la saturación' btn-ajustar='Ajustar por 0,03 $'. Sale una toma NUEVA (5) y la original (1) sigue.",
+    "correccion_producir_hecha_sola": "OK — En Correcciones se guardó 'más luz en la cara' con btn-guardar-correccion. producir-correccion-<id> ejecuta la operación; al terminar, la corrección sigue 'pendiente' con el texto 'Ya hay una toma de esta corrección: elígela en «Tomas» y se marcará hecha'. Elegir esa toma en pestana-tomas hace que la corrección desaparezca de pendientes ('Sin correcciones pendientes.') y aparezca en el historial como '· más luz en la cara — hecha'.",
+    "video_precios_y_reproduccion": "OK — E1·P2 en modalidad Vídeo, duración 3 s: btn 'Simulado · vídeo'='Producir por 0,75 $' (3×0,25), 'Simulado · vídeo de cine'='Producir por 9,00 $'. Al producir con sim-video, la toma es un <video> reproducible con marca SIMULADO.",
+    "panel_registro_del_lienzo": "OK — btn-panel-registro abre panel-registro con la tabla de 8 operaciones del proyecto, cada una con fila-operacion-<id>, costes Estimado y Real, Estado, Destino E1·P1 / E1·P2 y proveedor 'simulado'. registro-csv-proyecto visible. Total '8 operaciones · 1,09 $'. cerrar-panel-registro cierra.",
+    "pantalla_registro_global": "OK — acceso-registro (Receipt icon en cabecera) navega a /registro (pantalla-registro). filtro-espacio lista {todos, Pruebas del constructor, Espacio 1}. Al filtrar por 'Pruebas del constructor', totales-registro muestra '1,09 $ en 8 operaciones · Por espacio: Pruebas del constructor 1,09 $ · Por proyecto: Corto de pruebas 1,09 $', tabla lista las 8 operaciones con 'Espacio · proyecto' y destino E1·Pn, y registro-csv ('Exportar a CSV') presente.",
+    "regresion_fase5": "OK — plegar-escena-2 alterna 'Plegar'↔'Desplegar' correctamente. guion-grafico-1 abre pantalla completa con 2 tira-plano-N para la escena que tiene planos; Escape cierra. abrir-ficha-<Nombre> abre ficha-contextual-elemento, su X la cierra sin errores. Sin errores rojos en consola durante todos los flujos (solo la advertencia esperada de React Flow attribution)."
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Refrescar el indicador Gasto de la cabecera en vivo al completarse cada operación (SSE ya llega para tomas y estados de operación en el panel; falta invalidar la query del proyecto/'lienzo' o exponer un evento de gasto).",
+    "Refrescar el contador 'N tomas' de NodoPlano y el título de pestaña 'Tomas (N)' inmediatamente tras producir/ajustar/usar-como-toma/incierta-comprobada (mismo problema de invalidación de query).",
+    "Localizar el placeholder/formato de fecha en /registro (filtro-desde y filtro-hasta) a dd/mm/aaaa o usar un DatePicker propio en español, en lugar del input type=date nativo con placeholder 'mm/dd/yyyy'."
+  ],
+  "critical_code_review_comments": [
+    "En Lienzo.tsx el prop gasto se toma de useProyecto() y NO se invalida al recibir eventos SSE de operación completada; por eso indicador-gasto queda estancado hasta el próximo fetch. Sugerencia: en el hook SSE del motor, invalidar ['proyecto', proyectoId] cuando llega un evento de operación terminal, o exponer un endpoint ligero /api/proyectos/{id}/gasto que se refresque en el hook usePresupuesto.",
+    "En NodoPlano el texto 'N tomas' viene de la pieza cacheada; conviene invalidar ['lienzo', piezaId] junto con la lista de tomas del plano cuando termina una operación (mismo evento SSE).",
+    "El botón elegir-comparada-N usa disabled={t.id===elegidaId} — visualmente queda gris pero sin etiqueta explícita 'elegida' en la comparación (sí aparece 'Toma N · elegida' bajo la imagen). Aceptable, pero un tooltip title='Ya elegida' ayudaría.",
+    "Los data-testid con '·' (E1·P1, E1·P2) usan middle-dot U+00B7. Funciona en Playwright y CSS, pero conviene documentarlo para agentes/tests externos.",
+    "Pantalla /registro: los inputs de fecha nativos rompen la coherencia visual del resto de la app (Mulish + acento petróleo) y muestran 'mm/dd/yyyy' según locale del navegador."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (skipped por indicación)", "frontend": "14/14 flujos críticos OK — con 2 UX menores de refresco"},
+  "test_credentials": "N/A (app sin autenticación)",
+  "seed_data_creation": "En 'Pruebas del constructor' / 'Corto de pruebas' (5f3d0d6ff0e94725aec5b390b4f172ac) se dejaron: (a) Escena 1 con 2 planos: E1·P1 (Imagen, 'Un gato en la ventana', 6 tomas: 1 sim-imagen elegida en la 2, 1 vía incierta, 1 vía explorar-encuadres 'usar-como-toma', 1 vía ajustar 'baja la saturación', 1 vía corrección 'más luz en la cara' elegida como toma; historial de correcciones con '· más luz en la cara — hecha'; 1 operación 'presupuestada' de sim-inestable pendiente de autorizar) y E1·P2 (Vídeo 3s, 'Un tren pasa', 1 toma sim-video no elegida). (b) 8 operaciones en Registro con total 1,09 $ y destino E1·P1/E1·P2. (c) El plano E1·P1 también tiene el encuadre 'Plano general' fijado desde la lámina de encuadres. No se tocó Espacio 1 ni Proyecto 1.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Todos los data-testid clave del motor están presentes y funcionan: panel-producir, producir-modelo, producir-simular, presupuesto-plano, btn-producir, explorar-cuantas, btn-explorar-encuadres, operaciones-plano, operacion-<id>, estado-<id>, comprobar-<id>, reintentar-<id>, autorizar-<id>, marcar-fallida-<id>, panel-tomas, lista-tomas, medio-toma-N, elegir-toma-N, comparar-toma-N, comparacion-tomas, elegir-comparada-N, cerrar-comparacion, ajustar-toma-N, ajuste-instruccion, btn-ajustar, lista-exploraciones, fijar-N, usar-como-toma-N, correccion-<id>, producir-correccion-<id>, correccion-hecha-<id>, btn-historial-correcciones, historial-correcciones, btn-panel-registro, panel-registro, tabla-operaciones, fila-operacion-<id>, registro-csv-proyecto, cerrar-panel-registro, acceso-registro, pantalla-registro, filtro-espacio, filtro-proyecto, filtro-estado, totales-registro, registro-csv, indicador-gasto. Las simulaciones tardan 1-4 s (ffmpeg); esperar hasta 10 s tras btn-producir con polling del estado en la operación. Para leer estados usar contenido de 'operacion-<id>' o 'estado-<id>'. Header 'Gasto' se queda desfasado en la sesión — F5 para verificar totales reales.",
+  "rca of the issue": "Refresco del header y del contador de tomas: la query ['proyecto', id] (Lienzo.tsx) y ['lienzo', piezaId] no se invalidan cuando el SSE del motor notifica una operación terminal; hay que llamar a qc.invalidateQueries(['proyecto', proyectoId]) y qc.invalidateQueries(['lienzo', piezaId]) en el listener SSE del motor (o desde el hook que ya invalida la lista de operaciones/tomas del plano). No afecta a la corrección de los datos, solo al momento en que se ven."
+}

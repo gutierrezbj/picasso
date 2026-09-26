@@ -209,17 +209,59 @@ interfaz en «Pruebas del constructor» (iteration_8: **18/18 flujos, 0 fallos**
 - Probado en aislamiento: `scripts_pruebas/p7_lienzo.py` ampliado (409 del primer plano,
   avisos §13, formato del resumen, prompt sin dobles signos) + pytest: todo OK.
 
+### ✅ FASE 6 — Motor con proveedor `simulado` (COMPLETADA · 26-09-2026)
+Probada en la base AISLADA (`scripts_pruebas/ejecutar.py` → `p8_motor.py`, 36
+comprobaciones OK, más pytest 31 OK) y en la interfaz por el agente de pruebas
+(iteration_9: todos los flujos OK en «Pruebas del constructor»).
+- **Motor** (`backend/app/motor/`): `contrato.py` (§9.1, `Proveedor` Protocol,
+  `EntradaOperacion` inmutable con validación por acción, `EstadoRemoto` con progreso),
+  `catalogo.py` (valida `catalogo_modelos.yaml` al arrancar; plantillas no elegibles),
+  `estados.py` (transiciones del §9.4; cualquier otra → 409 diciendo el estado),
+  `operaciones.py` (presupuesto con reserva, crear/editar/autorizar/reintentar/marcar
+  fallida), `worker.py` (cola con concurrencia 2 por proveedor y posición visible,
+  envío, seguimiento, `Comprobar` sin reenviar, retomar al arrancar),
+  `ficheros.py` (ffmpeg) y `proveedores/simulado.py`.
+- **Proveedor simulado**: PNG / MP4 H.264 / WAV **reales** marcados «SIMULADO», con
+  contador de fotogramas y timecode, formatos variados por modelo (24/30 fps, 44,1/48
+  kHz, resoluciones distintas), miniaturas de las referencias recibidas, determinista y
+  con `fallo` / `incierto` / `timeout` provocables («Prueba · simular resultado», solo
+  con el simulado).
+- **API** (`app/api/motor.py`): `/api/catalogo`, `/api/operaciones` (POST, PATCH, GET
+  con filtros), `/autorizar` (con confirmación si pasa del presupuesto), `/comprobar`,
+  `/reintentar`, `/marcar-fallida`, `/api/planos/{id}/produccion`,
+  `/explorar-encuadres`, `/api/correcciones/{id}/preparar`, `/api/planos/{id}/tomas`,
+  `/api/tomas/{id}/elegir|ajustar`, `PATCH /api/tomas/{id}`,
+  `/api/exploraciones/{id}/fijar|usar-como-toma`, `/api/planos/{id}/mover-a-escena`,
+  `/api/registro/totales`, `/api/registro/exportar.csv`, `/api/eventos` (SSE por
+  proyecto).
+- **Interfaz**: pestañas **Producir** y **Tomas** en la ficha del plano (coste antes de
+  producir, gasto real + reservado, presupuesto restante, aviso si se pasa),
+  comparación lado a lado sin recortar, toma elegida, `Ajustar` (§7.6), correcciones →
+  operación → toma → «Hecha» sola (§7.7d), lámina de encuadres (§8) con `Fijar` y
+  `Usar como toma`, planos sin escena con «Mover a escena…» (§13), panel «Registro» en
+  el lienzo, pantalla global **`/registro`** con filtros, totales y CSV, y el gasto en
+  la cabecera con la parte reservada.
+- **Despliegue**: `backend/Dockerfile` con **ffmpeg declarado**, `frontend/Dockerfile`,
+  `docker-compose.yml` (mongo + backend + frontend, volúmenes persistentes, healthcheck)
+  y `TRASPASO.md` con el aviso de que no se ha probado fuera de este entorno.
+- **Cero `any`** en todo el código del motor; los 70 `any` heredados de las Fases 1-4
+  quedan registrados fichero a fichero en `PREGUNTAS.md`.
+- **No construido a propósito**: `Preparar referencias` (§4.3.3) no entraba en el
+  alcance acordado de la Fase 6.
+
 ## Backlog (orden del maestro §14)
-- P1 FASE 6 — Motor con proveedor `simulado` (operaciones, costes, SSE, tomas, registro,
-  inciertos) + «Preparar referencias» (hoja de personaje, photobook, lámina). Antes de
-  empezarla: activar `noImplicitAny: true` en el frontend (compromiso con el usuario).
-  En la Fase 6, cada corrección de un plano enlaza su operación y su toma, y al elegir esa
-  toma la corrección se marca «Hecha» sola (§7.7d).
-- P2 FASE 7 — Montaje (P8) + exportación ZIP/FCPXML.
+- **P1 FASE 7 — Montaje (P8) + exportación ZIP/FCPXML** (siguiente, cuando el usuario dé
+  por buena la Fase 6).
 - P2 FASE 8 — Impacto de cambios (§13), incluido el análisis al actualizar versión de ficha.
 - P2 FASE 9 — Proveedores reales (fal, kie, openai_images, elevenlabs) + catálogo de voces.
 
 ## PENDIENTE (ver PREGUNTAS.md)
+- `Preparar referencias` (§4.3.3): fuera del alcance acordado de la Fase 6; falta decidir
+  cuándo se construye.
+- El despliegue con Docker (compose + Dockerfiles con ffmpeg) está escrito pero **no
+  probado fuera de este entorno** (`TRASPASO.md`).
+- 70 `any` heredados de las Fases 1-4, listados fichero a fichero en PREGUNTAS.md. El
+  código del motor no tiene ninguno.
 - Tipografía y paleta (a decidir por el usuario). Nombre decidido: **Picasso** (25-09-2026).
 - Catálogo de voces del personaje (depende de Fase 9).
 - El almacén local no está garantizado como persistente en el entorno de previsualización.

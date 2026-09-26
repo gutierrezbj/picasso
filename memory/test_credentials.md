@@ -42,3 +42,17 @@ Al terminar de probar, dejar el `ultimo_acceso` de los proyectos de prueba **ant
 ```
 mongosh "$MONGO_URL/$DB_NAME" --eval 'db.proyectos.updateMany({espacio_id:"baf5a93a0b08431cb00b1da5c9fbabc1"},{$set:{ultimo_acceso:"2020-01-01T00:00:00+00:00"}})'
 ```
+
+## Aviso (26-09-2026)
+
+Abrir un proyecto en la interfaz (o pulsar «Retomar») escribe su `ultimo_acceso` y su
+`ultima_ubicacion`: es el funcionamiento normal del producto, no un cambio de contenido.
+Después de cualquier prueba de interfaz, los proyectos de **«Pruebas del constructor»**
+se dejan con `ultimo_acceso` anterior al de «Proyecto 1» para que «Retomar» siga llevando
+al último sitio del usuario. Hecho el 26-09-2026 (proyectos de prueba a 2026-09-01).
+
+## Datos de la Fase 6 en el espacio de pruebas (26-09-2026)
+
+En «Corto de pruebas» hay planos con tomas generadas por el proveedor **simulado**
+(PNG/MP4/WAV marcados «SIMULADO»), 9 operaciones en el registro y ~1,13 $ de gasto
+simulado. Todo es material de prueba del constructor: se puede borrar sin pensarlo.

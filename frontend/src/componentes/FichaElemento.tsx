@@ -379,7 +379,8 @@ export default function FichaElemento({
             {TEXTO_PREPARAR[elemento.clase] || "Preparar referencias"}
           </Boton>
           <span className="text-[13px] leading-[18px] text-tinta2">
-            Disponible cuando esté el motor (Fase 6)
+            No entra en el alcance acordado de la Fase 6: queda pendiente de decidir cuándo se
+            construye.
           </span>
         </div>
       </div>

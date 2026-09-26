@@ -146,7 +146,10 @@ export default function Lienzo() {
             rutaGuion={rutaGuion}
             rutaDePaso={rutaClase}
             onCambiado={async () => {
-              await qc.invalidateQueries({ queryKey: ["lienzo", pieza.id] });
+              await Promise.all([
+                qc.invalidateQueries({ queryKey: ["lienzo", pieza.id] }),
+                qc.invalidateQueries({ queryKey: ["proyecto", proyectoId] }),
+              ]);
             }}
           />
         </>

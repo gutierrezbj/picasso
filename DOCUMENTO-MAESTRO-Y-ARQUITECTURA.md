@@ -503,6 +503,56 @@ Tabla filtrable por espacio, proyecto, estado y fecha: acción, modelo, proveedo
 
 ---
 
+### 9.6 Detalle acordado del motor (26-09-2026)
+
+- **Contrato**: `estimar` devuelve `Decimal | None` (`None` = «coste sin verificar»,
+  nunca 0 por desconocido). `consultar` solo lee: nunca crea ni reenvía. El estado
+  «incierto» no lo da el proveedor: lo decide el motor cuando enviar o consultar no
+  contestan. `EntradaOperacion` valida, por acción, qué campos exige y cuáles no le tocan.
+  `simular_resultado` (`normal | fallo | incierto | timeout`) solo lo acepta el proveedor
+  `simulado`; cualquier otro lo rechaza.
+- **Idempotencia**: clave = hash(`operacion_id` + número de intento + entradas). Antes de
+  enviar, el motor busca un intento con esa misma clave y no envía dos veces. «Producir
+  otra toma» es otra operación y «Reintentar» es otro intento: esos sí se envían, con
+  autorización nueva.
+- **Transiciones**: solo las del diagrama del §9.4; cualquier otra se rechaza con 409
+  diciendo en qué estado está la operación.
+- **Dinero**: al autorizar se reserva el coste estimado; al completar, la reserva se
+  sustituye por el coste real; si falla sin cobro, se libera. El gasto de la cabecera es
+  real + reservado, y lo dice.
+- **Reinicio**: el worker retoma desde la base de datos. Las operaciones con `id_remoto`
+  se vuelven a consultar; una enviada sin `id_remoto` pasa a «incierta». Nunca se reenvía
+  nada al arrancar.
+- **Cola**: concurrencia 2 por proveedor, con la posición visible («en cola, posición 3»).
+- **Catálogo**: se valida al arrancar (acción desconocida, proveedor inexistente, unidad
+  distinta de `imagen | segundo | caracter | operacion` o moneda distinta de USD impiden
+  arrancar, diciendo qué entrada falla). Los modelos de los proveedores reales quedan como
+  **plantillas** (`plantilla: true`) y no son elegibles hasta que el usuario las rellene.
+  Los modelos simulados llevan `verificado: false` y la interfaz dice «precio simulado».
+- **Lámina de encuadres (§8)**: una sola operación con N variantes (4 por defecto), coste
+  N × precio unitario y autorización única. Las variantes que fallan no se cobran y se
+  reintentan sueltas con su propia autorización. Las tomas de exploración van aparte de
+  las tomas del plano: `Fijar` escribe el encuadre y el ángulo en la dirección (inicio o
+  final en vídeo) y `Usar como toma del plano` crea una toma de verdad.
+- **Correcciones (§7.7d)**: en imagen, `editar_imagen` sobre la toma elegida con la
+  corrección como instrucción; en vídeo, volver a producir el plano con la toma elegida
+  como referencia y la corrección sumada al prompt, visible y editable antes de autorizar.
+  Si el plano no tiene toma todavía, la corrección se suma al prompt de la primera
+  producción.
+- **Planos sin escena (§13)**: fila al final del lienzo, con `Mover a escena…` y `Borrar`.
+  No entran en el montaje hasta que tengan escena.
+- **Registro**: el mismo dato por tres puertas: la pantalla global (§9.5), un panel en el
+  lienzo filtrado al proyecto y las operaciones de cada plano en su pestaña `Producir`.
+  `GET /eventos` emite solo los eventos del proyecto que se está viendo.
+- **Proveedor simulado**: ficheros reales con ffmpeg (PNG, MP4 H.264, WAV) marcados
+  «SIMULADO», con contador de fotogramas y timecode en vídeo, formatos variados por modelo
+  (24 o 30 fps, 44,1 o 48 kHz, resoluciones distintas) y siempre en la relación del
+  proyecto. Cada fichero escribe el plano, la acción, el encuadre y el ángulo pedidos, la
+  variante y las miniaturas de las referencias recibidas. Determinista por clave de
+  idempotencia.
+
+---
+
 ## 10. Asistente
 
 - Interfaz `ProveedorTexto` en el backend con un único método `proponer(contexto, tarea) -> Propuesta`. Modelo configurable en Ajustes.

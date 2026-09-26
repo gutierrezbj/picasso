@@ -291,3 +291,107 @@ del constructor (§0.2 del maestro). Cada punto queda con `PENDIENTE`.
   photobook del producto, lámina del escenario, §4.3.3 y §6.2). El botón se muestra
   desactivado con el texto "Disponible cuando esté el motor (Fase 6)" y nada más, por
   indicación del usuario.
+
+## Fase 6 · Motor con proveedor simulado (26-09-2026)
+
+### DEUDA DE TIPADO, escrita como exigió el usuario
+- **El código del motor va con CERO `any`**, ni implícito ni escrito a mano:
+  `backend/app/motor/*` (contrato, catálogo, estados, operaciones, worker, ficheros,
+  proveedores/simulado) usa modelos Pydantic v2 inmutables (`frozen=True`) y
+  `dict[str, Any]` solo para documentos de MongoDB en los bordes; y en el frontend
+  `componentes/motor/*`, `componentes/lienzo/PanelProducir.tsx`,
+  `PanelTomas.tsx` y `pantallas/Registro.tsx` no tienen ni un `any`.
+- **Quedan 70 apariciones de `any` en el código heredado de las Fases 1 a 4** (deuda
+  registrada, no se amplía). `noImplicitAny: true` sigue activado, así que ninguno es
+  implícito: todos están escritos a mano y acotados. Reparto por fichero:
+
+  | Fichero | `any` |
+  | --- | --- |
+  | `frontend/src/api/cliente.ts` | 11 |
+  | `frontend/src/componentes/PanelAsistente.tsx` | 10 |
+  | `frontend/src/pantallas/Desarrollo.tsx` | 9 |
+  | `frontend/src/componentes/DialogoRevision.tsx` | 8 |
+  | `frontend/src/componentes/TarjetaEscena.tsx` | 6 |
+  | `frontend/src/pantallas/PasoElementos.tsx` | 4 |
+  | `frontend/src/pantallas/Guion.tsx` | 4 |
+  | `frontend/src/pantallas/Biblioteca.tsx` | 4 |
+  | `frontend/src/lib/campos.ts` | 4 |
+  | `frontend/src/pantallas/Apertura.tsx` | 3 |
+  | `frontend/src/componentes/FichaElemento.tsx` | 3 |
+  | `frontend/src/tipos.ts` | 2 |
+  | `frontend/src/pantallas/Espacio.tsx` | 1 |
+  | `frontend/src/estado/useAutoguardado.ts` | 1 |
+
+  Casi todos son `CamposDinamicos = Record<string, any>` (formularios heredados que
+  guardan por clave), respuestas sin tipar en la capa de API y eventos del DOM. Se
+  cerrarán cuando esos formularios pasen a modelos tipados por clase.
+
+### Decisiones tomadas con el usuario (aplicadas literalmente)
+- **Contrato (§9.1)**: `estimar` devuelve `Decimal | None` (`None` = «coste sin
+  verificar», nunca 0 por desconocido); `consultar` **solo lee**; el estado
+  «incierto» **no** está en `EstadoRemoto`: lo decide el motor cuando enviar o
+  consultar no contestan (`SinRespuesta`). `EntradaOperacion` valida por acción qué
+  campos exige y cuáles no le tocan.
+- **Idempotencia**: clave = `hash(operacion_id + número de intento + entradas)`.
+  Antes de enviar, el motor busca un intento con esa misma clave y no envía otra vez.
+  «Producir otra toma» es otra operación y «Reintentar» es otro intento: esos sí se
+  envían, con autorización nueva.
+- **Catálogo (§9.3)**: se valida al arrancar (acción desconocida, proveedor que no
+  existe, unidad inválida o moneda distinta de USD → no arranca, diciendo qué entrada
+  falla). Modelos simulados: `sim-imagen` 0,04 $/imagen · `sim-editar` 0,03 $/operación ·
+  `sim-video` 0,25 $/s (24 fps) · `sim-video-cine` 3 $/s (30 fps, 1920) ·
+  `sim-voz` 0,002 $/carácter (44,1 kHz) · `sim-personaje-hablando` (48 kHz) ·
+  `sim-sin-precio` (coste `null`) · `sim-inestable` («Simulado · falla»). Todos con
+  `verificado: false` → la interfaz dice **«precio simulado»**. Los proveedores reales
+  quedan como **plantillas** (`plantilla: true`, «Plantilla · rellenar»): no son
+  elegibles hasta que el usuario las rellene y quite la marca.
+- **Dinero**: al autorizar se **reserva** el coste estimado; al completar, la reserva se
+  sustituye por el coste real; al fallar sin cobro se libera. El gasto de la cabecera es
+  **real + reservado** y lo dice («incluye X reservado»).
+- **Reinicio del backend**: el worker retoma desde la base. Las operaciones con
+  `id_remoto` se vuelven a consultar; una enviada sin `id_remoto` pasa a **incierta**.
+  **Nunca se reenvía nada al arrancar.**
+- **Router**: primer proveedor configurado del modelo; si falla **antes** de enviar,
+  propone el siguiente con su coste y exige autorizar otra vez. Concurrencia 2 por
+  proveedor con posición de cola visible.
+- **Exploración (§8)**: una sola operación, N=4 por defecto, coste = N × precio
+  unitario con autorización única. Las variantes que fallan no se cobran (se cobra solo
+  lo producido) y se pueden reintentar sueltas. Las tomas de exploración van aparte;
+  «Fijar» escribe encuadre/ángulo (inicio o final en vídeo) y «Usar como toma del
+  plano» crea una toma de verdad.
+- **Correcciones (§7.7d)**: en imagen, `editar_imagen` sobre la toma elegida con la
+  corrección como instrucción; en vídeo, volver a producir con la toma elegida como
+  referencia y la corrección **sumada al prompt** (visible y editable antes de
+  autorizar). Si el plano no tiene toma, la corrección se suma al prompt de la primera
+  producción. Al elegir la toma resultante, la corrección se marca «Hecha» sola.
+- **Planos sin escena (§13)**: fila al final del lienzo, con «Mover a escena…» y
+  «Borrar», y el aviso de que no entran en el montaje hasta que tengan escena.
+- **Registro (§9.5)**: el mismo dato por tres puertas: pantalla global `/registro`
+  (filtros espacio/proyecto/estado/fecha, totales por espacio y por proyecto, CSV),
+  panel «Registro» en el lienzo filtrado al proyecto, y las operaciones de cada plano
+  en su pestaña «Producir». `/api/eventos` emite **solo** los eventos del proyecto que
+  se está viendo.
+- **Proveedor simulado**: ficheros reales con ffmpeg, formatos variados según el modelo
+  (24 o 30 fps, resoluciones distintas, 44,1 o 48 kHz), siempre en la relación del
+  proyecto; duración exacta y voces a 15 caracteres por segundo; cada fichero escribe el
+  plano (E1·P2), la acción, el encuadre y el ángulo (inicio → final en vídeo), la
+  variante y las miniaturas de las referencias recibidas en una esquina; `editar_imagen`
+  parte de la imagen de entrada y sobreimprime «editado: <instrucción>»;
+  `personaje_hablando` y `sincronizar_labios` devuelven MP4 con la pista de audio
+  recibida. Todo determinista por clave de idempotencia. `coste_real` = la estimación
+  (y `null` en el modelo sin precio).
+
+### PENDIENTE (no entra en la Fase 6 acordada)
+- **`Preparar referencias`** (hoja de personaje, photobook del producto, lámina del
+  escenario; §4.3.3 y §6.2) **no se ha construido**: el usuario no lo incluyó en el
+  alcance de la Fase 6. El botón sigue desactivado y ahora lo dice así. Falta decidir
+  cuándo se construye.
+- **Despliegue**: `docker-compose.yml`, `backend/Dockerfile` (con **ffmpeg** declarado)
+  y `frontend/Dockerfile` están escritos, pero **no se han probado fuera de este
+  entorno**. Queda anotado en `TRASPASO.md`.
+
+- **Detalle menor (26-09-2026)**: los filtros de fecha de `/registro` usan el selector de
+  fecha nativo del navegador, que muestra el formato de la configuración del navegador
+  (en inglés puede verse «mm/dd/yyyy») aunque la aplicación esté en español. Debajo de
+  cada campo se indica **día/mes/año**. Cambiarlo del todo exigiría un selector de fecha
+  propio; queda anotado, no construido.

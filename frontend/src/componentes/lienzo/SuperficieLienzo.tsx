@@ -97,7 +97,18 @@ function Superficie({
   );
 
   const clave = JSON.stringify([
-    vista.escenas.map((e) => [e.escena.id, e.planos.map((p) => [p.id, p.updated_at])]),
+    vista.escenas.map((e) => [
+      e.escena.id,
+      e.planos.map((p) => [
+        p.id,
+        p.updated_at,
+        p.numero_tomas,
+        p.numero_exploraciones,
+        p.estado_produccion,
+        p.toma_elegida?.medio_id ?? null,
+        p.desactualizado,
+      ]),
+    ]),
     vista.reparto.map((r) => r.id),
     vista.planos_sin_escena.map((p) => [p.id, p.updated_at]),
     layout.posiciones,
