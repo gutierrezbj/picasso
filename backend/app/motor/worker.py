@@ -392,6 +392,21 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
                 tomas.append(sin_id(doc))
             if op.get("correccion_id") and tomas and not op["es_exploracion"]:
                 await _enlazar_correccion(plano, op["correccion_id"], op_id, tomas[0]["id"])
+    elif op["destino"]["tipo"] == "dialogo":
+        # Voz de un diálogo (§11.1): tomas propias, que no compiten con las del plano.
+        numero = await db.tomas.count_documents({"dialogo_id": op["destino"]["id"]})
+        for orden, (_, medio) in enumerate(medios):
+            toma = Toma(
+                dialogo_id=op["destino"]["id"],
+                texto_usado=entradas.texto,
+                medio_id=medio["id"],
+                operacion_id=op_id,
+                numero=numero + orden + 1,
+            )
+            doc = toma.model_dump(mode="json")
+            doc["_id"] = doc["id"]
+            await db.tomas.insert_one(doc)
+            tomas.append(sin_id(doc))
 
     fallidas = [
         i for i in range(entradas.n_variantes) if i not in [indice for indice, _ in medios]

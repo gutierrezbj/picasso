@@ -23,6 +23,8 @@ import type {
   Toma,
   TotalesRegistro,
   VistaGuion,
+  VocesEscena,
+  VozDialogoVista,
   VistaLienzo,
   VistaOperacion,
   VistaProduccion,
@@ -311,6 +313,12 @@ export const api = {
     }),
   tomas: (planoId: string) => peticion<VistaTomas>(`/planos/${planoId}/tomas`),
   elegirToma: (tomaId: string) => peticion<Plano>(`/tomas/${tomaId}/elegir`, { method: "POST" }),
+  vocesEscena: (escenaId: string) => peticion<VocesEscena>(`/escenas/${escenaId}/voces`),
+  editarVoz: (dialogoId: string, datos: { plano_id?: string; desfase_s?: number }) =>
+    peticion<VozDialogoVista>(`/voces/${dialogoId}`, {
+      method: "PATCH",
+      body: JSON.stringify(datos),
+    }),
   valorarToma: (tomaId: string, datos: Record<string, unknown>) =>
     peticion<Toma>(`/tomas/${tomaId}`, { method: "PATCH", body: JSON.stringify(datos) }),
   ajustarToma: (tomaId: string, datos: Record<string, unknown>) =>

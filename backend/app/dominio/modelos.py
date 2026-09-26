@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -98,15 +98,21 @@ class Espacio(BaseModel):
 # --- Proyecto ---
 
 
+Fps = Literal[24, 25, 30]
+
+
 class ProyectoCrear(BaseModel):
     nombre: str
     tipo: TipoProyecto
     formato_video: FormatoVideo
+    fps: Fps = 25
 
 
 class ProyectoEditar(BaseModel):
     nombre: Optional[str] = None
     formato_video: Optional[FormatoVideo] = None
+    fps: Optional[Fps] = None
+    voz_narrador: Optional[Voz] = None
     duracion_objetivo_s: Optional[int] = None
     presupuesto_max: Optional[float] = None
     pasos_omitidos: Optional[list[str]] = None
@@ -120,6 +126,8 @@ class Proyecto(BaseModel):
     tipo: TipoProyecto
     formato_id: Optional[str] = None
     formato_video: FormatoVideo
+    fps: Fps = 25  # ritmo del montaje y del paquete (§3.1, §11.3)
+    voz_narrador: Optional[Voz] = None
     duracion_objetivo_s: Optional[int] = None
     presupuesto_max: Optional[float] = None
     pasos_omitidos: list[str] = Field(default_factory=list)
@@ -348,6 +356,9 @@ class Guion(BaseModel):
 
 
 class Dialogo(BaseModel):
+    # Estable: se conserva al copiar la escena en una revisión y ata cada voz a
+    # su diálogo (§3.1, §11.1).
+    id: str = Field(default_factory=nuevo_id)
     hablante: str  # elemento_id | "narrador"
     texto: str = ""
 
@@ -730,8 +741,28 @@ class Toma(BaseModel):
     es_exploracion: bool = False
     exploracion: Optional[VarianteEncuadre] = None
     correccion_id: Optional[str] = None
+    dialogo_id: Optional[str] = None  # tomas de voz (§11.1)
+    texto_usado: Optional[str] = None  # texto con que se produjo la voz
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
+
+
+class VozDialogo(BaseModel):
+    """La voz de un diálogo (§3.1 «Voz», §11.1). Una por diálogo; su `_id` es el
+    del diálogo."""
+
+    id: str  # = dialogo_id
+    escena_id: str  # escena aprobada del diálogo
+    plano_id: Optional[str] = None  # dónde suena; None = primer plano de la escena
+    desfase_s: float = Field(default=0, ge=0)
+    toma_elegida_id: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class VozDialogoEditar(BaseModel):
+    plano_id: Optional[str] = None
+    desfase_s: Optional[float] = Field(default=None, ge=0)
 
 
 class PrepararOperacion(BaseModel):

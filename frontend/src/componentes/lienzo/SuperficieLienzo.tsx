@@ -12,6 +12,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { LayoutGrid, Link2, Link2Off, FileText, Receipt } from "lucide-react";
 import PanelRegistro from "../motor/PanelRegistro";
 import Boton from "../Boton";
@@ -121,11 +122,16 @@ function Superficie({
     // eslint-disable-next-line
   }, [clave]);
 
+  const qc = useQueryClient();
+
   // Estados en vivo por SSE (§15.1): solo del proyecto que se está viendo.
   useEffect(() => {
     const fuente = new EventSource(api.urlEventos(proyectoId));
     fuente.onmessage = () => {
       onCambiado();
+      // Las voces (§11.1) y sus operaciones también cambian por el motor.
+      qc.invalidateQueries({ queryKey: ["voces"] });
+      qc.invalidateQueries({ queryKey: ["operaciones"] });
     };
     return () => fuente.close();
     // eslint-disable-next-line

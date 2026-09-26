@@ -6,6 +6,7 @@ import { Campo, Entrada, AreaTexto } from "../Campo";
 import PanelPrompt from "./PanelPrompt";
 import PanelProducir from "./PanelProducir";
 import PanelTomas from "./PanelTomas";
+import PanelVoces from "./PanelVoces";
 import { useAutoguardado } from "../../estado/useAutoguardado";
 import { useGuardado } from "../../estado/GuardadoContext";
 import { api } from "../../api/cliente";
@@ -32,7 +33,7 @@ interface Editable {
   plano_anterior_encadenado: boolean;
 }
 
-type Pestana = "direccion" | "producir" | "tomas" | "continuidad" | "correcciones";
+type Pestana = "direccion" | "producir" | "tomas" | "voces" | "continuidad" | "correcciones";
 
 const CAMPOS_IMAGEN: (keyof Direccion)[] = ["encuadre", "angulo"];
 const CAMPOS_VIDEO: (keyof Direccion)[] = [
@@ -183,6 +184,7 @@ export default function FichaPlano({
         {pestanaBtn("direccion", "Dirección")}
         {pestanaBtn("producir", "Producir")}
         {pestanaBtn("tomas", `Tomas${plano.numero_tomas ? ` (${plano.numero_tomas})` : ""}`)}
+        {pestanaBtn("voces", "Voces")}
         {pestanaBtn("continuidad", "Continuidad")}
         {pestanaBtn("correcciones", `Correcciones${pendientes.length ? ` (${pendientes.length})` : ""}`)}
       </div>
@@ -392,6 +394,8 @@ export default function FichaPlano({
           onCambiado={onCambiado}
         />
       )}
+
+      {pestana === "voces" && <PanelVoces plano={plano} onCambiado={onCambiado} />}
 
       {pestana === "continuidad" && (
         <div className="mt-4 flex flex-col gap-5" data-testid="pestana-continuidad-contenido">

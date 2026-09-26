@@ -21,6 +21,7 @@ from app.api import (
     piezas,
     proyectos,
     reparto,
+    voces,
 )
 
 app = FastAPI(title="studio")
@@ -48,13 +49,16 @@ app.include_router(piezas.router)
 app.include_router(guiones.router)
 app.include_router(lienzo.router)
 app.include_router(motor.router)
+app.include_router(voces.router)
 
 
 @app.on_event("startup")
 async def al_arrancar() -> None:
     """El worker retoma lo que quedó a medias. Nunca reenvía nada (§9.4)."""
+    from app.api.voces import asegurar_ids_dialogos
     from app.motor import worker
 
+    await asegurar_ids_dialogos()
     await worker.retomar()
 
 

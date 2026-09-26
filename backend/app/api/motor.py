@@ -25,8 +25,10 @@ from app.api.lienzo import (
     _vista_plano,
 )
 from app.db import db, sin_id
+from app.api import voces as voces_api
 from app.dominio.modelos import (
     Accion,
+    AjustesVoz,
     Autorizacion,
     EditarOperacion,
     EntradaOperacion,
@@ -453,12 +455,75 @@ async def pasar_toma_a_ficha(toma_id: str, datos: PasarAFicha):
     return sin_id(await db.fichas.find_one({"_id": ficha["_id"]}))
 
 
+async def _entradas_de_dialogo(
+    dialogo_id: str, modelo_id: str, simular: SimulacionPrueba
+) -> tuple[EntradaOperacion, dict[str, Any]]:
+    """Voz de un diálogo (§11.1): el texto es el del diálogo en el guion
+    aprobado y la voz, la de la ficha del hablante o la del narrador."""
+    escena = await voces_api.escena_de_dialogo(dialogo_id)
+    if not escena:
+        raise HTTPException(404, "Ese diálogo no está en el guion aprobado.")
+    dialogo = next(d for d in escena["dialogos"] if d.get("id") == dialogo_id)
+    if not (dialogo.get("texto") or "").strip():
+        raise HTTPException(409, "El diálogo está vacío: escribe el texto en el guion antes de producir su voz.")
+    guion = await db.guiones.find_one({"_id": escena["guion_id"]})
+    _, proy = await _pieza_proyecto(guion["pieza_id"])
+    if cat.modelo(modelo_id) is None:
+        raise HTTPException(422, f"El modelo «{modelo_id}» no está en el catálogo.")
+    voz: Optional[dict[str, Any]] = None
+    if dialogo["hablante"] == "narrador":
+        voz = proy.get("voz_narrador")
+    else:
+        entrada = await db.reparto.find_one(
+            {"proyecto_id": proy["id"], "elemento_id": dialogo["hablante"]}
+        )
+        if entrada:
+            ficha = await db.fichas.find_one(
+                {"elemento_id": dialogo["hablante"], "version": entrada["version_ficha"]}
+            )
+            voz = (ficha or {}).get("voz")
+    ajustes = None
+    if voz and (voz.get("proveedor") or voz.get("voice_id")):
+        ajustes = AjustesVoz(
+            proveedor=voz.get("proveedor"),
+            voice_id=voz.get("voice_id"),
+            ajustes={k: str(v) for k, v in (voz.get("ajustes") or {}).items()},
+        )
+    nombre = await voces_api._nombre_hablante(dialogo["hablante"])
+    entradas = EntradaOperacion(
+        accion=Accion.generar_voz,
+        modelo=modelo_id,
+        texto=dialogo["texto"],
+        voz=ajustes,
+        etiqueta_destino=f"{nombre}: «{dialogo['texto'][:40]}»",
+        simular_resultado=simular,
+    )
+    return entradas, proy
+
+
 @router.post("/operaciones", status_code=201)
 async def preparar_operacion(datos: PrepararOperacion):
     if datos.destino_tipo == "ficha":
         return await preparar_referencias(datos.destino_id, datos)
+    if datos.destino_tipo == "dialogo":
+        if datos.accion != Accion.generar_voz:
+            raise HTTPException(422, "Sobre un diálogo solo se produce su voz (generar_voz).")
+        entradas, proy = await _entradas_de_dialogo(
+            datos.destino_id, datos.modelo, datos.simular_resultado
+        )
+        try:
+            return await ops.crear_operacion(
+                proyecto_id=proy["id"],
+                espacio_id=proy["espacio_id"],
+                destino_tipo="dialogo",
+                destino_id=datos.destino_id,
+                entradas=entradas,
+                prompt_visible=entradas.texto or "",
+            )
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
     if datos.destino_tipo != "plano":
-        raise HTTPException(422, "El destino de una operación es un plano o una ficha.")
+        raise HTTPException(422, "El destino de una operación es un plano, una ficha o un diálogo.")
     plano = await _plano(datos.destino_id)
     _, proy = await _pieza_proyecto(plano["pieza_id"])
     correccion_texto = None
@@ -506,6 +571,18 @@ async def editar_operacion(operacion_id: str, datos: EditarOperacion):
         raise HTTPException(404, "Operación no encontrada")
     op = sin_id(doc)
     previas = EntradaOperacion(**op["entradas"])
+    if op["destino"]["tipo"] == "dialogo":
+        entradas, _ = await _entradas_de_dialogo(
+            op["destino"]["id"],
+            datos.modelo or op["modelo"],
+            datos.simular_resultado or previas.simular_resultado,
+        )
+        try:
+            return await ops.editar(operacion_id, entradas, entradas.texto or "")
+        except estados.TransicionNoPermitida as e:
+            raise _error_estado(e) from e
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from e
     if op["destino"]["tipo"] == "ficha":
         ficha, elemento = await _ficha_y_elemento(op["destino"]["id"])
         proyecto = await db.proyectos.find_one({"_id": op["proyecto_id"]})
@@ -713,6 +790,18 @@ async def elegir_toma(toma_id: str):
             409,
             "Es una toma de exploración: fija su encuadre o pulsa «Usar como toma del plano».",
         )
+    if doc.get("dialogo_id"):
+        # Toma de voz (§11.1): se elige en la voz de su diálogo, no en el plano.
+        escena = await voces_api.escena_de_dialogo(doc["dialogo_id"])
+        if not escena:
+            raise HTTPException(409, "El diálogo de esta voz ya no está en el guion aprobado.")
+        await voces_api.guardar_voz(doc["dialogo_id"], escena, {"toma_elegida_id": toma_id})
+        guion = await db.guiones.find_one({"_id": escena["guion_id"]})
+        _, proy = await _pieza_proyecto(guion["pieza_id"])
+        eventos.publicar(proy["id"], {"tipo": "voz", "dialogo_id": doc["dialogo_id"]})
+        planos = await voces_api.planos_de_escena(escena["id"])
+        dialogo = next(d for d in escena["dialogos"] if d.get("id") == doc["dialogo_id"])
+        return await voces_api.vista_voz(escena, dialogo, planos)
     plano = await db.planos.find_one({"_id": doc["plano_id"]})
     if not plano:
         raise HTTPException(404, "Plano no encontrado")
@@ -862,6 +951,8 @@ async def _vista_operacion(doc: dict[str, Any]) -> dict[str, Any]:
             destino_etiqueta = await etiqueta_plano(sin_id(plano))
     elif op["destino"]["tipo"] == "ficha":
         destino_etiqueta = op["entradas"].get("etiqueta_destino") or "ficha"
+    elif op["destino"]["tipo"] == "dialogo":
+        destino_etiqueta = "Voz · " + (op["entradas"].get("etiqueta_destino") or "diálogo")
     proy = await db.proyectos.find_one({"_id": op["proyecto_id"]})
     esp = await db.espacios.find_one({"_id": op["espacio_id"]})
     tomas = await db.tomas.find({"operacion_id": op["id"]}).sort("numero", 1).to_list(50)

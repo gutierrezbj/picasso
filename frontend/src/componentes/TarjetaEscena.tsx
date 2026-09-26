@@ -323,7 +323,7 @@ export default function TarjetaEscena({
                 pequeno
                 variante="secundario"
                 data-testid={`anadir-dialogo-${indice + 1}`}
-                onClick={() => set("dialogos", [...datos.dialogos, { hablante: "narrador", texto: "" }])}
+                onClick={() => set("dialogos", [...datos.dialogos, { id: crypto.randomUUID().replace(/-/g, ""), hablante: "narrador", texto: "" }])}
               >
                 <Plus size={15} strokeWidth={1.9} /> Añadir diálogo
               </Boton>

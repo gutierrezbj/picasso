@@ -163,6 +163,7 @@ export interface Pieza {
 }
 
 export interface Dialogo {
+  id?: string; // estable entre revisiones: ata la voz a su diálogo (§11.1)
   hablante: string; // "narrador" | elemento_id (personaje de la escena)
   texto: string;
 }
@@ -568,4 +569,37 @@ export interface TotalesRegistro {
   moneda: string;
   por_proyecto: TotalRegistro[];
   por_espacio: TotalRegistro[];
+}
+
+/** Voz de un diálogo (§3.1 «Voz», §11.1). */
+export interface TomaVoz {
+  id: string;
+  dialogo_id: string;
+  medio_id: string;
+  operacion_id: string | null;
+  numero: number;
+  texto_usado: string | null;
+  texto_actual: boolean;
+  duracion_s: number | null;
+  created_at: string;
+}
+
+export interface VozDialogoVista {
+  dialogo_id: string;
+  escena_id: string;
+  hablante: string;
+  hablante_nombre: string;
+  texto: string;
+  plano_id: string | null;
+  desfase_s: number;
+  toma_elegida_id: string | null;
+  tomas: TomaVoz[];
+  desactualizada: boolean;
+  avisos: string[];
+  updated_at: string | null;
+}
+
+export interface VocesEscena {
+  planos: { id: string; etiqueta: string; duracion_s: number | null }[];
+  voces: VozDialogoVista[];
 }
