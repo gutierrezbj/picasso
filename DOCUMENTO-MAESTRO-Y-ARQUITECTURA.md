@@ -99,6 +99,8 @@ Estudio (implícito, uno)
 
 **Proyecto**
 - `espacio_id`, `nombre`, `tipo`: `corto` | `anuncio` | `imagen` | `serie`, `formato_id?`, `formato_video`: relación de aspecto (`9:16`, `16:9`, `1:1`, `4:5`), `duracion_objetivo_s?`, `presupuesto_max?` (en la moneda configurada), `paso_actual` (derivado, §4), `pasos_omitidos` (ids de pasos opcionales que el usuario ha marcado "no hace falta"), `ultimo_acceso`, `ultima_ubicacion` (ruta y selección para "Retomar").
+- `fps`: `24` | `25` | `30` (por defecto 25), elegido al crear el proyecto y editable. Es el ritmo del montaje y del paquete de edición: todas las tomas se normalizan a él al exportar (§11).
+- `voz_narrador?` `{proveedor, voice_id, ajustes}`: la voz de los diálogos cuyo hablante es "narrador".
 
 **Desarrollo** (uno por proyecto)
 - `intencion` (qué se quiere conseguir), `publico?`, `mensaje?`, `tono?`, `premisa?`, `mundo?`, `notas` (texto libre), `respuestas_formato` (mapa pregunta→respuesta si hay formato), `estado`: `en_curso` | `listo`.
@@ -130,7 +132,7 @@ Estudio (implícito, uno)
 - Para tipo `imagen` el guion se sustituye por un **Encargo de imagen** (§4.1, recorrido Imagen), con el mismo ciclo borrador/aprobado.
 
 **Escena**
-- `guion_id`, `orden`, `titulo`, `que_ocurre`, `que_se_ve`, `intencion`, `elementos` (ids del reparto), `dialogos` (lista `{hablante: elemento_id | "narrador", texto}`; el `elemento_id` es de un elemento de clase personaje que esté en `elementos`), `sonido_previsto?` (texto), `duracion_orientativa_s?`.
+- `guion_id`, `orden`, `titulo`, `que_ocurre`, `que_se_ve`, `intencion`, `elementos` (ids del reparto), `dialogos` (lista `{id, hablante: elemento_id | "narrador", texto}`; el `elemento_id` es de un elemento de clase personaje que esté en `elementos`; el `id` es estable: se conserva al copiar la escena en una revisión del guion y es lo que ata cada voz a su diálogo), `sonido_previsto?` (texto), `duracion_orientativa_s?`.
 
 **Plano**
 - `escena_id` (o `pieza_id` en tipo imagen), `orden`, `descripcion`, `modalidad`: `imagen` | `video`, `duracion_s?`, `elementos` (ids del reparto; subconjunto de la escena), `direccion` (§8), `toma_elegida_id?`, `plano_anterior_encadenado: bool` (usar el último fotograma de la toma elegida del plano anterior como primer fotograma), `correcciones` (lista de Correccion, §7.7d), `prompt_editado_a_mano: bool` y `prompt_manual?` (§8).
@@ -145,7 +147,16 @@ Estudio (implícito, uno)
 - `operacion_id`, `proveedor`, `id_remoto?`, `estado`, `coste_real?`, `error?`, `inicio`, `fin?`, `medios_resultado`.
 
 **Toma**
-- `plano_id` (o `ficha_version_id`), `medio_id`, `operacion_id?`, `numero` (1, 2, 3… por plano), `fichas_usadas` (mapa elemento→versión con que se hizo), `revision_guion` (con qué revisión del guion se hizo), `valoracion?` (`buena` | `descartada` | null), `nota?`.
+- `plano_id` (o `ficha_version_id`, o `dialogo_id` en las tomas de voz), `medio_id`, `operacion_id?`, `texto_usado?` (tomas de voz), `numero` (1, 2, 3… por plano o por diálogo), `fichas_usadas` (mapa elemento→versión con que se hizo), `revision_guion` (con qué revisión del guion se hizo), `valoracion?` (`buena` | `descartada` | null), `nota?`.
+
+**Voz** (una por diálogo, §11)
+- `dialogo_id`, `escena_origen_id` (la escena aprobada del diálogo), `plano_id?` (el plano donde suena; por defecto, el primero de la escena), `desfase_s` (segundos desde el inicio de ese plano; por defecto 0), `toma_elegida_id?`.
+- Las tomas de voz son `Toma` con `dialogo_id` y `texto_usado` (el texto con que se produjo), sin `plano_id`. No compiten con las tomas de imagen o vídeo del plano.
+- Una voz está `desactualizada` (derivado) si el `texto_usado` de su toma elegida ya no coincide con el texto del diálogo en el guion aprobado.
+- Si el diálogo desaparece en una revisión, su voz se conserva como "voz sin diálogo" hasta que el usuario la borre (igual que los planos sin escena, §13).
+
+**PistaAudio** (por pieza, §11)
+- `pieza_id`, `capa`: `musica` | `ambiente`, `medio_id` (audio importado del espacio), `inicio_s` (desde el inicio de la pieza), `volumen_db` (por defecto 0), `nombre`.
 
 **LayoutLienzo** (uno por proyecto)
 - `posiciones` (mapa id de tarjeta→`{x, y}`), `grupos_plegados` (lista), `viewport` `{x, y, zoom}`, `seleccion` (lista de ids), `pieza_activa?`.
@@ -569,24 +580,55 @@ Tabla filtrable por espacio, proyecto, estado y fecha: acción, modelo, proveedo
 
 ## 11. Montaje y paquete de edición (P8)
 
-- Tira horizontal con las tomas elegidas en orden de escena y plano. Los planos sin toma aparecen como hueco con su número.
-- `Reproducir secuencia`: reproduce en el navegador las tomas consecutivas (sin render).
-- Pistas de audio simples debajo: voces generadas colocadas en su plano, y música/ambiente importados (inicio y volumen). No hay edición de corte fino.
-- Cada toma muestra qué versión es y permite `Ir al plano` (abre el lienzo con ese plano seleccionado).
-- `Exportar paquete de edición` genera un ZIP:
+### 11.1 Voces
+
+- Cada diálogo del guion aprobado tiene su **Voz** (§3.1). Se produce con la acción `generar_voz` sobre ese diálogo: el texto es el del diálogo y la voz, la de la ficha del hablante (o la del narrador del proyecto). Coste visible y `Producir por X $`, como cualquier operación (§9.4).
+- En el lienzo, la ficha del plano tiene la pestaña **Voces**: los diálogos de su escena, con su texto, hablante, tomas de voz, la elegida, el plano donde suena y el desfase. Desde ahí se produce, se compara (escuchar una tras otra) y se elige.
+- Si una voz dura más que el plano donde suena (desde su desfase), se avisa en la pestaña Voces y en el montaje, con opciones: alargar el plano, mover la voz a otro plano o cambiar el desfase. No se acelera ni se recorta nada en silencio.
+
+### 11.2 Pantalla de montaje (P8)
+
+- Tira horizontal con las tomas elegidas en orden de escena y plano, a escala de duración real. Los planos sin toma aparecen como hueco con su número (`E2·P1 · sin toma`).
+- `Reproducir secuencia`: reproduce en el navegador las tomas consecutivas (sin render), con las voces en su sitio.
+- Debajo, tres pistas: **Voces** (colocadas en su plano con su desfase), **Música** y **Ambiente** (importadas del espacio, con inicio y volumen). No hay edición de corte fino: eso se hace en el editor.
+- Cada toma muestra su número de toma y `Ir al plano` (abre el lienzo con ese plano seleccionado).
+- Avisos visibles antes de exportar: huecos, voces más largas que su plano, voces o tomas desactualizadas. Se puede exportar con avisos; quedan listados en el paquete (`LEEME.md`).
+- En proyectos de tipo `imagen` no hay montaje: `Exportar paquete` saca las imágenes elegidas con su manifiesto.
+
+### 11.3 Paquete de edición
+
+`Exportar paquete de edición` es un trabajo en segundo plano con progreso visible (no tiene coste). Genera un ZIP ordenado por tipo de material, nunca un cajón mezclado:
 
 ```
 <proyecto>_<pieza>_<fecha>/
-├── video/      E01_P01_t3.mp4 … (tomas elegidas, originales, numeradas en orden)
-├── imagen/     (si el plano es imagen)
-├── audio/      voces por plano y música/ambiente
-├── timeline.fcpxml     (DaVinci Resolve: clips y audios colocados en orden)
-├── previo.mp4          (concatenado rápido con ffmpeg, solo para ver)
-├── guion.md            (guion aprobado legible)
-└── manifiesto.json     (planos, tomas, modelos, fichas usadas, costes)
+├── video/          E01_P01_t3.mp4 … tomas elegidas, normalizadas, en orden de montaje
+├── imagen/         E01_P02_t1.png … planos de imagen
+├── audio/
+│   ├── voces/      E01_P01_marta.wav … una por diálogo: escena, plano y hablante
+│   ├── musica/     pistas importadas
+│   └── ambiente/   pistas importadas
+├── fichas/         una carpeta por elemento usado (marta_v1/, taller-de-ceramica_v1/) con ficha.md (rasgos fijos, variables, personalidad) y sus referencias
+├── alternativas/   (opcional, casilla al exportar) tomas no elegidas y originales sin normalizar: E01_P01_t1.mp4, E01_P01_t2.mp4…
+├── timeline.fcpxml DaVinci Resolve: vídeo y cada capa de audio en su propia pista, en orden
+├── previo.mp4      concatenado rápido con ffmpeg, con las voces, solo para ver
+├── guion.md        guion aprobado legible, con su número de revisión
+├── LEEME.md        cómo importar en DaVinci y en CapCut, y los avisos del montaje
+└── manifiesto.json planos, tomas, voces, modelos, fichas usadas (versión), correcciones aplicadas y costes
 ```
 
-Para CapCut se usa la carpeta numerada y el `previo.mp4`; no se promete importación de línea de tiempo en CapCut.
+Reglas:
+- **Nombres**: siempre `Exx_Pyy_tz` (escena, plano, toma); las voces `Exx_Pyy_<hablante>` y, si hay varias en el mismo plano, `Exx_Pyy_<hablante>_2`. Sin espacios ni tildes, para que ordenen igual en cualquier sistema.
+- **Normalización**: cada toma de vídeo se convierte al formato del proyecto con ffmpeg: `fps` del proyecto, resolución según `formato_video` (1080×1920, 1920×1080, 1080×1080 o 1080×1350), H.264 yuv420p. Si la toma no tiene la relación de aspecto del proyecto, se encaja sin recortar (bandas) y se avisa. El original sin tocar va en `alternativas/` si se marca la casilla.
+- **Audio**: WAV PCM 16 bits a 48 kHz, mono para voces. Voces, música y ambiente nunca se mezclan en un archivo.
+- **FCPXML**: duraciones y posiciones en fotogramas exactos del `fps` del proyecto; el formato de la secuencia (incluido vertical) declarado en la cabecera; vídeo en la pista principal; voces, música y ambiente como pistas separadas debajo. Las voces van enganchadas a su clip, para que se muevan con él en el editor.
+- **Rutas**: por defecto relativas a la carpeta del paquete. Casilla al exportar: "rutas absolutas a esta carpeta" (se pide la ruta donde se descomprimirá), por si el editor no acepta relativas.
+- **Comprobación automática** tras generar: carpetas, nombres, que cada fichero exista y dure lo que dice el manifiesto (±1 fotograma), y que el FCPXML sea XML válido y su duración total cuadre. Si falla, no se entrega el ZIP y se dice qué falló.
+- Para CapCut se usan las carpetas numeradas y el `previo.mp4`; no se promete importar la línea de tiempo en CapCut.
+
+### 11.4 Proyectos de referencia
+
+- `docs/referencias/` guarda proyectos de referencia descritos en texto (idea, fichas, escenas, planos con su dirección, diálogos). Sirven para recrear siempre el mismo caso y comparar el paquete entre versiones.
+- El primero es el corto de Marta (`corto-marta.md`), construido durante la validación de las Fases 1 a 6.
 
 ---
 
@@ -644,9 +686,10 @@ P7 sin producción: estructura desde el guion, grupos, fichas contextuales, dire
 Operaciones, catálogo, costes, SSE, tomas, comparación, elegir toma, editar imagen, registro, estados inciertos.
 ✔ Producir un plano, ver coste antes, obtener 2 tomas, compararlas, elegir la segunda. Provocar un `incierto` y recuperarlo desde el Registro sin que se cree un segundo envío.
 
-**F7 · Montaje y exportación**
-P8, reproducción de la secuencia, audio simple, ZIP con FCPXML.
-✔ Exportar, abrir `timeline.fcpxml` en DaVinci Resolve y ver los clips en orden.
+**F7 · Montaje y exportación** (se construye fuera de Emergent)
+Voces por diálogo (§11.1), `fps` del proyecto, pistas de música y ambiente, P8 (§11.2) y paquete de edición (§11.3).
+✔ En un proyecto nuevo creado por la interfaz: producir voces de dos diálogos, importar una música, exportar el paquete y abrir `timeline.fcpxml` en DaVinci Resolve en el Mac de Juan: cada clip y cada voz en su pista, en su sitio y con la duración correcta. La fase no se cierra hasta que Juan lo confirme en su DaVinci.
+✔ La comprobación automática del paquete pasa en la base de pruebas.
 
 **F8 · Impacto**
 Todas las reglas del §13.
