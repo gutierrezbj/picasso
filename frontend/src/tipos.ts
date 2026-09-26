@@ -653,3 +653,18 @@ export interface VistaMontaje {
   duracion_total_s: number;
   avisos: string[];
 }
+
+/** Exportación del paquete de edición (§11.3): trabajo en segundo plano. */
+export interface Exportacion {
+  id: string;
+  pieza_id: string;
+  estado: "en_curso" | "lista" | "fallida";
+  progreso: number;
+  paso: string;
+  error: string | null;
+  avisos: string[];
+  nombre_archivo?: string;
+  tamano_bytes?: number;
+  opciones: { alternativas: boolean; rutas: "relativas" | "absolutas"; carpeta_destino: string | null };
+  created_at: string;
+}

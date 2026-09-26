@@ -63,4 +63,11 @@ async def completado_de(db, proyecto: dict) -> dict:
             if p["pantalla"] == "guion":
                 completado[p["clave"]] = hay_aprobado
 
+    # §4.1: el montaje está listo cuando hay un paquete de edición exportado.
+    if any(p["pantalla"] == "montaje" for p in pasos):
+        exportado = await db.exportaciones.find_one({"proyecto_id": proyecto["id"], "estado": "lista"})
+        for p in pasos:
+            if p["pantalla"] == "montaje":
+                completado[p["clave"]] = bool(exportado)
+
     return completado

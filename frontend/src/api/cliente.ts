@@ -25,6 +25,7 @@ import type {
   VistaGuion,
   VocesEscena,
   VistaMontaje,
+  Exportacion,
   PistaAudio,
   VozDialogoVista,
   VistaLienzo,
@@ -315,6 +316,11 @@ export const api = {
     }),
   tomas: (planoId: string) => peticion<VistaTomas>(`/planos/${planoId}/tomas`),
   elegirToma: (tomaId: string) => peticion<Plano>(`/tomas/${tomaId}/elegir`, { method: "POST" }),
+  exportar: (piezaId: string, datos: { alternativas: boolean; rutas: string; carpeta_destino?: string }) =>
+    peticion<Exportacion>(`/piezas/${piezaId}/exportar`, { method: "POST", body: JSON.stringify(datos) }),
+  exportacion: (id: string) => peticion<Exportacion>(`/exportaciones/${id}`),
+  exportaciones: (piezaId: string) => peticion<Exportacion[]>(`/piezas/${piezaId}/exportaciones`),
+  urlExportacion: (id: string) => `${BASE}/exportaciones/${id}/archivo`,
   montaje: (piezaId: string) => peticion<VistaMontaje>(`/piezas/${piezaId}/montaje`),
   anadirPista: (piezaId: string, datos: { capa: string; medio_id: string; inicio_s?: number; volumen_db?: number }) =>
     peticion<PistaAudio>(`/piezas/${piezaId}/pistas`, { method: "POST", body: JSON.stringify(datos) }),

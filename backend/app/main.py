@@ -12,6 +12,7 @@ from app.api import (
     desarrollo,
     elementos,
     espacios,
+    exportaciones,
     estudio,
     formatos,
     guiones,
@@ -54,6 +55,7 @@ app.include_router(motor.router)
 app.include_router(voces.router)
 app.include_router(pistas.router)
 app.include_router(montaje.router)
+app.include_router(exportaciones.router)
 
 
 @app.on_event("startup")
@@ -63,6 +65,7 @@ async def al_arrancar() -> None:
     from app.motor import worker
 
     await asegurar_ids_dialogos()
+    await exportaciones.reparar_al_arrancar()
     await worker.retomar()
 
 

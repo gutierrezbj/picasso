@@ -7,6 +7,7 @@ import BarraRecorrido from "../componentes/BarraRecorrido";
 import Boton from "../componentes/Boton";
 import Selector from "../componentes/Selector";
 import SubidorMedios from "../componentes/SubidorMedios";
+import PanelExportar from "../componentes/PanelExportar";
 import { Campo, Entrada } from "../componentes/Campo";
 import { useProyecto, usePiezas } from "../api/hooks";
 import { api } from "../api/cliente";
@@ -216,6 +217,8 @@ function Contenido({
       </div>
 
       <PanelPistas vista={vista} espacioId={espacioId} onCambiado={onCambiado} />
+
+      <PanelExportar piezaId={vista.pieza.id} onExportado={onCambiado} />
     </div>
   );
 }
