@@ -119,6 +119,7 @@ def test_asistente_estado_simulado(s):
     assert d["disponible"] is True
 
 
+@pytest.mark.skipif(not os.environ.get("EMERGENT_LLM_KEY"), reason="necesita la clave del asistente real")
 def test_asistente_estado_claude(s):
     s.put(f"{API}/ajustes", json={"modelo_asistente": "claude-sonnet-5"})
     r = s.get(f"{API}/asistente/estado")

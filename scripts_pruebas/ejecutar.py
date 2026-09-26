@@ -23,7 +23,7 @@ from pymongo import MongoClient
 
 RAIZ = Path(__file__).resolve().parent.parent
 BACKEND = RAIZ / "backend"
-ENV = dotenv_values(BACKEND / ".env")
+ENV = {**dotenv_values(BACKEND / ".env"), **{k: v for k, v in os.environ.items() if k in ("MONGO_URL", "DB_NAME", "DB_NAME_PRUEBAS")}}
 MONGO_URL = ENV["MONGO_URL"]
 DB_REAL = ENV["DB_NAME"]
 DB_PRUEBAS = ENV.get("DB_NAME_PRUEBAS") or "picasso_pruebas"
@@ -61,7 +61,7 @@ def levantar() -> subprocess.Popen:
     }
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(
-        ["/root/.venv/bin/uvicorn", "server:app", "--host", "127.0.0.1", "--port", str(PUERTO)],
+        [sys.executable, "-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", str(PUERTO)],
         cwd=BACKEND,
         env=entorno,
         stdout=subprocess.DEVNULL,
@@ -101,7 +101,7 @@ def main() -> None:
     resultados: dict[str, bool] = {}
     try:
         resultados["pytest"] = ejecutar(
-            "pytest", ["/root/.venv/bin/python", "-m", "pytest", "backend/tests", "-q"], entorno
+            "pytest", [sys.executable, "-m", "pytest", "backend/tests", "-q"], entorno
         )
         import sys as _sys
 
@@ -116,7 +116,7 @@ def main() -> None:
             if pedidos and not any(p in nombre for p in pedidos):
                 continue
             resultados[nombre] = ejecutar(
-                nombre, ["/root/.venv/bin/python", f"scripts_pruebas/{nombre}.py"], entorno
+                nombre, [sys.executable, f"scripts_pruebas/{nombre}.py"], entorno
             )
     finally:
         os.killpg(os.getpgid(proc.pid), signal.SIGTERM)

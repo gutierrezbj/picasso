@@ -12,7 +12,7 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 RAIZ = Path(__file__).resolve().parent.parent
-ENV = dotenv_values(RAIZ / "backend" / ".env")
+ENV = {**dotenv_values(RAIZ / "backend" / ".env"), **{k: v for k, v in os.environ.items() if k in ("MONGO_URL", "DB_NAME", "DB_NAME_PRUEBAS")}}
 DB_PRUEBAS = ENV.get("DB_NAME_PRUEBAS") or "picasso_pruebas"
 if DB_PRUEBAS == ENV.get("DB_NAME"):
     sys.exit("ABORTADO · la base de pruebas no puede ser la de la previsualización.")

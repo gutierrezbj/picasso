@@ -96,7 +96,9 @@ def _texto(
 def _ejecutar(orden: list[str]) -> None:
     resultado = subprocess.run(orden, capture_output=True, check=False)
     if resultado.returncode != 0:
-        detalle = resultado.stderr.decode("utf-8", "ignore")[-400:]
+        texto = resultado.stderr.decode("utf-8", "ignore")
+        claves = [l for l in texto.splitlines() if any(k in l for k in ("Error", "Invalid", "No such", "not found", "failed"))]
+        detalle = " | ".join(claves)[-400:] or texto[-400:]
         raise RuntimeError(f"ffmpeg ha fallado: {detalle}")
 
 

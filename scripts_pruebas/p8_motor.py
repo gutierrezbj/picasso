@@ -337,7 +337,7 @@ req("PATCH", f"/api/planos/{huerfano['id']}", {"updated_at": huerfano["updated_a
 from pymongo import MongoClient  # noqa: E402
 from dotenv import dotenv_values  # noqa: E402
 
-env = dotenv_values("/app/backend/.env")
+env = {**dotenv_values("backend/.env"), **{k: v for k, v in os.environ.items() if k in ("MONGO_URL", "DB_NAME_PRUEBAS")}}
 MongoClient(env["MONGO_URL"])[env.get("DB_NAME_PRUEBAS") or "picasso_pruebas"].planos.update_one(
     {"_id": huerfano["id"]}, {"$set": {"escena_id": None}}
 )
@@ -377,7 +377,7 @@ if personaje:
         if o["estado"] in ("completada", "fallida"):
             break
         time.sleep(0.5)
-    ok(o["estado"] == "completada", "lámina de referencias producida")
+    ok(o["estado"] == "completada", f"lámina de referencias producida ({o['estado']}: {o.get('error')})")
     tomas_ficha = req("GET", f"/api/fichas/{ficha['id']}/tomas")["tomas"]
     ok(len(tomas_ficha) == 4, f"{len(tomas_ficha)} tomas para revisar")
     ok(
