@@ -9,6 +9,6 @@ ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 RUN yarn build
 
 FROM nginx:1.27-alpine
-COPY --from=construir /frontend/dist /usr/share/nginx/html
+COPY --from=construir /frontend/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
