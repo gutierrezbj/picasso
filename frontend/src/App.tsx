@@ -9,6 +9,7 @@ import PasoElementos from "./pantallas/PasoElementos";
 import Desarrollo from "./pantallas/Desarrollo";
 import Guion from "./pantallas/Guion";
 import Lienzo from "./pantallas/Lienzo";
+import Montaje from "./pantallas/Montaje";
 import Registro from "./pantallas/Registro";
 
 export default function App() {
@@ -25,7 +26,8 @@ export default function App() {
       <Route path="/p/:proyectoId/guion/:piezaId" element={<Guion />} />
       <Route path="/p/:proyectoId/lienzo" element={<Lienzo />} />
       <Route path="/p/:proyectoId/lienzo/:piezaId" element={<Lienzo />} />
-      <Route path="/p/:proyectoId/montaje" element={<PasoMinimo pantalla="montaje" />} />
+      <Route path="/p/:proyectoId/montaje" element={<Montaje />} />
+      <Route path="/p/:proyectoId/montaje/:piezaId" element={<Montaje />} />
     </Routes>
   );
 }

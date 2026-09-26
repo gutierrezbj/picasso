@@ -24,6 +24,8 @@ import type {
   TotalesRegistro,
   VistaGuion,
   VocesEscena,
+  VistaMontaje,
+  PistaAudio,
   VozDialogoVista,
   VistaLienzo,
   VistaOperacion,
@@ -313,6 +315,12 @@ export const api = {
     }),
   tomas: (planoId: string) => peticion<VistaTomas>(`/planos/${planoId}/tomas`),
   elegirToma: (tomaId: string) => peticion<Plano>(`/tomas/${tomaId}/elegir`, { method: "POST" }),
+  montaje: (piezaId: string) => peticion<VistaMontaje>(`/piezas/${piezaId}/montaje`),
+  anadirPista: (piezaId: string, datos: { capa: string; medio_id: string; inicio_s?: number; volumen_db?: number }) =>
+    peticion<PistaAudio>(`/piezas/${piezaId}/pistas`, { method: "POST", body: JSON.stringify(datos) }),
+  editarPista: (pistaId: string, datos: { inicio_s?: number; volumen_db?: number; nombre?: string }) =>
+    peticion<PistaAudio>(`/pistas/${pistaId}`, { method: "PATCH", body: JSON.stringify(datos) }),
+  quitarPista: (pistaId: string) => peticion<{ ok: boolean }>(`/pistas/${pistaId}`, { method: "DELETE" }),
   vocesEscena: (escenaId: string) => peticion<VocesEscena>(`/escenas/${escenaId}/voces`),
   editarVoz: (dialogoId: string, datos: { plano_id?: string; desfase_s?: number }) =>
     peticion<VozDialogoVista>(`/voces/${dialogoId}`, {

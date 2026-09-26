@@ -604,3 +604,52 @@ export interface VocesEscena {
   planos: { id: string; etiqueta: string; duracion_s: number | null }[];
   voces: VozDialogoVista[];
 }
+
+/** Montaje de una pieza (§11.2): línea de tiempo derivada, no editable a mano. */
+export interface PlanoMontaje {
+  plano_id: string;
+  etiqueta: string;
+  escena_id: string;
+  escena_titulo: string;
+  modalidad: "imagen" | "video" | null;
+  descripcion: string | null;
+  inicio_s: number;
+  duracion_s: number;
+  fuente_duracion: "toma" | "plano" | "defecto";
+  toma: { id: string; numero: number; medio_id: string; clase: string | null; duracion_s: number | null } | null;
+}
+
+export interface VozMontaje {
+  dialogo_id: string;
+  plano_id: string;
+  etiqueta_plano: string | null;
+  hablante_nombre: string;
+  texto: string;
+  desfase_s: number;
+  inicio_s: number;
+  duracion_s: number | null;
+  medio_id: string;
+  desactualizada: boolean;
+}
+
+export interface PistaAudio {
+  id: string;
+  pieza_id: string;
+  capa: "musica" | "ambiente";
+  medio_id: string;
+  nombre: string;
+  inicio_s: number;
+  volumen_db: number;
+  duracion_s: number | null;
+}
+
+export interface VistaMontaje {
+  pieza: { id: string; titulo: string | null; numero: number | null };
+  proyecto: { id: string; nombre: string; tipo: string; formato_video: string; fps: number; updated_at: string };
+  revision_guion: number;
+  planos: PlanoMontaje[];
+  voces: VozMontaje[];
+  pistas: PistaAudio[];
+  duracion_total_s: number;
+  avisos: string[];
+}
