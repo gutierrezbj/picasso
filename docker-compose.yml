@@ -1,0 +1,62 @@
+# Despliegue en infraestructura propia (§15.1). AVISO: no se ha probado fuera
+# del entorno de previsualización (ver TRASPASO.md).
+#
+# Las variables salen de un `.env` en la raíz, según `backend/.env.example`.
+# Ninguna clave se escribe aquí.
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - datos_mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: ${DB_NAME}
+      DB_NAME_PRUEBAS: ${DB_NAME_PRUEBAS}
+      DATA_DIR: /datos
+      MONEDA: ${MONEDA}
+      PRESUPUESTO_POR_DEFECTO: ${PRESUPUESTO_POR_DEFECTO}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      EMERGENT_LLM_KEY: ${EMERGENT_LLM_KEY:-}
+      FAL_KEY: ${FAL_KEY:-}
+      KIE_API_KEY: ${KIE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+    volumes:
+      - datos_medios:/datos
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8001/api/salud"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_BACKEND_URL: ${REACT_APP_BACKEND_URL}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  datos_mongo:
+  datos_medios:

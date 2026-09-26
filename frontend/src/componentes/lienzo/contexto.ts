@@ -7,7 +7,9 @@ export interface AccionesLienzo {
   anadirPlano: (escenaId: string) => void;
   abrirGuionGrafico: (escenaId: string) => void;
   verEnGuion: () => void;
-  abrirFicha: (nodoId: string) => void;
+  abrirFicha: (nodoId: string, pestana?: "direccion" | "producir" | "tomas") => void;
+  moverAEscena: (planoId: string, escenaId: string) => void;
+  escenas: { id: string; titulo: string }[];
   moverPlano: (planoId: string, direccion: "antes" | "despues") => void;
   duplicarPlano: (planoId: string) => void;
   dividirPlano: (planoId: string) => void;

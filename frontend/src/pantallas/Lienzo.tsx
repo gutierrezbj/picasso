@@ -59,7 +59,7 @@ export default function Lienzo() {
     );
   }
 
-  const { proyecto, espacio, recorrido, gasto, moneda } = data;
+  const { proyecto, espacio, recorrido, gasto, gasto_detalle: gastoDetalle, moneda } = data;
   const migas = [
     { texto: "Estudio", a: "/" },
     { texto: espacio?.nombre || "Espacio", a: `/e/${proyecto.espacio_id}` },
@@ -77,7 +77,7 @@ export default function Lienzo() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <Cabecera migas={migas} gasto={gasto} moneda={moneda} />
+      <Cabecera migas={migas} gasto={gasto} gastoDetalle={gastoDetalle} moneda={moneda} />
       <BarraRecorrido proyectoId={proyectoId} recorrido={recorrido} claveVista={paso?.clave} />
 
       {bloqueo.length > 0 ? (
@@ -140,6 +140,7 @@ export default function Lienzo() {
             key={pieza.id}
             vista={vista}
             relacion={(proyecto.formato_video || "16:9").replace(":", " / ")}
+            moneda={moneda}
             opciones={opciones}
             proyectoId={proyectoId!}
             rutaGuion={rutaGuion}

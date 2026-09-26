@@ -67,6 +67,7 @@ export interface VistaProyecto {
   espacio: Espacio | null;
   recorrido: Recorrido;
   gasto: number;
+  gasto_detalle?: GastoProyecto;
   moneda: string;
 }
 
@@ -313,6 +314,13 @@ export interface Plano {
   correcciones_pendientes: number;
   encadenado_sin_anterior: boolean;
   continuidad: ContinuidadElemento[];
+  numero_tomas: number;
+  numero_exploraciones: number;
+  toma_elegida: (Toma & { medio: Medio | null }) | null;
+  estado_produccion: "sin_dirigir" | "dirigido" | "en_produccion" | "con_tomas" | "resuelto";
+  operacion_viva: Operacion | null;
+  operacion_incierta: Operacion | null;
+  desactualizado: boolean;
 }
 
 export interface AvisoEncadenado {
@@ -367,4 +375,176 @@ export interface PromptVista {
   automatico: string;
   editado_a_mano: boolean;
   fichas_usadas: { nombre: string; version: number; aprobada: boolean }[];
+}
+
+// --- Fase 6: motor (§9), tomas y registro ---
+
+export type Accion =
+  | "generar_imagen"
+  | "editar_imagen"
+  | "imagen_con_referencias"
+  | "generar_video"
+  | "generar_voz"
+  | "sincronizar_labios"
+  | "personaje_hablando";
+
+export type SimulacionPrueba = "normal" | "fallo" | "incierto" | "timeout";
+
+export type EstadoOperacion =
+  | "preparada"
+  | "presupuestada"
+  | "autorizada"
+  | "enviada"
+  | "en_curso"
+  | "completada"
+  | "incierta"
+  | "fallida"
+  | "descartada";
+
+export interface CosteCatalogo {
+  unidad: "imagen" | "segundo" | "caracter" | "operacion";
+  valor: string | null;
+  moneda: string;
+  verificado: boolean;
+}
+
+export interface ModeloCatalogo {
+  id: string;
+  nombre_visible: string;
+  acciones: Accion[];
+  proveedores: string[];
+  admite: {
+    primer_fotograma: boolean;
+    ultimo_fotograma: boolean;
+    referencias: number;
+    audio: boolean;
+  };
+  duraciones_s: number[];
+  relaciones: string[];
+  coste: CosteCatalogo;
+  plantilla: boolean;
+  proveedor: string | null;
+  elegible: boolean;
+  motivo_no_elegible: string | null;
+  precio_simulado: boolean;
+}
+
+export interface GastoProyecto {
+  real: number;
+  reservado: number;
+  total: number;
+  sin_verificar: number;
+}
+
+export interface Presupuesto {
+  coste_estimado: number | null;
+  coste_sin_verificar: boolean;
+  gasto: GastoProyecto;
+  presupuesto_max: number | null;
+  presupuesto_restante: number | null;
+  supera_presupuesto: boolean;
+  moneda: string;
+}
+
+export interface IntentoOperacion {
+  id: string;
+  numero: number;
+  proveedor: string;
+  id_remoto: string | null;
+  estado: string;
+  coste_real: number | null;
+  error: string | null;
+  inicio: string;
+  fin: string | null;
+  medios_resultado: string[];
+}
+
+export interface Toma {
+  id: string;
+  plano_id: string | null;
+  medio_id: string;
+  operacion_id: string | null;
+  numero: number;
+  fichas_usadas: Record<string, number>;
+  revision_guion: number;
+  valoracion: "buena" | "descartada" | null;
+  nota: string | null;
+  es_exploracion: boolean;
+  exploracion: { encuadre: string | null; angulo: string | null } | null;
+  correccion_id: string | null;
+  created_at: string;
+  medio: Medio | null;
+  modelo?: string | null;
+  accion?: Accion | null;
+}
+
+export interface Operacion {
+  id: string;
+  proyecto_id: string;
+  espacio_id: string;
+  destino: { tipo: string; id: string };
+  accion: Accion;
+  modelo: string;
+  proveedor: string | null;
+  prompt_visible: string;
+  coste_estimado: number | null;
+  coste_unidad: string;
+  coste_verificado: boolean;
+  coste_real: number | null;
+  estado: EstadoOperacion;
+  clave_idempotencia: string;
+  correccion_id: string | null;
+  toma_origen_id: string | null;
+  es_exploracion: boolean;
+  error: string | null;
+  intentos: number;
+  variantes_fallidas: number[];
+  posicion_cola: number | null;
+  autorizada_en: string | null;
+  created_at: string;
+  updated_at: string;
+  modelo_visible?: string;
+  precio_simulado?: boolean;
+  destino_etiqueta?: string | null;
+  proyecto_nombre?: string | null;
+  espacio_nombre?: string | null;
+  numero_intentos?: number;
+  intentos_detalle?: IntentoOperacion[];
+  tomas?: Toma[];
+}
+
+export interface VistaOperacion {
+  operacion: Operacion;
+  presupuesto: Presupuesto;
+  modelo: ModeloCatalogo | null;
+}
+
+export interface VistaProduccion {
+  etiqueta: string;
+  relacion: string;
+  presupuesto: Presupuesto;
+  operaciones: Operacion[];
+  prompt: string;
+}
+
+export interface VistaTomas {
+  toma_elegida_id: string | null;
+  tomas: Toma[];
+  exploraciones: Toma[];
+}
+
+export interface TotalRegistro {
+  proyecto_id?: string;
+  espacio_id?: string;
+  nombre: string;
+  total: number;
+}
+
+export interface TotalesRegistro {
+  total: number;
+  operaciones: number;
+  sin_verificar: number;
+  moneda: string;
+  por_proyecto: TotalRegistro[];
+  por_espacio: TotalRegistro[];
 }

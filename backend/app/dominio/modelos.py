@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 def ahora() -> str:
@@ -506,6 +506,281 @@ class Viewport(BaseModel):
     x: float = 0
     y: float = 0
     zoom: float = 1
+
+
+# --- Fase 6: motor de producción (§9), tomas y registro ----------------------
+
+
+class Accion(str, Enum):
+    """Acciones del motor (§9.2)."""
+
+    generar_imagen = "generar_imagen"
+    editar_imagen = "editar_imagen"
+    imagen_con_referencias = "imagen_con_referencias"
+    generar_video = "generar_video"
+    generar_voz = "generar_voz"
+    sincronizar_labios = "sincronizar_labios"
+    personaje_hablando = "personaje_hablando"
+
+
+class SimulacionPrueba(str, Enum):
+    """Qué resultado se provoca a propósito. Solo lo acepta el proveedor
+    `simulado`; cualquier otro lo rechaza."""
+
+    normal = "normal"
+    fallo = "fallo"
+    incierto = "incierto"
+    timeout = "timeout"
+
+
+class EstadoOperacion(str, Enum):
+    """Ciclo del §9.4."""
+
+    preparada = "preparada"
+    presupuestada = "presupuestada"
+    autorizada = "autorizada"
+    enviada = "enviada"
+    en_curso = "en_curso"
+    completada = "completada"
+    incierta = "incierta"
+    fallida = "fallida"
+    descartada = "descartada"
+
+
+class ReferenciaEntrada(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    medio_id: str
+    ruta: str
+    rol: str = "otra"
+
+
+class MedioEntrada(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    medio_id: str
+    ruta: str
+
+
+class AjustesVoz(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    proveedor: Optional[str] = None
+    voice_id: Optional[str] = None
+    ajustes: dict[str, str] = Field(default_factory=dict)
+
+
+class VarianteEncuadre(BaseModel):
+    """Una variante de la lámina de encuadres (§8)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    encuadre: Optional[str] = None
+    angulo: Optional[str] = None
+
+
+# Qué campos exige cada acción y cuáles no le tocan (§9.2).
+_EXIGE: dict[str, tuple[str, ...]] = {
+    "generar_imagen": ("prompt",),
+    "editar_imagen": ("imagen_entrada", "instruccion"),
+    "imagen_con_referencias": ("prompt", "referencias"),
+    "generar_video": ("prompt",),
+    "generar_voz": ("texto",),
+    "sincronizar_labios": ("video_entrada", "audio_entrada"),
+    "personaje_hablando": ("retrato", "audio_entrada"),
+}
+_PROHIBE: dict[str, tuple[str, ...]] = {
+    "generar_imagen": (
+        "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
+        "video_entrada", "audio_entrada", "retrato", "texto", "voz",
+    ),
+    "editar_imagen": (
+        "primer_fotograma", "ultimo_fotograma", "video_entrada", "audio_entrada",
+        "retrato", "texto", "voz",
+    ),
+    "imagen_con_referencias": (
+        "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
+        "video_entrada", "audio_entrada", "retrato", "texto", "voz",
+    ),
+    "generar_video": (
+        "imagen_entrada", "instruccion", "video_entrada", "audio_entrada",
+        "retrato", "texto", "voz",
+    ),
+    "generar_voz": (
+        "prompt", "negativos", "referencias", "imagen_entrada", "instruccion",
+        "primer_fotograma", "ultimo_fotograma", "video_entrada", "audio_entrada", "retrato",
+    ),
+    "sincronizar_labios": (
+        "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
+        "retrato", "texto", "voz", "prompt",
+    ),
+    "personaje_hablando": (
+        "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
+        "video_entrada", "texto", "prompt",
+    ),
+}
+
+
+class EntradaOperacion(BaseModel):
+    """Lo que se envía al proveedor (§9.1). Inmutable: su huella es la clave de
+    idempotencia. Un validador comprueba que cada acción lleva los campos que
+    necesita y ninguno que no le toque."""
+
+    model_config = ConfigDict(frozen=True)
+
+    accion: Accion
+    modelo: str
+    prompt: Optional[str] = None
+    negativos: Optional[str] = None
+    referencias: tuple[ReferenciaEntrada, ...] = ()
+    imagen_entrada: Optional[MedioEntrada] = None
+    instruccion: Optional[str] = None
+    primer_fotograma: Optional[MedioEntrada] = None
+    ultimo_fotograma: Optional[MedioEntrada] = None
+    duracion_s: Optional[float] = None
+    relacion_aspecto: Optional[str] = None
+    resolucion: Optional[str] = None
+    texto: Optional[str] = None
+    voz: Optional[AjustesVoz] = None
+    video_entrada: Optional[MedioEntrada] = None
+    audio_entrada: Optional[MedioEntrada] = None
+    retrato: Optional[MedioEntrada] = None
+    n_variantes: int = 1
+    variantes: tuple[VarianteEncuadre, ...] = ()
+    etiqueta_destino: Optional[str] = None
+    rotulos: tuple[str, ...] = ()
+    simular_resultado: SimulacionPrueba = SimulacionPrueba.normal
+
+    @model_validator(mode="after")
+    def _coherente(self) -> "EntradaOperacion":
+        accion = self.accion.value
+        for campo in _EXIGE[accion]:
+            if not getattr(self, campo):
+                raise ValueError(f"«{accion}» necesita «{campo}».")
+        for campo in _PROHIBE[accion]:
+            if getattr(self, campo):
+                raise ValueError(f"«{accion}» no lleva «{campo}».")
+        if self.n_variantes > 1 and accion != "generar_imagen":
+            raise ValueError("Las variantes solo se piden en «generar_imagen» (§8).")
+        if self.n_variantes != max(1, len(self.variantes) or self.n_variantes):
+            raise ValueError("El número de variantes no cuadra con la lista de variantes.")
+        return self
+
+
+class Destino(BaseModel):
+    tipo: str  # plano | ficha | medio
+    id: str
+
+
+class Operacion(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    proyecto_id: str
+    espacio_id: str
+    destino: Destino
+    accion: Accion
+    modelo: str
+    proveedor: Optional[str] = None
+    proveedores_descartados: list[str] = Field(default_factory=list)
+    entradas: EntradaOperacion
+    prompt_visible: str = ""
+    coste_estimado: Optional[float] = None
+    coste_unidad: str = "operacion"
+    coste_verificado: bool = False
+    coste_real: Optional[float] = None
+    estado: EstadoOperacion = EstadoOperacion.preparada
+    clave_idempotencia: str = ""
+    correccion_id: Optional[str] = None
+    toma_origen_id: Optional[str] = None
+    es_exploracion: bool = False
+    error: Optional[str] = None
+    intentos: int = 0
+    variantes_fallidas: list[int] = Field(default_factory=list)
+    posicion_cola: Optional[int] = None
+    autorizada_en: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class Intento(BaseModel):
+    id: str = Field(default_factory=nuevo_id)
+    operacion_id: str
+    numero: int = 1
+    proveedor: str
+    id_remoto: Optional[str] = None
+    estado: str = "enviada"  # enviada | en_curso | completada | incierta | fallida
+    clave_idempotencia: str = ""
+    coste_real: Optional[float] = None
+    error: Optional[str] = None
+    inicio: str = Field(default_factory=ahora)
+    fin: Optional[str] = None
+    medios_resultado: list[str] = Field(default_factory=list)
+
+
+class Toma(BaseModel):
+    plano_id: Optional[str] = None
+    ficha_version_id: Optional[str] = None
+    id: str = Field(default_factory=nuevo_id)
+    medio_id: str
+    operacion_id: Optional[str] = None
+    numero: int = 1
+    fichas_usadas: dict[str, int] = Field(default_factory=dict)
+    revision_guion: int = 0
+    valoracion: Optional[str] = None  # buena | descartada | None
+    nota: Optional[str] = None
+    es_exploracion: bool = False
+    exploracion: Optional[VarianteEncuadre] = None
+    correccion_id: Optional[str] = None
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class PrepararOperacion(BaseModel):
+    """Cuerpo de `POST /api/operaciones` (§9.4.1 y 2). No envía nada."""
+
+    destino_tipo: str = "plano"
+    destino_id: str
+    accion: Accion
+    modelo: str
+    duracion_s: Optional[float] = None
+    instruccion: Optional[str] = None
+    texto: Optional[str] = None
+    n_variantes: Optional[int] = None
+    correccion_id: Optional[str] = None
+    toma_origen_id: Optional[str] = None
+    prompt_manual: Optional[str] = None
+    simular_resultado: SimulacionPrueba = SimulacionPrueba.normal
+
+
+class EditarOperacion(BaseModel):
+    """PATCH: solo en `preparada` o `presupuestada`. Recalcula el coste y no
+    envía nada."""
+
+    modelo: Optional[str] = None
+    duracion_s: Optional[float] = None
+    instruccion: Optional[str] = None
+    texto: Optional[str] = None
+    n_variantes: Optional[int] = None
+    prompt_manual: Optional[str] = None
+    simular_resultado: Optional[SimulacionPrueba] = None
+
+
+class Autorizacion(BaseModel):
+    confirmado_por_encima_del_presupuesto: bool = False
+
+
+class TomaEditar(BaseModel):
+    valoracion: Optional[str] = None  # buena | descartada | ninguna
+    nota: Optional[str] = None
+
+
+class FijarExploracion(BaseModel):
+    """§8: fijar los valores de una toma de exploración en la dirección."""
+
+    momento: str = "inicio"  # inicio | final (solo vídeo)
+
+
+class MoverAEscena(BaseModel):
+    escena_id: str
 
 
 class LayoutLienzo(BaseModel):

@@ -1,4 +1,5 @@
 import type {
+  Accion,
   Ajustes,
   AvisoEncadenado,
   Desarrollo,
@@ -10,15 +11,23 @@ import type {
   FichaVersion,
   LayoutLienzo,
   Medio,
+  ModeloCatalogo,
+  Operacion,
   OpcionesDireccion,
   Pieza,
   Plano,
+  Presupuesto,
   PromptVista,
   Proyecto,
   Recorrido,
+  Toma,
+  TotalesRegistro,
   VistaGuion,
   VistaLienzo,
+  VistaOperacion,
+  VistaProduccion,
   VistaProyecto,
+  VistaTomas,
 } from "../tipos";
 
 const BASE = `${import.meta.env.REACT_APP_BACKEND_URL}/api`;
@@ -266,6 +275,70 @@ export const api = {
     }),
   reconstruirPrompt: (planoId: string) =>
     peticion<PromptVista>(`/planos/${planoId}/prompt/reconstruir`, { method: "POST" }),
+
+  // --- Fase 6: motor (§9), tomas y registro ---
+  catalogo: (accion?: Accion) =>
+    peticion<ModeloCatalogo[]>(`/catalogo${accion ? `?accion=${accion}` : ""}`),
+  produccion: (planoId: string) => peticion<VistaProduccion>(`/planos/${planoId}/produccion`),
+  prepararOperacion: (datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>("/operaciones", { method: "POST", body: JSON.stringify(datos) }),
+  editarOperacion: (id: string, datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>(`/operaciones/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(datos),
+    }),
+  autorizarOperacion: (id: string, confirmado = false) =>
+    peticion<VistaOperacion>(`/operaciones/${id}/autorizar`, {
+      method: "POST",
+      body: JSON.stringify({ confirmado_por_encima_del_presupuesto: confirmado }),
+    }),
+  comprobarOperacion: (id: string) =>
+    peticion<VistaOperacion>(`/operaciones/${id}/comprobar`, { method: "POST" }),
+  marcarFallida: (id: string) =>
+    peticion<VistaOperacion>(`/operaciones/${id}/marcar-fallida`, { method: "POST" }),
+  reintentarOperacion: (id: string) =>
+    peticion<VistaOperacion>(`/operaciones/${id}/reintentar`, { method: "POST" }),
+  descartarOperacion: (id: string) => peticion(`/operaciones/${id}`, { method: "DELETE" }),
+  explorarEncuadres: (planoId: string, datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>(`/planos/${planoId}/explorar-encuadres`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  prepararCorreccion: (correccionId: string, datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>(`/correcciones/${correccionId}/preparar`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  tomas: (planoId: string) => peticion<VistaTomas>(`/planos/${planoId}/tomas`),
+  elegirToma: (tomaId: string) => peticion<Plano>(`/tomas/${tomaId}/elegir`, { method: "POST" }),
+  valorarToma: (tomaId: string, datos: Record<string, unknown>) =>
+    peticion<Toma>(`/tomas/${tomaId}`, { method: "PATCH", body: JSON.stringify(datos) }),
+  ajustarToma: (tomaId: string, datos: Record<string, unknown>) =>
+    peticion<VistaOperacion>(`/tomas/${tomaId}/ajustar`, {
+      method: "POST",
+      body: JSON.stringify(datos),
+    }),
+  fijarExploracion: (tomaId: string, momento: "inicio" | "final") =>
+    peticion<Plano>(`/exploraciones/${tomaId}/fijar`, {
+      method: "POST",
+      body: JSON.stringify({ momento }),
+    }),
+  usarExploracionComoToma: (tomaId: string) =>
+    peticion<Toma>(`/exploraciones/${tomaId}/usar-como-toma`, { method: "POST" }),
+  moverPlanoAEscena: (planoId: string, escenaId: string) =>
+    peticion<Plano>(`/planos/${planoId}/mover-a-escena`, {
+      method: "POST",
+      body: JSON.stringify({ escena_id: escenaId }),
+    }),
+  operaciones: (filtros: Record<string, string>) =>
+    peticion<Operacion[]>(`/operaciones?${new URLSearchParams(filtros).toString()}`),
+  totalesRegistro: (filtros: Record<string, string>) =>
+    peticion<TotalesRegistro>(`/registro/totales?${new URLSearchParams(filtros).toString()}`),
+  urlRegistroCsv: (filtros: Record<string, string>) =>
+    `${BASE}/registro/exportar.csv?${new URLSearchParams(filtros).toString()}`,
+  gastoProyecto: (proyectoId: string) =>
+    peticion<Presupuesto>(`/proyectos/${proyectoId}/gasto`),
+  urlEventos: (proyectoId: string) => `${BASE}/eventos?proyecto_id=${proyectoId}`,
 };
 
 export { ErrorApi };

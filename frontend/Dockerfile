@@ -1,0 +1,14 @@
+# Construcción del frontend (Vite) y servicio estático.
+FROM node:20-slim AS construir
+WORKDIR /frontend
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+COPY . .
+ARG REACT_APP_BACKEND_URL
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+RUN yarn build
+
+FROM nginx:1.27-alpine
+COPY --from=construir /frontend/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

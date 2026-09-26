@@ -39,6 +39,7 @@ SCRIPTS = [
     "p5_diff",
     "p6_hablantes",
     "p7_lienzo",
+    "p8_motor",
 ]
 
 

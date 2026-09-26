@@ -9,6 +9,7 @@ import PasoElementos from "./pantallas/PasoElementos";
 import Desarrollo from "./pantallas/Desarrollo";
 import Guion from "./pantallas/Guion";
 import Lienzo from "./pantallas/Lienzo";
+import Registro from "./pantallas/Registro";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
       <Route path="/e/:espacioId" element={<Espacio />} />
       <Route path="/e/:espacioId/biblioteca" element={<Biblioteca />} />
       <Route path="/ajustes" element={<Ajustes />} />
+      <Route path="/registro" element={<Registro />} />
       <Route path="/p/:proyectoId/idea" element={<Desarrollo />} />
       <Route path="/p/:proyectoId/paso/:clave" element={<PasoElementos />} />
       <Route path="/p/:proyectoId/guion" element={<Guion />} />

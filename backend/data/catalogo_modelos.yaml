@@ -1,0 +1,142 @@
+# Catálogo de modelos (§9.3). Editable sin tocar código.
+#
+# Los modelos de los proveedores reales quedan como PLANTILLAS vacías: no llevan
+# nombres de modelos inventados y no se pueden elegir hasta que el usuario las
+# rellene y quite `plantilla: true`.
+#
+# coste.unidad: imagen | segundo | caracter | operacion · moneda: solo USD
+# coste.verificado: false en todo lo simulado → la interfaz dice «precio simulado».
+
+- id: sim-imagen
+  nombre_visible: "Simulado · imagen"
+  acciones: [generar_imagen, imagen_con_referencias]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 4, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: 0.04, moneda: USD, verificado: false}
+  formato: {png_lado_largo: 1280}
+
+- id: sim-editar
+  nombre_visible: "Simulado · editar imagen"
+  acciones: [editar_imagen]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: operacion, valor: 0.03, moneda: USD, verificado: false}
+  formato: {png_lado_largo: 1280}
+
+- id: sim-video
+  nombre_visible: "Simulado · vídeo"
+  acciones: [generar_video]
+  proveedores: [simulado]
+  admite: {primer_fotograma: true, ultimo_fotograma: true, referencias: 2, audio: false}
+  duraciones_s: [3, 5, 10]
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: segundo, valor: 0.25, moneda: USD, verificado: false}
+  formato: {fps: 24, lado_largo: 1280}
+
+- id: sim-video-cine
+  nombre_visible: "Simulado · vídeo de cine"
+  acciones: [generar_video]
+  proveedores: [simulado]
+  admite: {primer_fotograma: true, ultimo_fotograma: true, referencias: 4, audio: false}
+  duraciones_s: [5, 10]
+  relaciones: ["9:16", "16:9"]
+  coste: {unidad: segundo, valor: 3, moneda: USD, verificado: false}
+  formato: {fps: 30, lado_largo: 1920}
+
+- id: sim-voz
+  nombre_visible: "Simulado · voz"
+  acciones: [generar_voz]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
+  duraciones_s: []
+  relaciones: []
+  coste: {unidad: caracter, valor: 0.002, moneda: USD, verificado: false}
+  formato: {hz: 44100}
+
+- id: sim-personaje-hablando
+  nombre_visible: "Simulado · personaje hablando"
+  acciones: [personaje_hablando, sincronizar_labios]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: segundo, valor: 0.25, moneda: USD, verificado: false}
+  formato: {fps: 30, lado_largo: 1280, hz: 48000}
+
+- id: sim-sin-precio
+  nombre_visible: "Simulado · imagen sin precio"
+  acciones: [generar_imagen, imagen_con_referencias]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 4, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: null, moneda: USD, verificado: false}
+  formato: {png_lado_largo: 1024}
+
+- id: sim-inestable
+  nombre_visible: "Simulado · falla"
+  acciones: [generar_imagen, generar_video]
+  proveedores: [simulado]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: false}
+  duraciones_s: [3, 5]
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: 0.04, moneda: USD, verificado: false}
+  formato: {fps: 24, png_lado_largo: 1024, lado_largo: 1024}
+
+# --- Plantillas de los proveedores reales (Fase 9) ---------------------------
+# No son elegibles mientras lleven `plantilla: true`. Rellena id, nombre_visible,
+# lo que admite y el precio, y quita la marca.
+
+- id: fal-plantilla-imagen
+  nombre_visible: "Plantilla · rellenar"
+  plantilla: true
+  acciones: [generar_imagen, imagen_con_referencias, editar_imagen]
+  proveedores: [fal]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 4, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: null, moneda: USD, verificado: false}
+
+- id: fal-plantilla-video
+  nombre_visible: "Plantilla · rellenar"
+  plantilla: true
+  acciones: [generar_video, sincronizar_labios, personaje_hablando]
+  proveedores: [fal]
+  admite: {primer_fotograma: true, ultimo_fotograma: true, referencias: 2, audio: true}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9"]
+  coste: {unidad: segundo, valor: null, moneda: USD, verificado: false}
+
+- id: kie-plantilla-video
+  nombre_visible: "Plantilla · rellenar"
+  plantilla: true
+  acciones: [generar_imagen, generar_video]
+  proveedores: [kie]
+  admite: {primer_fotograma: true, ultimo_fotograma: false, referencias: 0, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9"]
+  coste: {unidad: segundo, valor: null, moneda: USD, verificado: false}
+
+- id: openai-images-plantilla
+  nombre_visible: "Plantilla · rellenar"
+  plantilla: true
+  acciones: [generar_imagen, editar_imagen, imagen_con_referencias]
+  proveedores: [openai_images]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 4, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: null, moneda: USD, verificado: false}
+
+- id: elevenlabs-plantilla-voz
+  nombre_visible: "Plantilla · rellenar"
+  plantilla: true
+  acciones: [generar_voz]
+  proveedores: [elevenlabs]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
+  duraciones_s: []
+  relaciones: []
+  coste: {unidad: caracter, valor: null, moneda: USD, verificado: false}

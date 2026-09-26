@@ -61,7 +61,7 @@ export function posicionAutomatica(
 }
 
 export function construirNodos(
-  vista: { reparto: RepartoLienzo[]; escenas: EscenaConPlanos[] },
+  vista: { reparto: RepartoLienzo[]; escenas: EscenaConPlanos[]; planos_sin_escena?: Plano[] },
   layout: LayoutLienzo,
   seleccion: string[]
 ): NodoLienzo[] {
@@ -106,6 +106,22 @@ export function construirNodos(
         data: { plano, etiqueta: `E${indice + 1}·P${j + 1}` },
         selected: seleccion.includes(pid),
       });
+    });
+  });
+
+  // Fila de los planos sin escena, al final del lienzo (§13).
+  (vista.planos_sin_escena || []).forEach((plano, j) => {
+    const pid = idPlano(plano.id);
+    nodos.push({
+      id: pid,
+      type: "plano",
+      position:
+        layout.posiciones[pid] || {
+          x: COL_ESCENAS + ANCHO_ESCENA + 40 + j * (ANCHO_PLANO + 30),
+          y: 40 + escenas.length * ALTO_FILA,
+        },
+      data: { plano, etiqueta: `SE·P${j + 1}` },
+      selected: seleccion.includes(pid),
     });
   });
 

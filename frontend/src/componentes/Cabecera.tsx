@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Settings, Receipt } from "lucide-react";
 import IndicadorGuardado from "./IndicadorGuardado";
 import { formatoMoneda } from "../lib/formato";
 
@@ -15,9 +15,15 @@ interface Props {
   migas?: Miga[];
   gasto?: number | null;
   moneda?: string;
+  gastoDetalle?: { real: number; reservado: number; total: number; sin_verificar: number } | null;
 }
 
-export default function Cabecera({ migas = [], gasto = null, moneda = "USD" }: Props) {
+export default function Cabecera({
+  migas = [],
+  gasto = null,
+  moneda = "USD",
+  gastoDetalle = null,
+}: Props) {
   return (
     <header
       className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-linea bg-superficie/90 px-6 backdrop-blur"
@@ -53,10 +59,33 @@ export default function Cabecera({ migas = [], gasto = null, moneda = "USD" }: P
       <div className="flex items-center gap-5 shrink-0">
         <IndicadorGuardado />
         {gasto !== null && (
-          <span data-testid="indicador-gasto" className="tabular text-[14px] leading-[20px] text-tinta2">
+          <span
+            data-testid="indicador-gasto"
+            title={
+              gastoDetalle
+                ? `${formatoMoneda(gastoDetalle.real, moneda)} cobrado + ` +
+                  `${formatoMoneda(gastoDetalle.reservado, moneda)} reservado`
+                : undefined
+            }
+            className="tabular text-[14px] leading-[20px] text-tinta2"
+          >
             Gasto: {formatoMoneda(gasto, moneda)}
+            {gastoDetalle && gastoDetalle.reservado > 0 && (
+              <span className="ml-1 text-tinta3">
+                (incluye {formatoMoneda(gastoDetalle.reservado, moneda)} reservado)
+              </span>
+            )}
           </span>
         )}
+        <Link
+          to="/registro"
+          data-testid="acceso-registro"
+          aria-label="Registro"
+          title="Registro"
+          className="flex h-11 w-11 items-center justify-center rounded-control text-tinta2 hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+        >
+          <Receipt size={20} strokeWidth={1.9} />
+        </Link>
         <Link
           to="/ajustes"
           data-testid="acceso-ajustes"

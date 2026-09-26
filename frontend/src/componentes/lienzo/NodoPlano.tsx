@@ -8,10 +8,22 @@ import {
   Trash2,
   SlidersHorizontal,
   Link2,
+  Play,
+  Layers,
+  AlertTriangle,
 } from "lucide-react";
+import { api } from "../../api/cliente";
 import type { DatosPlano } from "../../lib/lienzo";
 import { ANCHO_PLANO } from "../../lib/lienzo";
 import { useAccionesLienzo } from "./contexto";
+
+const ESTADOS: Record<string, string> = {
+  sin_dirigir: "sin dirigir",
+  dirigido: "dirigido",
+  en_produccion: "en producción",
+  con_tomas: "con tomas",
+  resuelto: "resuelto",
+};
 
 // Tarjeta de plano (§7.2 y §7.7c): resumen de dirección, correcciones pendientes
 // y todas las acciones con botón visible.
@@ -39,9 +51,54 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
         </span>
       </div>
 
-      <div className="mt-2 flex h-[92px] items-center justify-center rounded-control bg-superficie2">
-        <span className="text-[13px] text-tinta3">sin toma</span>
-      </div>
+      {plano.toma_elegida?.medio ? (
+        <div className="mt-2 overflow-hidden rounded-control bg-superficie2">
+          {plano.toma_elegida.medio.clase === "video" ? (
+            <video
+              src={api.urlMedio(plano.toma_elegida.medio.id)}
+              muted
+              className="h-[92px] w-full object-contain"
+              data-testid={`toma-elegida-${etiqueta}`}
+            />
+          ) : (
+            <img
+              src={api.urlMedio(plano.toma_elegida.medio.id)}
+              alt={`Toma elegida del plano ${etiqueta}`}
+              className="h-[92px] w-full object-contain"
+              data-testid={`toma-elegida-${etiqueta}`}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="mt-2 flex h-[92px] items-center justify-center rounded-control bg-superficie2">
+          <span className="text-[13px] text-tinta3">
+            {plano.estado_produccion === "en_produccion" ? "produciendo…" : "sin toma"}
+          </span>
+        </div>
+      )}
+
+      <p className="mt-1 text-[12px] leading-[16px] text-tinta2" data-testid={`estado-plano-${etiqueta}`}>
+        {ESTADOS[plano.estado_produccion]}
+        {plano.numero_tomas > 0 && ` · ${plano.numero_tomas} toma${plano.numero_tomas === 1 ? "" : "s"}`}
+      </p>
+
+      {plano.desactualizado && (
+        <p
+          data-testid={`desactualizado-${etiqueta}`}
+          className="mt-1 inline-flex items-center gap-1 text-[12px] leading-[16px] text-aviso"
+        >
+          <AlertTriangle size={12} strokeWidth={1.9} /> desactualizado
+        </p>
+      )}
+
+      {plano.operacion_incierta && (
+        <p
+          data-testid={`incierta-${etiqueta}`}
+          className="mt-1 text-[12px] leading-[16px] text-aviso"
+        >
+          operación incierta: compruébala en Producir
+        </p>
+      )}
 
       <p className="mt-2 line-clamp-2 text-[13px] leading-[18px] text-tinta">
         {plano.que_se_muestra || <span className="text-tinta3">sin describir</span>}
@@ -87,6 +144,21 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
           <SlidersHorizontal size={14} strokeWidth={1.9} /> Dirigir
         </button>
         <button
+          data-testid={`producir-${etiqueta}`}
+          onClick={() => acciones.abrirFicha(id, "producir")}
+          className="inline-flex items-center gap-1 rounded-control border border-linea bg-superficie px-2 py-1 text-[13px] leading-[18px] text-tinta hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+        >
+          <Play size={14} strokeWidth={1.9} /> Producir
+        </button>
+        <button
+          data-testid={`ver-tomas-${etiqueta}`}
+          onClick={() => acciones.abrirFicha(id, "tomas")}
+          className="inline-flex items-center gap-1 rounded-control border border-linea bg-superficie px-2 py-1 text-[13px] leading-[18px] text-tinta hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+        >
+          <Layers size={14} strokeWidth={1.9} /> Tomas ({plano.numero_tomas})
+        </button>
+        {plano.escena_id && (
+          <button
           data-testid={`mover-antes-${etiqueta}`}
           aria-label="Mover antes"
           title="Mover antes"
@@ -94,8 +166,10 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
           className={boton}
         >
           <ChevronLeft size={15} strokeWidth={1.9} />
-        </button>
-        <button
+          </button>
+        )}
+        {plano.escena_id && (
+          <button
           data-testid={`mover-despues-${etiqueta}`}
           aria-label="Mover después"
           title="Mover después"
@@ -103,7 +177,8 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
           className={boton}
         >
           <ChevronRight size={15} strokeWidth={1.9} />
-        </button>
+          </button>
+        )}
         <button
           data-testid={`duplicar-${etiqueta}`}
           aria-label="Duplicar plano"
@@ -132,6 +207,27 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
           <Trash2 size={14} strokeWidth={1.9} />
         </button>
       </div>
+
+      {!plano.escena_id && (
+        <div className="mt-2 border-t border-linea pt-2">
+          <p className="text-[12px] leading-[16px] text-aviso">
+            Sin escena: no entra en el montaje hasta que tenga una.
+          </p>
+          <select
+            data-testid={`mover-a-escena-${etiqueta}`}
+            defaultValue=""
+            onChange={(e) => e.target.value && acciones.moverAEscena(plano.id, e.target.value)}
+            className="mt-1 w-full rounded-control border border-linea bg-superficie px-2 py-1 text-[13px] leading-[18px] text-tinta focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+          >
+            <option value="">Mover a escena…</option>
+            {acciones.escenas.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.titulo}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 }

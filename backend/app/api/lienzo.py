@@ -183,8 +183,46 @@ async def _avisos_encadenado(escena_id: str, antes: list[str]) -> list[dict]:
     return avisos
 
 
+def _estado_produccion(plano: dict, numero_tomas: int, en_curso: bool) -> str:
+    """Estado derivado del plano (§3.2)."""
+    if plano.get("toma_elegida_id"):
+        return "resuelto"
+    if en_curso:
+        return "en_produccion"
+    if numero_tomas:
+        return "con_tomas"
+    d = plano.get("direccion") or {}
+    dirigido = bool(plano.get("que_se_muestra")) and any(
+        d.get(k) for k in ("encuadre", "encuadre_inicio", "angulo", "angulo_inicio")
+    )
+    return "dirigido" if dirigido else "sin_dirigir"
+
+
 async def _vista_plano(plano: dict, reparto: list[dict]) -> dict:
     pendientes = [c for c in plano.get("correcciones") or [] if c["estado"] == "pendiente"]
+    tomas = await db.tomas.find(
+        {"plano_id": plano["id"], "es_exploracion": {"$ne": True}}
+    ).sort("numero", 1).to_list(500)
+    exploraciones = await db.tomas.count_documents(
+        {"plano_id": plano["id"], "es_exploracion": True}
+    )
+    elegida = next((t for t in tomas if t["_id"] == plano.get("toma_elegida_id")), None)
+    medio = await db.medios.find_one({"_id": (elegida or {}).get("medio_id") or ""})
+    viva = await db.operaciones.find_one(
+        {
+            "destino.id": plano["id"],
+            "estado": {"$in": ["autorizada", "enviada", "en_curso"]},
+        }
+    )
+    incierta = await db.operaciones.find_one({"destino.id": plano["id"], "estado": "incierta"})
+    guion = await db.guiones.find_one({"pieza_id": plano["pieza_id"]})
+    versiones = {r["elemento_id"]: r["version_ficha"] for r in reparto}
+    desactualizado = False
+    if elegida:
+        usadas = elegida.get("fichas_usadas") or {}
+        desactualizado = any(
+            versiones.get(el, v) != v for el, v in usadas.items()
+        ) or int(elegida.get("revision_guion") or 0) < int((guion or {}).get("revision") or 0)
     return {
         **plano,
         "resumen_direccion": _resumen_direccion(plano),
@@ -192,6 +230,15 @@ async def _vista_plano(plano: dict, reparto: list[dict]) -> dict:
         "encadenado_sin_anterior": bool(plano.get("plano_anterior_encadenado"))
         and plano.get("orden") == 0,
         "continuidad": await _continuidad(plano, reparto),
+        "numero_tomas": len(tomas),
+        "numero_exploraciones": exploraciones,
+        "toma_elegida": (
+            {**sin_id(elegida), "medio": sin_id(medio) if medio else None} if elegida else None
+        ),
+        "estado_produccion": _estado_produccion(plano, len(tomas), bool(viva)),
+        "operacion_viva": sin_id(viva) if viva else None,
+        "operacion_incierta": sin_id(incierta) if incierta else None,
+        "desactualizado": desactualizado,
     }
 
 

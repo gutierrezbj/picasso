@@ -1,9 +1,11 @@
 import React, { useRef, useState } from "react";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, Wand2 } from "lucide-react";
 import Boton from "../Boton";
 import Selector from "../Selector";
 import { Campo, Entrada, AreaTexto } from "../Campo";
 import PanelPrompt from "./PanelPrompt";
+import PanelProducir from "./PanelProducir";
+import PanelTomas from "./PanelTomas";
 import { useAutoguardado } from "../../estado/useAutoguardado";
 import { useGuardado } from "../../estado/GuardadoContext";
 import { api } from "../../api/cliente";
@@ -12,6 +14,9 @@ import type { Direccion, OpcionesDireccion, Plano, RepartoLienzo } from "../../t
 interface Props {
   plano: Plano;
   etiqueta: string;
+  relacion: string;
+  moneda: string;
+  pestanaInicial?: Pestana;
   reparto: RepartoLienzo[];
   opciones: OpcionesDireccion;
   urlMedio: (medioId: string) => string;
@@ -27,7 +32,7 @@ interface Editable {
   plano_anterior_encadenado: boolean;
 }
 
-type Pestana = "direccion" | "continuidad" | "correcciones";
+type Pestana = "direccion" | "producir" | "tomas" | "continuidad" | "correcciones";
 
 const CAMPOS_IMAGEN: (keyof Direccion)[] = ["encuadre", "angulo"];
 const CAMPOS_VIDEO: (keyof Direccion)[] = [
@@ -59,12 +64,15 @@ const BASE_OPCION = (clave: keyof Direccion): string =>
 export default function FichaPlano({
   plano,
   etiqueta,
+  relacion,
+  moneda,
+  pestanaInicial = "direccion",
   reparto,
   opciones,
   urlMedio,
   onCambiado,
 }: Props) {
-  const [pestana, setPestana] = useState<Pestana>("direccion");
+  const [pestana, setPestana] = useState<Pestana>(pestanaInicial);
   const [datos, setDatos] = useState<Editable>({
     que_se_muestra: plano.que_se_muestra,
     modalidad: plano.modalidad,
@@ -75,6 +83,8 @@ export default function FichaPlano({
   });
   const [nuevaCorreccion, setNuevaCorreccion] = useState("");
   const [historial, setHistorial] = useState(false);
+  const [produciendo, setProduciendo] = useState<string | null>(null);
+  const [errorCorreccion, setErrorCorreccion] = useState<string | null>(null);
   const sello = useRef(plano.updated_at);
   const g = useGuardado();
 
@@ -172,6 +182,8 @@ export default function FichaPlano({
     <div data-testid="ficha-plano">
       <div className="flex flex-wrap gap-1.5 border-b border-linea pb-3">
         {pestanaBtn("direccion", "Dirección")}
+        {pestanaBtn("producir", "Producir")}
+        {pestanaBtn("tomas", `Tomas${plano.numero_tomas ? ` (${plano.numero_tomas})` : ""}`)}
         {pestanaBtn("continuidad", "Continuidad")}
         {pestanaBtn("correcciones", `Correcciones${pendientes.length ? ` (${pendientes.length})` : ""}`)}
       </div>
@@ -363,6 +375,12 @@ export default function FichaPlano({
         </div>
       )}
 
+      {pestana === "producir" && <PanelProducir plano={plano} onCambiado={onCambiado} />}
+
+      {pestana === "tomas" && (
+        <PanelTomas plano={plano} relacion={relacion} moneda={moneda} onCambiado={onCambiado} />
+      )}
+
       {pestana === "continuidad" && (
         <div className="mt-4 flex flex-col gap-5" data-testid="pestana-continuidad-contenido">
           {plano.continuidad.length === 0 && (
@@ -429,9 +447,15 @@ export default function FichaPlano({
             Guardar corrección
           </Boton>
           <p className="mt-2 text-[12px] leading-[16px] text-tinta2">
-            En la Fase 5 se guarda como pendiente. En la Fase 6 se convierte en una operación
-            con coste.
+            Al producirla se convierte en una operación con coste: sale una toma nueva, la
+            original se conserva y la corrección se marca «Hecha» al elegirla.
           </p>
+
+          {errorCorreccion && (
+            <p data-testid="error-correccion" className="mt-2 text-[13px] leading-[18px] text-aviso">
+              {errorCorreccion}
+            </p>
+          )}
 
           <ul className="mt-5 flex flex-col gap-3" data-testid="lista-correcciones">
             {pendientes.length === 0 && (
@@ -444,7 +468,38 @@ export default function FichaPlano({
                 className="rounded-card border border-linea bg-superficie2 p-3"
               >
                 <p className="text-[14px] leading-[20px] text-tinta">{c.texto}</p>
-                <div className="mt-2 flex gap-2">
+                {c.toma_id && (
+                  <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
+                    Ya hay una toma de esta corrección: elígela en «Tomas» y se marcará hecha.
+                  </p>
+                )}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Boton
+                    pequeno
+                    data-testid={`producir-correccion-${c.id}`}
+                    disabled={produciendo === c.id}
+                    onClick={async () => {
+                      setProduciendo(c.id);
+                      setErrorCorreccion(null);
+                      try {
+                        const prep = await api.prepararCorreccion(c.id, {
+                          destino_id: plano.id,
+                          accion: plano.modalidad === "video" ? "generar_video" : "editar_imagen",
+                          modelo: plano.modalidad === "video" ? "sim-video" : "sim-editar",
+                        });
+                        await api.autorizarOperacion(prep.operacion.id, true);
+                        await onCambiado();
+                      } catch (e) {
+                        setErrorCorreccion(
+                          e instanceof Error ? e.message : "No se ha podido producir la corrección."
+                        );
+                      } finally {
+                        setProduciendo(null);
+                      }
+                    }}
+                  >
+                    <Wand2 size={14} strokeWidth={1.9} /> Producir la corrección
+                  </Boton>
                   <Boton
                     pequeno
                     variante="secundario"

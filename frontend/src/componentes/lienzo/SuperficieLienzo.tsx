@@ -12,7 +12,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Link } from "react-router-dom";
-import { LayoutGrid, Link2, Link2Off, FileText } from "lucide-react";
+import { LayoutGrid, Link2, Link2Off, FileText, Receipt } from "lucide-react";
+import PanelRegistro from "../motor/PanelRegistro";
 import Boton from "../Boton";
 import DialogoConfirmar from "../DialogoConfirmar";
 import FichaContextual from "./FichaContextual";
@@ -38,6 +39,7 @@ import AvisosEncadenado from "./AvisosEncadenado";
 interface Props {
   vista: VistaLienzo;
   relacion: string;
+  moneda: string;
   opciones: OpcionesDireccion;
   proyectoId: string;
   rutaGuion: string;
@@ -55,11 +57,22 @@ export default function SuperficieLienzo(props: Props) {
   );
 }
 
-function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePaso, onCambiado }: Props) {
+function Superficie({
+  vista,
+  relacion,
+  moneda,
+  opciones,
+  proyectoId,
+  rutaGuion,
+  rutaDePaso,
+  onCambiado,
+}: Props) {
   const { flowToScreenPosition } = useReactFlow();
   const [layout, setLayout] = useState<LayoutLienzo>(vista.layout);
   const [seleccion, setSeleccion] = useState<string[]>(vista.layout.seleccion || []);
   const [ficha, setFicha] = useState<string | null>(null);
+  const [pestanaFicha, setPestanaFicha] = useState<"direccion" | "producir" | "tomas">("direccion");
+  const [registro, setRegistro] = useState(false);
   const [storyboard, setStoryboard] = useState<number | null>(null);
   const [recolocar, setRecolocar] = useState(false);
   const [avisos, setAvisos] = useState<{
@@ -86,6 +99,7 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
   const clave = JSON.stringify([
     vista.escenas.map((e) => [e.escena.id, e.planos.map((p) => [p.id, p.updated_at])]),
     vista.reparto.map((r) => r.id),
+    vista.planos_sin_escena.map((p) => [p.id, p.updated_at]),
     layout.posiciones,
     layout.grupos_plegados,
     seleccion,
@@ -95,6 +109,16 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
     setNodos(construirNodos(vista, layout, seleccion));
     // eslint-disable-next-line
   }, [clave]);
+
+  // Estados en vivo por SSE (§15.1): solo del proyecto que se está viendo.
+  useEffect(() => {
+    const fuente = new EventSource(api.urlEventos(proyectoId));
+    fuente.onmessage = () => {
+      onCambiado();
+    };
+    return () => fuente.close();
+    // eslint-disable-next-line
+  }, [proyectoId]);
 
   const conexiones = useMemo(() => construirConexiones(vista, layout), [vista, layout]);
 
@@ -128,11 +152,20 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
     verEnGuion: () => {
       window.location.assign(rutaGuion);
     },
-    abrirFicha: (nodoId) => {
+    abrirFicha: (nodoId, pestana) => {
       setSeleccion([nodoId]);
       guardar({ seleccion: [nodoId] });
+      setPestanaFicha(pestana || "direccion");
       setFicha(nodoId);
     },
+    moverAEscena: async (planoId, escenaId) => {
+      await api.moverPlanoAEscena(planoId, escenaId);
+      await onCambiado();
+    },
+    escenas: vista.escenas.map((e) => ({
+      id: e.escena.id,
+      titulo: e.escena.titulo || "Escena sin título",
+    })),
     moverPlano: async (planoId, direccion) => {
       const r = await api.moverPlano(planoId, { direccion });
       await onCambiado();
@@ -226,6 +259,14 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
         >
           <FileText size={15} strokeWidth={1.9} /> Editar en el guion
         </Link>
+        <Boton
+          pequeno
+          variante="secundario"
+          data-testid="btn-panel-registro"
+          onClick={() => setRegistro(true)}
+        >
+          <Receipt size={15} strokeWidth={1.9} /> Registro
+        </Boton>
         <span className="ml-auto text-[13px] leading-[18px] text-tinta2" data-testid="lienzo-resumen">
           {vista.escenas.length} {vista.escenas.length === 1 ? "escena" : "escenas"} ·{" "}
           {planos.length} {planos.length === 1 ? "plano" : "planos"} · revisión {vista.guion.revision}
@@ -260,8 +301,11 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
           onCerrar={() => setFicha(null)}
         >
           <FichaPlano
-            key={planoFicha.id}
+            key={planoFicha.id + pestanaFicha}
+            pestanaInicial={pestanaFicha}
             plano={planoFicha}
+            relacion={relacion}
+            moneda={moneda}
             etiqueta={etiquetaDe(planoFicha.id)}
             reparto={vista.reparto}
             opciones={opciones}
@@ -325,6 +369,21 @@ function Superficie({ vista, relacion, opciones, proyectoId, rutaGuion, rutaDePa
           }
           onCerrar={() => setAvisos(null)}
         />
+      )}
+
+      {registro && (
+        <PanelRegistro proyectoId={proyectoId} onCerrar={() => setRegistro(false)} />
+      )}
+
+      {vista.planos_sin_escena.length > 0 && (
+        <div
+          data-testid="aviso-planos-sin-escena"
+          className="border-t border-linea bg-superficie2 px-6 py-2 text-[13px] leading-[18px] text-tinta2"
+        >
+          {vista.planos_sin_escena.length}{" "}
+          {vista.planos_sin_escena.length === 1 ? "plano sin escena" : "planos sin escena"} al
+          final del lienzo: no entran en el montaje hasta que tengan escena.
+        </div>
       )}
 
       <DialogoConfirmar

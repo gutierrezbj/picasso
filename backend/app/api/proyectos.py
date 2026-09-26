@@ -52,17 +52,22 @@ async def crear_proyecto(espacio_id: str, datos: ProyectoCrear):
 
 @router.get("/proyectos/{proyecto_id}")
 async def obtener_proyecto(proyecto_id: str):
+    from app.motor import operaciones as motor
+
     doc = await db.proyectos.find_one({"_id": proyecto_id})
     if not doc:
         raise HTTPException(404, "Proyecto no encontrado")
     p = sin_id(doc)
     esp = await db.espacios.find_one({"_id": p["espacio_id"]})
     estado = recorridos.calcular(p, await completado_de(db, p))
+    presupuesto = await motor.presupuesto(proyecto_id, None)
     return {
         "proyecto": p,
         "espacio": sin_id(esp) if esp else None,
         "recorrido": estado,
-        "gasto": 0.0,
+        "gasto": presupuesto["gasto"]["total"],
+        "gasto_detalle": presupuesto["gasto"],
+        "presupuesto": presupuesto,
         "moneda": await _moneda(),
     }
 
