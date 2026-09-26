@@ -94,6 +94,11 @@ async def subir_medio(
     if clase == ClaseMedio.imagen:
         medio.ancho, medio.alto = _medidas(datos)
     medio.ruta = almacen.guardar(espacio_id, medio.id, extension, datos)
+    if clase in (ClaseMedio.audio, ClaseMedio.video):
+        # La duración real la necesitan el montaje y el paquete (§11).
+        from app.motor.ficheros import duracion_de
+
+        medio.duracion_s = duracion_de(almacen.ruta_absoluta(medio.ruta))
 
     doc = medio.model_dump(mode="json")
     doc["_id"] = doc["id"]
@@ -123,6 +128,8 @@ async def borrar_medio(medio_id: str):
         elementos = await db.elementos.find({"_id": {"$in": ids}}).to_list(200)
         nombres = ", ".join(e["nombre"] for e in elementos)
         raise HTTPException(409, f"No se puede borrar: se usa como referencia en {nombres}.")
+    if await db.pistas_audio.find_one({"medio_id": medio_id}):
+        raise HTTPException(409, "No se puede borrar: se usa como música o ambiente en una pieza.")
     almacen.borrar(doc["ruta"])
     await db.medios.delete_one({"_id": medio_id})
     return {"ok": True}

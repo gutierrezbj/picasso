@@ -19,6 +19,7 @@ from app.api import (
     medios,
     motor,
     piezas,
+    pistas,
     proyectos,
     reparto,
     voces,
@@ -50,6 +51,7 @@ app.include_router(guiones.router)
 app.include_router(lienzo.router)
 app.include_router(motor.router)
 app.include_router(voces.router)
+app.include_router(pistas.router)
 
 
 @app.on_event("startup")

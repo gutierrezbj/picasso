@@ -765,6 +765,39 @@ class VozDialogoEditar(BaseModel):
     desfase_s: Optional[float] = Field(default=None, ge=0)
 
 
+class CapaAudio(str, Enum):
+    musica = "musica"
+    ambiente = "ambiente"
+
+
+class PistaAudio(BaseModel):
+    """Música o ambiente importados a una pieza (§3.1 «PistaAudio», §11.2)."""
+
+    id: str = Field(default_factory=nuevo_id)
+    pieza_id: str
+    capa: CapaAudio
+    medio_id: str
+    nombre: str = ""
+    inicio_s: float = Field(default=0, ge=0)  # desde el inicio de la pieza
+    volumen_db: float = Field(default=0, ge=-60, le=12)
+    created_at: str = Field(default_factory=ahora)
+    updated_at: str = Field(default_factory=ahora)
+
+
+class PistaAudioCrear(BaseModel):
+    capa: CapaAudio
+    medio_id: str
+    nombre: Optional[str] = None
+    inicio_s: float = Field(default=0, ge=0)
+    volumen_db: float = Field(default=0, ge=-60, le=12)
+
+
+class PistaAudioEditar(BaseModel):
+    nombre: Optional[str] = None
+    inicio_s: Optional[float] = Field(default=None, ge=0)
+    volumen_db: Optional[float] = Field(default=None, ge=-60, le=12)
+
+
 class PrepararOperacion(BaseModel):
     """Cuerpo de `POST /api/operaciones` (§9.4.1 y 2). No envía nada."""
 

@@ -42,6 +42,7 @@ SCRIPTS = [
     "p8_motor",
     "p9_reinicio",
     "p10_voces",
+    "p11_pistas",
 ]
 
 
