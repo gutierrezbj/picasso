@@ -630,6 +630,13 @@ Reglas:
 - `docs/referencias/` guarda proyectos de referencia descritos en texto (idea, fichas, escenas, planos con su dirección, diálogos). Sirven para recrear siempre el mismo caso y comparar el paquete entre versiones.
 - El primero es el corto de Marta (`corto-marta.md`), construido durante la validación de las Fases 1 a 6.
 
+### 11.5 Marca del estudio
+
+- El Estudio guarda una marca: sello o logo (SVG o PNG con transparencia, en versión clara y oscura), color de fondo, color de tinta y web. Se sube una vez en P10 y vale para todos los espacios.
+- Al exportar, casilla "Añadir cierre con la marca" (y, aparte, "Añadir portada"): una tarjeta de 3 s con el sello centrado y la web debajo, que entra con un fundido de 0,5 s. Se genera con ffmpeg a los `fps`, la resolución y el formato del proyecto, como un clip más (`video/99_cierre.mp4`) al final de la línea de tiempo y del `previo.mp4`.
+- La marca no se pone nunca encima de los planos (ni esquinas ni marcas de agua propias): solo en portada y cierre.
+- Origen: la presentación y el vídeo de OverWatch para Dubái (01-10), donde el cierre con el sello sobre el color de fondo funcionó y el logo en cada esquina se veía feo.
+
 ---
 
 ## 12. Guardado
@@ -690,6 +697,9 @@ Operaciones, catálogo, costes, SSE, tomas, comparación, elegir toma, editar im
 Voces por diálogo (§11.1), `fps` del proyecto, pistas de música y ambiente, P8 (§11.2) y paquete de edición (§11.3).
 ✔ En un proyecto nuevo creado por la interfaz: producir voces de dos diálogos, importar una música, exportar el paquete y abrir `timeline.fcpxml` en DaVinci Resolve en el Mac de Juan: cada clip y cada voz en su pista, en su sitio y con la duración correcta. La fase no se cierra hasta que Juan lo confirme en su DaVinci.
 ✔ La comprobación automática del paquete pasa en la base de pruebas.
+
+**F7b · Marca del estudio** (§11.5)
+✔ Subir el kit en P10, exportar con cierre y portada y ver las dos tarjetas en el `previo.mp4` y en DaVinci, a los fps y el formato del proyecto, sin nada encima de los planos.
 
 **F8 · Impacto**
 Todas las reglas del §13.
@@ -794,6 +804,7 @@ Todas las escrituras llevan `updated_at` esperado para detectar conflictos (409)
 - Formatos predefinidos más allá del genérico por tipo.
 - Plantillas, galerías de inspiración o contenido de ejemplo.
 - Modo oscuro (se valorará después).
+- Quitar marcas de agua de material de terceros (se hizo a mano para OverWatch; no es función del producto).
 
 ---
 
