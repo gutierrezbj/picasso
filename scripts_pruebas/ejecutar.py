@@ -62,6 +62,7 @@ def levantar() -> subprocess.Popen:
         "DB_NAME": DB_PRUEBAS,
         "DB_NAME_PRUEBAS": DB_PRUEBAS,
         "DATA_DIR": str(DATA_DIR),
+        "ENTREGAS_HOST": "",
     }
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(

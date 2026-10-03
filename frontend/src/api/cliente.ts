@@ -319,6 +319,7 @@ export const api = {
   exportar: (piezaId: string, datos: { alternativas: boolean; rutas: string; carpeta_destino?: string }) =>
     peticion<Exportacion>(`/piezas/${piezaId}/exportar`, { method: "POST", body: JSON.stringify(datos) }),
   exportacion: (id: string) => peticion<Exportacion>(`/exportaciones/${id}`),
+  carpetaEntregas: () => peticion<{ carpeta: string | null }>(`/exportaciones/entregas`),
   exportaciones: (piezaId: string) => peticion<Exportacion[]>(`/piezas/${piezaId}/exportaciones`),
   urlExportacion: (id: string) => `${BASE}/exportaciones/${id}/archivo`,
   montaje: (piezaId: string) => peticion<VistaMontaje>(`/piezas/${piezaId}/montaje`),

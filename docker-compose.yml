@@ -35,8 +35,11 @@ services:
       KIE_API_KEY: ${KIE_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ENTREGAS_HOST: ${ENTREGAS_HOST:-}
+      ENTREGAS_DIR: /entregas
     volumes:
       - datos_medios:/datos
+      - ${ENTREGAS_HOST:-./entregas}:/entregas
     ports:
       - "8001:8001"
     healthcheck:

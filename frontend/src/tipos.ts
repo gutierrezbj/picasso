@@ -665,6 +665,7 @@ export interface Exportacion {
   avisos: string[];
   nombre_archivo?: string;
   tamano_bytes?: number;
+  entregado_en?: string | null;
   opciones: { alternativas: boolean; rutas: "relativas" | "absolutas"; carpeta_destino: string | null };
   created_at: string;
 }

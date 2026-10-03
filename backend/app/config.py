@@ -17,6 +17,8 @@ class Config:
     MEDIA_DIR = Path(os.environ["DATA_DIR"]) / "media"
     MONEDA = os.environ.get("MONEDA", "USD")
     PRESUPUESTO_POR_DEFECTO = float(os.environ.get("PRESUPUESTO_POR_DEFECTO") or 0)
+    ENTREGAS_HOST = (os.environ.get("ENTREGAS_HOST") or "").rstrip("/") or None
+    ENTREGAS_DIR = Path(os.environ.get("ENTREGAS_DIR") or "/entregas")
 
 
 config = Config()

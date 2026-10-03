@@ -22,7 +22,7 @@ RAIZ = Path(config.DATA_DIR) / "exportaciones"
 
 class PedirExportacion(BaseModel):
     alternativas: bool = False
-    rutas: Literal["relativas", "absolutas"] = "relativas"
+    rutas: Optional[Literal["relativas", "absolutas"]] = None
     carpeta_destino: Optional[str] = None  # solo con rutas absolutas
 
 
@@ -35,16 +35,23 @@ async def _trabajar(exp_id: str, pieza_id: str, datos: PedirExportacion) -> None
     try:
         raiz = RAIZ / exp_id
         raiz.mkdir(parents=True, exist_ok=True)
+        entregar = (
+            config.ENTREGAS_DIR
+            if config.ENTREGAS_HOST and datos.rutas == "absolutas"
+            and (datos.carpeta_destino or "").rstrip("/") == config.ENTREGAS_HOST
+            else None
+        )
         zip_ruta, manifiesto = await paquete.generar(
             pieza_id, raiz, alternativas=datos.alternativas, rutas=datos.rutas,
-            carpeta_destino=datos.carpeta_destino, progreso=progreso,
+            carpeta_destino=datos.carpeta_destino, progreso=progreso, entregar_en=entregar,
         )
         await db.exportaciones.update_one(
             {"_id": exp_id},
             {"$set": {
                 "estado": "lista", "progreso": 100, "paso": "Listo", "archivo": str(zip_ruta),
                 "nombre_archivo": zip_ruta.name, "tamano_bytes": zip_ruta.stat().st_size,
-                "avisos": manifiesto.get("avisos", []), "updated_at": ahora(),
+                "avisos": manifiesto.get("avisos", []), "entregado_en": manifiesto.get("entregado_en"),
+                "updated_at": ahora(),
             }},
         )
     except Exception as e:  # noqa: BLE001 — se muestra al usuario tal cual
@@ -58,6 +65,10 @@ async def exportar(pieza_id: str, datos: PedirExportacion):
     pieza = await db.piezas.find_one({"_id": pieza_id})
     if not pieza:
         raise HTTPException(404, "Pieza no encontrada")
+    if datos.rutas is None:
+        datos.rutas = "absolutas" if config.ENTREGAS_HOST else "relativas"
+    if datos.rutas == "absolutas" and not (datos.carpeta_destino or "").strip() and config.ENTREGAS_HOST:
+        datos.carpeta_destino = config.ENTREGAS_HOST
     if datos.rutas == "absolutas" and not (datos.carpeta_destino or "").strip():
         raise HTTPException(422, "Con rutas absolutas hay que decir en qué carpeta se va a descomprimir.")
     en_marcha = await db.exportaciones.find_one({"pieza_id": pieza_id, "estado": "en_curso"})
@@ -72,6 +83,11 @@ async def exportar(pieza_id: str, datos: PedirExportacion):
     await db.exportaciones.insert_one(doc)
     asyncio.create_task(_trabajar(exp_id, pieza_id, datos))
     return sin_id(doc)
+
+
+@router.get("/exportaciones/entregas")
+async def carpeta_de_entregas():
+    return {"carpeta": config.ENTREGAS_HOST}
 
 
 @router.get("/exportaciones/{exp_id}")

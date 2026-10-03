@@ -191,7 +191,7 @@ def _leeme(nombre: str, fps: int, ancho: int, alto: int, rutas: str, avisos: lis
         "",
         "## DaVinci Resolve",
         "",
-        "1. Descomprime el ZIP y no muevas nada de dentro de la carpeta.",
+        "1. Si lo descargaste como ZIP, descomprímelo en la carpeta indicada al exportar y no muevas nada de dentro.",
         "2. En DaVinci: Archivo → Importar → Línea de tiempo… y elige `timeline.fcpxml`.",
         f"3. Crea el proyecto a {fps} fps antes de importar (el formato de la secuencia va en el archivo).",
         "4. Si algún clip sale sin enlazar, usa «Reenlazar medios» y apunta a esta carpeta.",
@@ -295,6 +295,7 @@ async def generar(
     rutas: str,
     carpeta_destino: Optional[str],
     progreso: Progreso,
+    entregar_en: Optional[Path] = None,
 ) -> tuple[Path, dict[str, Any]]:
     """Genera el paquete en `raiz` y devuelve la ruta del ZIP y el manifiesto."""
     await progreso(2, "Leyendo el montaje")
@@ -466,7 +467,8 @@ async def generar(
     (carpeta / "guion.md").write_text(_guion_md(escenas, linea["revision_guion"], nombres), encoding="utf-8")
 
     await progreso(80, "Escribiendo la línea de tiempo")
-    base_absoluta = str(Path(carpeta_destino) / nombre) if rutas == "absolutas" and carpeta_destino else None
+    subcarpeta = slug(proy["nombre"])
+    base_absoluta = str(Path(carpeta_destino) / subcarpeta / nombre) if rutas == "absolutas" and carpeta_destino else None
     (carpeta / "timeline.fcpxml").write_text(
         fcpxml.construir(proyecto=f"{proy['nombre']} · {nombre_pieza}", fps=fps, ancho=ancho, alto=alto,
                          elementos=elementos, base_absoluta=base_absoluta),
@@ -492,10 +494,16 @@ async def generar(
     def comprimir() -> None:
         with zipfile.ZipFile(zip_ruta, "w", zipfile.ZIP_DEFLATED) as z:
             # Las carpetas vacías también van: la estructura es siempre la misma (§11.3).
-            z.write(carpeta, carpeta.relative_to(raiz))
+            z.write(carpeta, Path(subcarpeta) / carpeta.relative_to(raiz))
             for f in sorted(carpeta.rglob("*")):
-                z.write(f, f.relative_to(raiz))
+                z.write(f, Path(subcarpeta) / f.relative_to(raiz))
 
     await asyncio.to_thread(comprimir)
+    if entregar_en is not None:
+        await progreso(98, "Guardando en tu carpeta de entregas")
+        destino = entregar_en / subcarpeta / nombre
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        await asyncio.to_thread(shutil.move, str(carpeta), str(destino))
+        manifiesto["entregado_en"] = str(Path(carpeta_destino) / subcarpeta / nombre)
     shutil.rmtree(carpeta, ignore_errors=True)
     return zip_ruta, manifiesto

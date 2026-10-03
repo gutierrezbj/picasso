@@ -60,7 +60,7 @@ ok(zip_bytes[:2] == b"PK", "se descarga un ZIP")
 
 with tempfile.TemporaryDirectory() as tmp:
     zipfile.ZipFile(io.BytesIO(zip_bytes)).extractall(tmp)
-    raiz = next(Path(tmp).iterdir())
+    raiz = next(next(Path(tmp).iterdir()).iterdir())
     for sub in ("video", "imagen", "audio/voces", "audio/musica", "audio/ambiente", "fichas", "alternativas"):
         ok((raiz / sub).is_dir(), f"carpeta {sub}/")
     for fijo in ("timeline.fcpxml", "previo.mp4", "guion.md", "LEEME.md", "manifiesto.json"):
@@ -101,7 +101,7 @@ zip2 = requests.get(f"{API}/api/exportaciones/{e2['id']}/archivo", timeout=60).c
 with zipfile.ZipFile(io.BytesIO(zip2)) as z:
     nombre = next(n for n in z.namelist() if n.endswith("timeline.fcpxml"))
     xml2 = ElementTree.fromstring(z.read(nombre))
-    carpeta = nombre.split("/")[0]
+    carpeta = "/".join(nombre.split("/")[:2])
 srcs2 = [m.get("src") for m in xml2.iter("media-rep")]
 ok(all(s.startswith(f"file:///Users/prueba/Movies/{carpeta}/") for s in srcs2),
    "con rutas absolutas apuntan a la carpeta indicada")

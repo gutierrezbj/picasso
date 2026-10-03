@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Download, PackageCheck } from "lucide-react";
 import Boton from "./Boton";
@@ -16,6 +16,14 @@ export default function PanelExportar({ piezaId, onExportado }: { piezaId: strin
   const [rutas, setRutas] = useState<"relativas" | "absolutas">("relativas");
   const [carpeta, setCarpeta] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { data: entregas } = useQuery({ queryKey: ["entregas"], queryFn: () => api.carpetaEntregas() });
+  const carpetaEntregas = entregas?.carpeta || null;
+  useEffect(() => {
+    if (carpetaEntregas) {
+      setRutas("absolutas");
+      setCarpeta(carpetaEntregas);
+    }
+  }, [carpetaEntregas]);
 
   const { data: lista, refetch } = useQuery({
     queryKey: ["exportaciones", piezaId],
@@ -71,15 +79,22 @@ export default function PanelExportar({ piezaId, onExportado }: { piezaId: strin
         <legend className="mb-1 text-[14px] font-medium text-tinta">Rutas de la línea de tiempo</legend>
         <label className="flex items-center gap-3 text-[16px] text-tinta">
           <input type="radio" name="rutas" checked={rutas === "relativas"} onChange={() => setRutas("relativas")} className="h-5 w-5 accent-[var(--color-acento)]" />
-          Relativas a la carpeta del paquete
+          Relativas a la carpeta del paquete: para CapCut o para mover la carpeta a otro equipo
         </label>
         <label className="flex items-center gap-3 text-[16px] text-tinta">
           <input type="radio" name="rutas" data-testid="exportar-absolutas" checked={rutas === "absolutas"} onChange={() => setRutas("absolutas")} className="h-5 w-5 accent-[var(--color-acento)]" />
-          Absolutas: por si el editor no encuentra los clips con las relativas
+          Absolutas: las que necesita DaVinci para encontrar los clips
         </label>
         {rutas === "absolutas" && (
           <div className="max-w-[560px]">
-            <Campo etiqueta="Carpeta donde vas a descomprimir el ZIP" ayuda="Por ejemplo /Users/juan/Movies/Picasso">
+            <Campo
+              etiqueta={carpetaEntregas ? "Carpeta de entregas" : "Carpeta donde vas a descomprimir el ZIP"}
+              ayuda={
+                carpetaEntregas && carpeta.trim().replace(/\/$/, "") === carpetaEntregas
+                  ? "El paquete se guarda ya descomprimido en esta carpeta, dentro de una subcarpeta con el nombre del proyecto."
+                  : "Por ejemplo /Users/juan/Movies/Picasso"
+              }
+            >
               <Entrada data-testid="exportar-carpeta" value={carpeta} onChange={(e) => setCarpeta(e.target.value)} placeholder="/Users/juan/Movies/Picasso" />
             </Campo>
           </div>
@@ -102,6 +117,12 @@ export default function PanelExportar({ piezaId, onExportado }: { piezaId: strin
                 <div className="h-full bg-acento transition-all" style={{ width: `${actual.progreso}%` }} />
               </div>
             </>
+          )}
+          {actual.estado === "lista" && actual.entregado_en && (
+            <p className="text-[14px] text-tinta" data-testid="entregado-en">
+              Guardado en <span className="font-mono">{actual.entregado_en}</span>. Importa su{" "}
+              <span className="font-mono">timeline.fcpxml</span> en DaVinci.
+            </p>
           )}
           {actual.estado === "lista" && (
             <a

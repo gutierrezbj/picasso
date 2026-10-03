@@ -15,3 +15,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .ruff_cache/
+
+# Carpeta de entregas por defecto si no se configura ENTREGAS_HOST
+entregas/
