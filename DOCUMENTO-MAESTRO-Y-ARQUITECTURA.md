@@ -564,7 +564,7 @@ Tabla filtrable por espacio, proyecto, estado y fecha: acción, modelo, proveedo
 
 ### 9.7 Plan de la Fase 9: proveedores reales (04-10-2026)
 
-Objetivo: que Picasso produzca de verdad. Usaremos como ejercicio guiado los cursos de Higgsfield Academy: "Blockbuster 4K" primero y "Corto animado" (ocho estilos) después. Cada lección se hace **dentro de Picasso**, y lo que la máquina no sepa hacer se apunta como mejora; no se resuelve a mano por fuera.
+Objetivo: que Picasso produzca de verdad. Usaremos como ejercicio guiado los cursos gratuitos de Higgsfield Academy, en este orden: 1) "Blockbuster 4K" (el recorrido completo de un corto); 2) "Crea un cortometraje animado" (un personaje en ocho estilos, para probar las versiones de ficha); 3) "Santiago: dirigir un cortometraje emocional" (la mesa de dirección, toma a toma); 4) "Anuncio cinematográfico E2E" (el tipo anuncio, con el producto como ficha). Antes de Santiago veremos "Cómo evaluar demos de cine con IA", para fijar los criterios con los que se comparan tomas y se escriben correcciones. Cada lección se hace **dentro de Picasso**, y lo que la máquina no sepa hacer se apunta como mejora; no se resuelve a mano por fuera.
 
 - **Orden de activación**, una modalidad cada vez y comprobada antes de pasar a la siguiente:
   1. `elevenlabs`: voz. Es la más barata, y con ella comprobamos el ciclo completo con dinero real.
