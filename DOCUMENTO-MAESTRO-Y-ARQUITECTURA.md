@@ -562,6 +562,22 @@ Tabla filtrable por espacio, proyecto, estado y fecha: acción, modelo, proveedo
   variante y las miniaturas de las referencias recibidas. Determinista por clave de
   idempotencia.
 
+### 9.7 Plan de la Fase 9: proveedores reales (04-10-2026)
+
+Objetivo: que Picasso produzca de verdad. Usaremos como ejercicio guiado los cursos de Higgsfield Academy: "Blockbuster 4K" primero y "Corto animado" (ocho estilos) después. Cada lección se hace **dentro de Picasso**, y lo que la máquina no sepa hacer se apunta como mejora; no se resuelve a mano por fuera.
+
+- **Orden de activación**, una modalidad cada vez y comprobada antes de pasar a la siguiente:
+  1. `elevenlabs`: voz. Es la más barata, y con ella comprobamos el ciclo completo con dinero real.
+  2. `kie`: imagen (fichas y planos de imagen).
+  3. `kie` / `fal`: vídeo, con primer y último fotograma.
+  4. `openai_images`: editar con referencias y correcciones.
+- **Modelos**: los que pida cada lección del curso, no un catálogo exhaustivo. Cada entrada del catálogo se verifica el mismo día contra la documentación del proveedor: endpoint, parámetros, duraciones, relaciones y precio. La entrada lleva `fuente` (URL) y `verificado_el` (fecha). Sin verificar no se puede elegir.
+- **Referencia**: los drivers de Escenda (`~/dev/escenda-studio`) ya hablaron con estas APIs de verdad. Se consultan como documentación de endpoints y trampas conocidas, pero el código se escribe nuevo sobre el contrato del §9.1.
+- **Claves**: se copian al `.env` local de Picasso desde la configuración de Escenda. Nunca van al repositorio. Sin clave, el proveedor aparece como "no configurado".
+- **Dinero**: el proyecto del curso arranca con un presupuesto explícito. El primer envío real de cada modelo lo autoriza Juan desde la interfaz, viendo la cifra. El coste real es el que devuelva el proveedor; si no lo devuelve, se registra el estimado y se marca como estimado.
+- **Pruebas**: hay tests de integración marcados `real` que no corren por defecto. La batería aislada sigue usando `simulado`.
+- **Resultados**: se descargan como `Medio` y la exportación los normaliza (§11.3). Formatos raros o duraciones distintas a las pedidas se avisan, no se corrigen en silencio.
+
 ---
 
 ## 10. Asistente
