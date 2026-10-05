@@ -831,3 +831,19 @@ Todas las escrituras llevan `updated_at` esperado para detectar conflictos (409)
 3. Modelos y precios reales del catálogo.
 4. Si la música se genera o solo se importa (en esta versión: solo se importa).
 5. Duración máxima por plano según modelo (la fija el catálogo).
+
+---
+
+## 18. Mejoras propuestas desde la formación (sin aprobar)
+
+Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y quede diseñada en su sección.
+
+| # | Mejora | Origen | Fase sugerida |
+| --- | --- | --- | --- |
+| 18.1 | **Catálogo con fortalezas y uso.** Cada modelo declara `bueno_para` (rostros realistas, estilizado, cinematográfico, lipsync, producto…) y `uso: exploracion | final`. Producir recomienda según el plano (personaje que habla, producto, estilo), sin elegir por el usuario. | AVB 01, regla 2 | F9 |
+| 18.2 | **Imagen antes que vídeo.** Por defecto, el plano de vídeo produce el fotograma de inicio en imagen, lo aprueba el director y solo entonces se anima. Se puede saltar. | AVB 01, reglas 3–4 | F9 |
+| 18.3 | **Diagnóstico de tomas.** Con el asistente real, «¿Por qué no funciona?» sobre una toma: mira la toma y la dirección del plano y propone una corrección (§7.7d) que el director acepta, edita o descarta. | AVB 01, regla 5 | Asistente real (§10) |
+| 18.4 | **Capa de efectos de sonido.** Cuarta capa de audio enganchada al plano igual que la voz (desfase dentro del plano), importada o generada. En el paquete va en `audio/efectos/` y en su propia pista del FCPXML. | AVB 01, regla 6 | Con F7b |
+| 18.5 | **Recetas.** «Guardar como receta» sobre una toma elegida: dirección, prompt resultante, modelo, ajustes y coste. Se reutilizan en otros planos y proyectos del estudio, y se adaptan antes de producir. Es el primer escalón del método Manual → Receta → Agente. | AVB 01, regla 7 | Tras F9 |
+| 18.6 | **Mencionar fichas con `@`.** Al escribir la dirección o una corrección, `@Marta` enlaza la ficha (con su versión del reparto) y la añade a las referencias de la operación. | AVB 01, regla 8 | Tras F9 |
+
