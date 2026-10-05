@@ -1,5 +1,5 @@
-# Despliegue en infraestructura propia (§15.1). AVISO: no se ha probado fuera
-# del entorno de previsualización (ver TRASPASO.md).
+# Despliegue en infraestructura propia (§15.1). Probado en local (Mac); el VPS
+# está pendiente (ver TRASPASO.md).
 #
 # Las variables salen de un `.env` en la raíz, según `backend/.env.example`.
 # Ninguna clave se escribe aquí.

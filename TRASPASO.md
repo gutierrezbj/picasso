@@ -1,7 +1,22 @@
 # TRASPASO.md
 
-Notas para llevarse el estudio a la infraestructura propia. Este documento se
-completará al terminar la **Fase 7**; por ahora solo recoge lo del despliegue.
+Cómo levantar y operar Picasso fuera de Emergent. Al día a 05-10-2026: F1–F7 construidas, F7 a falta del visto bueno de Juan en DaVinci y F9 diseñada (maestro §9.7).
+
+## Arranque en local
+
+```bash
+cd ~/dev/picasso && docker compose up -d --build
+```
+
+Interfaz en http://localhost:3000 y API en http://localhost:8001. Las pruebas aisladas corren con `bash scripts_pruebas/en_docker.sh`, sobre la base `picasso_pruebas` y sin tocar los datos reales.
+
+## Carpeta de entregas (§11.3)
+
+`ENTREGAS_HOST` en el `.env` (por ejemplo `/Users/juanguti/Movies/Picasso`) se monta en el contenedor como `/entregas`. Al exportar, el paquete se guarda ya descomprimido en `<entregas>/<proyecto>/<paquete>/`, con rutas absolutas. DaVinci Resolve 21 no importa rutas relativas. Sin esa variable (en el VPS) todo funciona como antes, con un ZIP y rutas relativas.
+
+## DaVinci
+
+En el Mac está instalado Resolve Studio 21.1, con la opción «External scripting: Local». El MCP de DaVinci (`~/dev/davinci-resolve-mcp`, registrado en Claude Code) importa el `timeline.fcpxml` del paquete y comprueba que los medios quedan enlazados.
 
 ## Despliegue con Docker (§15.1)
 
@@ -18,12 +33,9 @@ completará al terminar la **Fase 7**; por ahora solo recoge lo del despliegue.
 - Healthcheck del backend contra `GET /api/salud`; el frontend espera a que el
   backend esté sano.
 
-### Aviso honesto
+### Comprobado y pendiente
 
-**No se ha probado fuera de este entorno.** En la previsualización los servicios
-los lanza supervisor, no `docker-compose`, así que el compose y los Dockerfiles
-están escritos siguiendo el §15 pero sin ejecutarse aquí. Al primer despliegue en
-tu máquina o en el VPS habrá que comprobar, como mínimo:
+El compose funciona en el Mac de Juan desde el 26-09-2026 (los arreglos están en el historial de git). Falta desplegarlo en el VPS. Al hacerlo hay que comprobar, como mínimo:
 
 1. `docker compose build` y `docker compose up -d` sin errores.
 2. `GET /api/salud` y `GET /api/entorno` desde el host.
