@@ -577,6 +577,11 @@ Objetivo: que Picasso produzca de verdad. Usaremos como ejercicio guiado los cur
 - **Dinero**: el proyecto del curso arranca con un presupuesto explícito. El primer envío real de cada modelo lo autoriza Juan desde la interfaz, viendo la cifra. El coste real es el que devuelva el proveedor; si no lo devuelve, se registra el estimado y se marca como estimado.
 - **Pruebas**: hay tests de integración marcados `real` que no corren por defecto. La batería aislada sigue usando `simulado`.
 - **Resultados**: se descargan como `Medio` y la exportación los normaliza (§11.3). Formatos raros o duraciones distintas a las pedidas se avisan, no se corrigen en silencio.
+- **Diagnóstico de tomas (§18.3, aprobado el 07-10-2026)**: entra en esta fase porque, con dinero real, regenerar a ciegas cuesta. Para ello se hace real el asistente (§10) con Claude vía API (`ANTHROPIC_API_KEY`), de momento solo para esta tarea; el resto de tareas del asistente siguen en `simulado` hasta su turno.
+  - **Qué recibe**: la toma (la imagen, o 4 fotogramas espaciados si es vídeo, extraídos con ffmpeg), el prompt exacto enviado, el modelo, la dirección del plano, las fichas usadas con su versión, las tomas descartadas de ese plano con su nota, el fallo marcado por el director (tipificado o con sus palabras) y los negativos del proyecto.
+  - **Qué devuelve**: una `Propuesta` con causa probable (qué partes del prompt o de la dirección la provocan), qué falta y una corrección concreta. Se acepta, se edita o se descarta. Aceptada, queda como corrección del plano (§7.7d) y se produce de nuevo con autorización y precio, como siempre.
+  - **Coste**: la llamada al asistente también cuesta. Se estima y se muestra antes, y queda en el Registro como cualquier operación (acción `diagnosticar`, proveedor `anthropic`).
+  - **Aprendizaje**: si la toma producida tras la corrección se elige, el par fallo → corrección queda guardado como criterio del proyecto, consultable en los diagnósticos siguientes. Es el germen de las Recetas (§18.5).
 
 ---
 
@@ -724,6 +729,7 @@ Todas las reglas del §13.
 **F9 · Proveedores reales**
 `fal`, `kie`, `openai_images`, `elevenlabs`, con claves por entorno. Pruebas de integración marcadas y excluidas del test por defecto.
 ✔ Una operación real de cada tipo lanzada desde la interfaz con el coste mostrado y registrado.
+✔ Diagnosticar una toma real que salió mal: ver la causa y la corrección propuestas, aceptarla, producir de nuevo y comprobar en el Registro el coste del diagnóstico y el de la nueva toma.
 
 ---
 
@@ -842,7 +848,7 @@ Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y que
 | --- | --- | --- | --- |
 | 18.1 | **Catálogo con fortalezas y uso.** Cada modelo declara `bueno_para` (rostros realistas, estilizado, cinematográfico, lipsync, producto…) y `uso: exploracion | final`. Producir recomienda según el plano (personaje que habla, producto, estilo), sin elegir por el usuario. | AVB 01, regla 2 | F9 |
 | 18.2 | **Imagen antes que vídeo.** Por defecto, el plano de vídeo produce el fotograma de inicio en imagen, lo aprueba el director y solo entonces se anima. Se puede saltar. | AVB 01, reglas 3–4 | F9 |
-| 18.3 | **Diagnóstico de tomas.** Con el asistente real, «¿Por qué no funciona?» sobre una toma: mira la toma, el prompt enviado y la dirección del plano, y propone una corrección (§7.7d) que el director acepta, edita o descarta. Ofrece fallos tipificados como atajos (parece falso o plástico, le falta realismo, movimiento raro o gomoso, predecible, suena robótico). «Reintentar» ofrece primero «Diagnosticar»: no se regenera a ciegas. | AVB 01, regla 5; AVB 02, reglas 6–7 | Asistente real (§10) |
+| 18.3 | **Diagnóstico de tomas.** Con el asistente real, «¿Por qué no funciona?» sobre una toma: mira la toma, el prompt enviado y la dirección del plano, y propone una corrección (§7.7d) que el director acepta, edita o descarta. Ofrece fallos tipificados como atajos (parece falso o plástico, le falta realismo, movimiento raro o gomoso, predecible, suena robótico). «Reintentar» ofrece primero «Diagnosticar»: no se regenera a ciegas. | AVB 01, regla 5; AVB 02, reglas 6–7 | **APROBADA el 07-10-2026: se construye con la F9** |
 | 18.4 | **Capa de efectos de sonido.** Cuarta capa de audio enganchada al plano igual que la voz (desfase dentro del plano), importada o generada. En el paquete va en `audio/efectos/` y en su propia pista del FCPXML. | AVB 01, regla 6 | Con F7b |
 | 18.5 | **Recetas.** «Guardar como receta» sobre una toma elegida: dirección, prompt resultante, modelo, ajustes y coste. Se reutilizan en otros planos y proyectos del estudio, y se adaptan antes de producir. Es el primer escalón del método Manual → Receta → Agente. | AVB 01, regla 7 | Tras F9 |
 | 18.6 | **Mencionar fichas con `@`.** Al escribir la dirección o una corrección, `@Marta` enlaza la ficha (con su versión del reparto) y la añade a las referencias de la operación. | AVB 01, regla 8 | Tras F9 |
