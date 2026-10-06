@@ -306,7 +306,7 @@ No hay más. Un proyecto no aparece repetido en varias listas grandes. Si no hay
 
 1. **El encargo**: las restricciones que vienen de fuera.
    - *¿Dónde se va a publicar?* (`destino`, obligatorio), una de estas opciones: Reels, TikTok o Shorts → 9:16 · Feed de Instagram o Facebook → 4:5 · YouTube o web → 16:9 · Presentación o pantalla → 16:9 · Cine o festival → 16:9 · Varias plataformas, cuadrado → 1:1 · Otro. Al elegirlo, Picasso **propone** el `formato_video` del proyecto y lo aplica; el usuario puede cambiarlo justo debajo. El formato no se puede cambiar si el proyecto ya tiene tomas (409 que lo explica; el impacto completo es cosa de la F8).
-   - *Concretando* (`destino_detalle`, opcional): «portada de jrgblanco.com».
+   - *¿Dónde exactamente?* (`destino_detalle`, opcional): «portada de jrgblanco.com». Se llamó «Concretando» hasta que Juan preguntó qué era (07-10-2026).
    - *¿Para quién?* (`publico`), en todos los tipos.
    - *Duración*: corto y anuncio, en segundos (`duracion_objetivo_s` del proyecto); serie, la pregunta de capítulos del formato. Imagen no tiene duración.
 2. **Tu idea, tal cual** (`notas`, obligatorio): lo que tienes en la cabeza, sin ordenar. Debajo, según el tipo, la idea ordenada: corto con premisa y mundo; serie con premisa, arco general y mundo; anuncio con mensaje.
