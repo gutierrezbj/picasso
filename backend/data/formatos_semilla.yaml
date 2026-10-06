@@ -5,9 +5,7 @@
   nombre: Genérico (corto)
   tipos_aplicables: [corto]
   origen: sistema
-  preguntas_desarrollo:
-    - {clave: objetivo, pregunta: "¿Qué quieres que sienta o entienda quien lo vea?", ayuda: "En una frase."}
-    - {clave: duracion, pregunta: "¿Duración aproximada que buscas?", ayuda: "Orientativa."}
+  preguntas_desarrollo: []
   estructura_guion: []
 
 - id: generico-anuncio
@@ -16,15 +14,13 @@
   origen: sistema
   preguntas_desarrollo:
     - {clave: accion, pregunta: "¿Qué quieres que haga quien lo vea?", ayuda: "Llamada a la acción."}
-    - {clave: canal, pregunta: "¿Dónde se va a ver?", ayuda: "Contexto de uso."}
   estructura_guion: []
 
 - id: generico-imagen
   nombre: Genérico (imagen)
   tipos_aplicables: [imagen]
   origen: sistema
-  preguntas_desarrollo:
-    - {clave: uso, pregunta: "¿Para qué se usará la imagen?", ayuda: "Dónde y cómo."}
+  preguntas_desarrollo: []
   estructura_guion: []
 
 - id: generico-serie

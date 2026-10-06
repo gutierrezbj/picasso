@@ -19,7 +19,7 @@ TAREAS = {
 CLASES_ELEMENTO = {"personaje", "producto", "objeto", "escenario"}
 
 # Campos del Desarrollo que una propuesta puede rellenar.
-CAMPOS_VALIDOS = {"intencion", "publico", "mensaje", "tono", "premisa", "mundo", "arco_general", "notas"}
+CAMPOS_VALIDOS = {"intencion", "publico", "mensaje", "tono", "premisa", "mundo", "arco_general", "notas", "que_evitar", "destino_detalle"}
 
 
 CAMPOS_ESCENA_VALIDOS = {"titulo", "que_ocurre", "que_se_ve", "intencion", "sonido_previsto"}

@@ -21,7 +21,7 @@ corto:
     - clave: idea
       nombre: Idea
       construye: "Desarrollo: intención, premisa, tono, qué se quiere contar."
-      listo_cuando: "«Intención» y «premisa» rellenas y pulsas «Listo»."
+      listo_cuando: "Destino, tu idea, «Intención» y «premisa» rellenos y pulsas «Listo»."
       obligatorio: true
       pantalla: idea
       fase: 2
@@ -79,7 +79,7 @@ anuncio:
     - clave: idea
       nombre: Idea y mensaje
       construye: "Intención, mensaje, público, llamada a la acción, tono."
-      listo_cuando: "«Intención» y «mensaje» rellenos y pulsas «Listo»."
+      listo_cuando: "Destino, tu idea, «Intención» y «mensaje» rellenos y pulsas «Listo»."
       obligatorio: true
       pantalla: idea
       fase: 2
@@ -137,7 +137,7 @@ imagen:
     - clave: idea
       nombre: Idea
       construye: "Qué se quiere comunicar y para qué se usará la imagen."
-      listo_cuando: "«Intención» rellena y pulsas «Listo»."
+      listo_cuando: "Destino, tu idea e «Intención» rellenos y pulsas «Listo»."
       obligatorio: true
       pantalla: idea
       fase: 2
@@ -171,7 +171,7 @@ serie:
     - clave: premisa
       nombre: Premisa
       construye: "Premisa, tono, arco general."
-      listo_cuando: "«Premisa» y «arco general» rellenos y pulsas «Listo»."
+      listo_cuando: "Destino, tu idea, «premisa» y «arco general» rellenos y pulsas «Listo»."
       obligatorio: true
       pantalla: idea
       fase: 2

@@ -16,7 +16,24 @@ async def obtener_desarrollo(proyecto_id: str):
     doc = await db.desarrollos.find_one({"_id": proyecto_id})
     if not doc:
         return Desarrollo().model_dump()
-    return sin_id(doc)
+    return _recuperar_respuestas_antiguas(sin_id(doc))
+
+
+def _recuperar_respuestas_antiguas(des: dict) -> dict:
+    """Brief rediseñado (§6.1): las preguntas que repetían otra desaparecen y
+    su respuesta pasa a su sitio nuevo si ese sitio está vacío."""
+    resp = dict(des.get("respuestas_formato") or {})
+    for vieja in ("uso", "canal"):
+        texto = (resp.get(vieja) or "").strip()
+        if texto and not (des.get("destino_detalle") or "").strip():
+            des["destino_detalle"] = texto
+        resp.pop(vieja, None)
+    objetivo = (resp.pop("objetivo", None) or "").strip()
+    if objetivo and not (des.get("intencion") or "").strip():
+        des["intencion"] = objetivo
+    resp.pop("duracion", None)
+    des["respuestas_formato"] = resp
+    return des
 
 
 @router.put("/proyectos/{proyecto_id}/desarrollo")

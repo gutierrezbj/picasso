@@ -12,7 +12,9 @@ export function formatoMoneda(valor: number | null | undefined, moneda: string):
 
 /** «Corto · 16:9 · 25 fps»: qué es el proyecto, visible en la cabecera. */
 export function resumenProyecto(p: { tipo: string; formato_video: string; fps?: number }): string {
-  return [NOMBRE_TIPO[p.tipo] || p.tipo, p.formato_video, `${p.fps || 25} fps`].join(" · ");
+  const partes = [NOMBRE_TIPO[p.tipo] || p.tipo, p.formato_video];
+  if (p.tipo !== "imagen") partes.push(`${p.fps || 25} fps`);
+  return partes.join(" · ");
 }
 
 export const NOMBRE_TIPO: Record<string, string> = {

@@ -80,6 +80,14 @@ async def editar_proyecto(proyecto_id: str, datos: ProyectoEditar):
     if doc["updated_at"] != datos.updated_at:
         raise HTTPException(409, "El proyecto se ha modificado en otro sitio. Recarga o sobrescribe.")
     cambios = {k: v for k, v in datos.model_dump(exclude={"updated_at"}).items() if v is not None}
+    if "formato_video" in cambios and cambios["formato_video"] != doc.get("formato_video"):
+        piezas = [p["_id"] for p in await db.piezas.find({"proyecto_id": proyecto_id}, {"_id": 1}).to_list(500)]
+        planos = [p["_id"] for p in await db.planos.find({"pieza_id": {"$in": piezas}}, {"_id": 1}).to_list(5000)]
+        if planos and await db.tomas.count_documents({"plano_id": {"$in": planos}}, limit=1):
+            raise HTTPException(
+                409,
+                "El proyecto ya tiene tomas producidas en el formato actual. Cambiarlo afectaría a sus planos.",
+            )
     cambios["updated_at"] = ahora()
     await db.proyectos.update_one({"_id": proyecto_id}, {"$set": cambios})
     doc = await db.proyectos.find_one({"_id": proyecto_id})

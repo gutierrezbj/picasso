@@ -65,7 +65,7 @@ def _valores(plano: dict, continuidad: list[dict], desarrollo: dict | None) -> d
         "rasgos_fijos": " · ".join(fijos),
         "rasgos_variables": " · ".join(variables),
         "intencion_pieza": intencion,
-        "negativos": d.get("negativos") or "",
+        "negativos": ", ".join(t for t in (d.get("negativos"), des.get("que_evitar")) if t),
     }
 
 

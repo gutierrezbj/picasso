@@ -104,7 +104,7 @@ Fps = Literal[24, 25, 30]
 class ProyectoCrear(BaseModel):
     nombre: str
     tipo: TipoProyecto
-    formato_video: FormatoVideo
+    formato_video: FormatoVideo = "16:9"
     fps: Fps = 25
 
 
@@ -161,6 +161,9 @@ class AjustesEditar(BaseModel):
 
 
 class Desarrollo(BaseModel):
+    destino: Optional[str] = None
+    destino_detalle: Optional[str] = None
+    que_evitar: Optional[str] = None
     intencion: Optional[str] = None
     publico: Optional[str] = None
     mensaje: Optional[str] = None

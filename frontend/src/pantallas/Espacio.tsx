@@ -8,7 +8,6 @@ import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import DialogoConfirmar from "../componentes/DialogoConfirmar";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
-import Selector from "../componentes/Selector";
 import SubidorMedios from "../componentes/SubidorMedios";
 import { useEspacio, useProyectos, useRecorridos, useCrearProyecto } from "../api/hooks";
 import { api } from "../api/cliente";
@@ -16,27 +15,12 @@ import type { Espacio as EspacioTipo } from "../tipos";
 import { useAutoguardado } from "../estado/useAutoguardado";
 import { NOMBRE_TIPO, NOMBRE_TIPO_ESPACIO } from "../lib/formato";
 
-const FPS = [
-  { valor: "25", texto: "25 fps · Europa" },
-  { valor: "24", texto: "24 fps · cine" },
-  { valor: "30", texto: "30 fps · América" },
-];
-
-const FORMATOS = [
-  { valor: "16:9", texto: "16:9 · horizontal" },
-  { valor: "9:16", texto: "9:16 · vertical" },
-  { valor: "1:1", texto: "1:1 · cuadrado" },
-  { valor: "4:5", texto: "4:5 · retrato" },
-];
-
 function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }: { abierto: boolean; onCerrar: () => void; espacioId: string }) {
   const navegar = useNavigate();
   const { data: recorridos } = useRecorridos();
   const crear = useCrearProyecto(espacioId);
   const [nombre, setNombre] = useState("");
   const [tipo, setTipo] = useState("corto");
-  const [formato, setFormato] = useState("16:9");
-  const [fps, setFps] = useState("25");
 
   const enviar = async (e: any) => {
     e.preventDefault();
@@ -44,8 +28,6 @@ function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }: { abierto: boole
     const proy = await crear.mutateAsync({
       nombre: nombre.trim(),
       tipo,
-      formato_video: formato,
-      fps: Number(fps),
     });
     onCerrar();
     navegar(proy.ultima_ubicacion || `/p/${proy.id}/idea`);
@@ -88,21 +70,12 @@ function DialogoNuevoProyecto({ abierto, onCerrar, espacioId }: { abierto: boole
           </div>
         </Campo>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Formato de vídeo">
-            <Selector data-testid="select-formato" valor={formato} onChange={setFormato} opciones={FORMATOS} />
-          </Campo>
-          <Campo etiqueta="Fotogramas por segundo" ayuda="El ritmo del montaje: todo se exporta a esta cifra.">
-            <Selector data-testid="select-fps" valor={fps} onChange={setFps} opciones={FPS} />
-          </Campo>
-        </div>
-
         <div className="flex justify-end gap-3">
           <Boton type="button" variante="secundario" onClick={onCerrar}>
             Cancelar
           </Boton>
           <Boton type="submit" data-testid="btn-crear-proyecto" disabled={!nombre.trim() || crear.isPending}>
-            Crear proyecto
+            {crear.isPending ? "Creando…" : "Crear proyecto"}
           </Boton>
         </div>
       </form>

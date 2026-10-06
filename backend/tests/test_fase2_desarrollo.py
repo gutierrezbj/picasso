@@ -37,19 +37,20 @@ def proyectos(s, espacio):
 
 # --- Formatos ---------------------------------------------------------------
 
-@pytest.mark.parametrize("tipo,esperado_clave", [
-    ("corto", "objetivo"),
-    ("anuncio", "accion"),
-    ("imagen", "uso"),
-    ("serie", "episodios"),
+@pytest.mark.parametrize("tipo,esperadas", [
+    ("corto", set()),
+    ("anuncio", {"accion"}),
+    ("imagen", set()),
+    ("serie", {"episodios"}),
 ])
-def test_formatos_por_tipo(s, tipo, esperado_clave):
+def test_formatos_por_tipo(s, tipo, esperadas):
+    """Brief rediseñado (§6.1): solo quedan las preguntas que no repiten otra."""
     r = s.get(f"{API}/formatos", params={"tipo": tipo})
     assert r.status_code == 200
     data = r.json()
     assert len(data) >= 1
     claves = {p["clave"] for p in data[0]["preguntas_desarrollo"]}
-    assert esperado_clave in claves
+    assert claves == esperadas
 
 
 # --- Desarrollo GET/PUT ------------------------------------------------------
