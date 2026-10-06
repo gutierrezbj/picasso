@@ -349,6 +349,24 @@ Una misma pantalla para cada paso de elementos, filtrada por la clase del paso (
 
 ---
 
+### 6.4 Encargo de imagen (rediseñado el 07-10-2026)
+
+*Juan llegó operando a un lienzo vacío: el encargo de imagen nunca se había conectado con los planos, porque el lienzo solo se validó con el corto de Marta. Este apartado cierra ese hueco y las fricciones 19.7–19.10.*
+
+**Pantalla del encargo**
+- *Contexto del brief* (solo lectura, arriba): intención, tono, qué evitar y destino del Desarrollo, con un enlace para editarlos allí. La intención no se vuelve a pedir; el campo *Intención propia* es opcional y solo para cuando una imagen persigue algo distinto de lo que dice el brief (19.7).
+- *Qué se muestra*, *Composición* (punto de partida para dirigir: encuadre, punto de vista, luz), *Elementos* (del reparto), *Referencias* y *Número de imágenes*.
+- *Referencias* (19.10): se ven solo las elegidas, como en la ficha. «Traer de la biblioteca» abre el selector aparte. Las referencias de las fichas de los elementos elegidos salen como **sugeridas** y se añaden con un clic. La identidad del espacio (logo y portada) no aparece como referencia.
+- El asistente, en un proyecto de imagen, no habla de escenas ni de guion: ofrece «Proponer qué se muestra» y «Detectar elementos» (19.9).
+- Las menciones `@` (18.6) llegan después, sobre esta misma pantalla.
+
+**Del encargo al lienzo**
+- Con el encargo aprobado, el lienzo tiene **un plano de imagen por cada imagen pedida**, agrupados bajo un rótulo «Imágenes del encargo» (no «sin escena») y etiquetados I1, I2…
+- Cada plano nace con *qué se muestra*, *elementos* y la *composición* del encargo (campo de dirección `composicion`, editable en el plano, que va al prompt justo después de «qué se muestra»).
+- Las referencias del encargo viajan a cada operación de esos planos, sumadas a las de las fichas.
+- **Sincronización:** al abrir el lienzo con el encargo aprobado, se crean los planos que falten. Si el número de imágenes baja, se quitan los sobrantes **sin tomas**; los que ya tienen tomas se quedan y se avisa. Al aprobar una revisión del encargo, los planos todavía sin tomas se ponen al día con los nuevos textos; los que tienen tomas no se tocan (el impacto completo es de la F8).
+- Batería de pruebas: un proyecto de imagen recorrido de punta a punta, desde la idea hasta un plano con toma elegida.
+
 ## 7. Lienzo (P7)
 
 Librería: **React Flow (`@xyflow/react`)**. Ocupa todo el ancho y alto disponibles bajo la cabecera y la barra del recorrido.
