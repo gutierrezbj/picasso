@@ -6,7 +6,7 @@ export const ETIQUETA_CAMPO: Record<string, any> = {
   premisa: "Premisa",
   mundo: "Mundo",
   arco_general: "Arco general",
-  notas: "Notas",
+  notas: "Tu idea, tal cual",
   titulo: "Título",
   que_ocurre: "Qué ocurre",
   que_se_ve: "Qué se ve",
@@ -14,6 +14,7 @@ export const ETIQUETA_CAMPO: Record<string, any> = {
 };
 
 export const AYUDA_CAMPO: Record<string, any> = {
+  notas: "Escribe lo que tienes en la cabeza, sin ordenar. Después lo repartes en los campos de abajo, o te ayuda el asistente con «Ordenar mis notas».",
   intencion: "Qué quieres conseguir o contar.",
   premisa: "La idea en una o dos frases.",
   mensaje: "Qué debe quedar claro a quien lo ve.",
@@ -22,10 +23,10 @@ export const AYUDA_CAMPO: Record<string, any> = {
 };
 
 export const CAMPOS_POR_TIPO: Record<string, any> = {
-  corto: ["intencion", "premisa", "tono", "mundo", "notas"],
-  anuncio: ["intencion", "mensaje", "publico", "tono", "notas"],
-  imagen: ["intencion", "tono", "notas"],
-  serie: ["premisa", "arco_general", "tono", "mundo", "notas"],
+  corto: ["notas", "intencion", "premisa", "tono", "mundo"],
+  anuncio: ["notas", "intencion", "mensaje", "publico", "tono"],
+  imagen: ["notas", "intencion", "tono"],
+  serie: ["notas", "premisa", "arco_general", "tono", "mundo"],
 };
 
 export const REQUERIDOS: Record<string, any> = {
