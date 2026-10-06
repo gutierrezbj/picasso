@@ -1,6 +1,6 @@
 # AVB 01 · AI Creator Foundations
 
-Fuente: AI Video Bootcamp (escuela de Promptwise), módulo AI Creator Foundations. Lecciones: *Course Content*, *AI Models* (con su guía) y *The Tools*. Leídas el 06-10-2026.
+Fuente: AI Video Bootcamp (escuela de Promptwise), módulo AI Creator Foundations. Lecciones: *Course Content*, *AI Models* (con su guía y su nota sobre relaciones de aspecto, que solo aparece en la página de la lección) y *The Tools*. Leídas el 06/07-10-2026.
 
 ## Lo que enseña, en reglas
 
@@ -13,6 +13,13 @@ Fuente: AI Video Bootcamp (escuela de Promptwise), módulo AI Creator Foundation
 7. **Lo que funciona se guarda y se reutiliza.** Su "My prompts" (biblioteca de prompts que funcionaron) es, según ellos, el activo que más vale con el tiempo.
 8. **Elementos de consistencia citables:** sus "Seeds" se mencionan con `@` dentro del prompt (producto, influencer, personaje).
 9. **No acumular herramientas: la mejor es la que se usa con constancia.** Montaje en CapCut; DaVinci u otro si ya lo usas.
+10. **La relación de aspecto se decide por el destino, no por gusto:**
+    - **9:16:** vídeo corto para TikTok, Reels y Shorts, anuncios móviles, UGC y POV.
+    - **4:5:** imagen de feed, anuncios estáticos, fotos de influencer, producto y carruseles.
+    - **1:1:** cuando hace falta algo seguro y multiplataforma: gráficos simples y miniaturas.
+    - **16:9:** YouTube, web, tráiler, cine horizontal y cursos.
+
+    La relación equivocada hace que la pieza se vea recortada y fuera de sitio.
 
 ## Qué provoca en Picasso
 
@@ -25,3 +32,4 @@ Fuente: AI Video Bootcamp (escuela de Promptwise), módulo AI Creator Foundation
 | 7 | Plantillas de prompt del sistema | **Recetas**: guardar como receta el plano que funcionó (dirección + prompt + modelo + coste) y reutilizarlo en otros proyectos |
 | 8 | Fichas versionadas y reparto por escena | **Mencionar fichas con `@`** al escribir la dirección o una corrección |
 | 9 | El paquete sirve para DaVinci y CapCut (§11.3) | Nada que cambiar |
+| 10 | `formato_video` por proyecto (16:9, 9:16, 1:1 y 4:5, ya normalizados en el paquete) | **Formato por destino**: al crear el proyecto se pregunta «¿dónde se publica?» y se propone la relación. Más adelante, **versiones de formato**: la misma pieza en otra relación, reencuadrando plano a plano |
