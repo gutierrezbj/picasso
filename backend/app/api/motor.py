@@ -237,6 +237,13 @@ async def _construir_entradas(
                             medio_id=medio["id"], ruta=_ruta(medio), rol=r.get("rol") or "otra"
                         )
                     )
+        if plano.get("escena_id") is None:
+            guion = await db.guiones.find_one({"pieza_id": plano["pieza_id"]})
+            if guion and guion.get("clase") == "encargo":
+                for medio_id in (guion.get("encargo") or {}).get("referencias") or []:
+                    medio = await _medio(medio_id)
+                    if medio and all(x.medio_id != medio["id"] for x in referencias):
+                        referencias.append(ReferenciaEntrada(medio_id=medio["id"], ruta=_ruta(medio), rol="otra"))
         if es_video and toma_origen_id:
             toma = await db.tomas.find_one({"_id": toma_origen_id})
             medio = await _medio((toma or {}).get("medio_id"))

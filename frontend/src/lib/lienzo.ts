@@ -6,6 +6,7 @@ export const idElemento = (repartoId: string) => `el:${repartoId}`;
 export const idEscena = (escenaId: string) => `esc:${escenaId}`;
 export const idPlano = (planoId: string) => `pl:${planoId}`;
 
+export const ID_ENCARGO = "encargo";
 export const ANCHO_ELEMENTO = 220;
 export const ANCHO_ESCENA = 260;
 export const ANCHO_PLANO = 230;
@@ -26,6 +27,7 @@ export interface DatosEscena {
   resumen: string;
   numPlanos: number;
   orden: number;
+  encargo?: boolean;
   [clave: string]: unknown;
 }
 
@@ -61,7 +63,13 @@ export function posicionAutomatica(
 }
 
 export function construirNodos(
-  vista: { reparto: RepartoLienzo[]; escenas: EscenaConPlanos[]; planos_sin_escena?: Plano[] },
+  vista: {
+    reparto: RepartoLienzo[];
+    escenas: EscenaConPlanos[];
+    planos_sin_escena?: Plano[];
+    imagenes?: Plano[];
+    encargo?: { que_se_muestra?: string } | null;
+  },
   layout: LayoutLienzo,
   seleccion: string[]
 ): NodoLienzo[] {
@@ -109,6 +117,38 @@ export function construirNodos(
     });
   });
 
+  // Encargo de imagen (§6.4): un grupo con un plano por imagen pedida.
+  const imagenes = vista.imagenes || [];
+  if (vista.encargo) {
+    const id = idEscena(ID_ENCARGO);
+    nodos.push({
+      id,
+      type: "escena",
+      position: layout.posiciones[id] || { x: COL_ESCENAS, y: 40 },
+      data: {
+        escenaId: ID_ENCARGO,
+        titulo: "Imágenes del encargo",
+        resumen: vista.encargo.que_se_muestra || "",
+        numPlanos: imagenes.length,
+        orden: 1,
+        encargo: true,
+      },
+      selected: seleccion.includes(id),
+    });
+    if (!layout.grupos_plegados.includes(ID_ENCARGO)) {
+      imagenes.forEach((plano, j) => {
+        const pid = idPlano(plano.id);
+        nodos.push({
+          id: pid,
+          type: "plano",
+          position: layout.posiciones[pid] || { x: COL_ESCENAS + ANCHO_ESCENA + 40 + j * (ANCHO_PLANO + 30), y: 40 },
+          data: { plano, etiqueta: `I${j + 1}`, encargo: true },
+          selected: seleccion.includes(pid),
+        });
+      });
+    }
+  }
+
   // Fila de los planos sin escena, al final del lienzo (§13).
   (vista.planos_sin_escena || []).forEach((plano, j) => {
     const pid = idPlano(plano.id);
@@ -129,7 +169,7 @@ export function construirNodos(
 }
 
 export function construirConexiones(
-  vista: { reparto: RepartoLienzo[]; escenas: EscenaConPlanos[] },
+  vista: { reparto: RepartoLienzo[]; escenas: EscenaConPlanos[]; imagenes?: Plano[] },
   layout: LayoutLienzo
 ): Edge[] {
   if (!layout.mostrar_conexiones_reparto) return [];
@@ -148,5 +188,18 @@ export function construirConexiones(
       });
     });
   });
+  if (!layout.grupos_plegados.includes(ID_ENCARGO)) {
+    (vista.imagenes || []).forEach((plano) => {
+      plano.elementos.forEach((repartoId) => {
+        if (!vista.reparto.some((r) => r.id === repartoId)) return;
+        aristas.push({
+          id: `${repartoId}->${plano.id}`,
+          source: idElemento(repartoId),
+          target: idPlano(plano.id),
+          style: { stroke: "var(--color-linea-fuerte, #b9c6c4)" },
+        });
+      });
+    });
+  }
   return aristas;
 }

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, BookOpen, Check, Pencil, Trash2 } from "lucide-react";
+import { Plus, BookOpen, Check, Pencil, Trash2, X, Images } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
 import { resumenProyecto } from "../lib/formato";
 import BarraRecorrido from "../componentes/BarraRecorrido";
@@ -19,7 +19,7 @@ import Dialogo from "../componentes/Dialogo";
 import Tarjeta from "../componentes/Tarjeta";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import { api } from "../api/cliente";
-import { useProyecto, usePiezas, useGuion, useReparto, useMedios, useFormato } from "../api/hooks";
+import { useProyecto, usePiezas, useGuion, useReparto, useMedios, useFormato, useDesarrollo } from "../api/hooks";
 import { useAutoguardado } from "../estado/useAutoguardado";
 
 function ListaCapitulos({ proyecto, piezas, paso, onCrear, onBorrar }: {
@@ -132,7 +132,7 @@ function ListaCapitulos({ proyecto, piezas, paso, onCrear, onBorrar }: {
   );
 }
 
-function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuardado, onCrearElemento }: {
+function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuardado, onCrearElemento, brief, excluir = [], proyectoId }: {
   piezaId: string;
   encargo: Encargo;
   editable: boolean;
@@ -140,7 +140,11 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
   medios: Medio[];
   onGuardado: () => void | Promise<unknown>;
   onCrearElemento: () => void;
+  brief?: any;
+  excluir?: string[];
+  proyectoId?: string;
 }) {
+  const [picker, setPicker] = useState(false);
   const [datos, setDatos] = useState<CamposDinamicos>({
     que_se_muestra: encargo?.que_se_muestra || "",
     composicion: encargo?.composicion || "",
@@ -160,15 +164,43 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
   );
 
   const set = (k: string, v: any) => setDatos((d) => ({ ...d, [k]: v }));
-  const imagenes = (medios || []).filter((m) => m.clase === "imagen");
+  const imagenes = (medios || []).filter((m) => m.clase === "imagen" && !excluir.includes(m.id));
+  const porId = Object.fromEntries((medios || []).map((m) => [m.id, m]));
+  const elegidos = datos.elementos.length ? reparto.filter((r) => datos.elementos.includes(r.id)) : reparto;
+  const sugeridas = Array.from(
+    new Set(elegidos.flatMap((r) => (r.ficha?.referencias || []).map((x: any) => x.medio_id)))
+  ).filter((id) => !datos.referencias.includes(id) && porId[id]);
+  const disponibles = imagenes.filter((m) => !datos.referencias.includes(m.id));
+  const ponerRef = (id: string) => set("referencias", [...datos.referencias, id]);
+  const quitarRef = (id: string) => set("referencias", datos.referencias.filter((x: any) => x !== id));
+  const miniatura = (id: string, extra?: React.ReactNode) => (
+    <span className="relative block aspect-[4/3] w-[120px] overflow-hidden rounded-card border border-linea bg-superficie2">
+      <img src={api.urlMedio(id)} alt={porId[id]?.nombre_original || ""} className="h-full w-full object-cover" />
+      {extra}
+    </span>
+  );
 
   return (
     <section className="mt-8 max-w-[76ch] rounded-panel border border-linea bg-superficie p-6" data-testid="encargo-imagen">
       <div className="flex flex-col gap-6">
+        {brief && (
+          <div className="rounded-control bg-superficie2 p-4 text-[14px] leading-[20px] text-tinta2" data-testid="encargo-contexto-brief">
+            <p className="font-medium text-tinta">Del brief</p>
+            {brief.intencion && <p className="mt-1"><span className="text-tinta">Intención:</span> {brief.intencion}</p>}
+            {brief.tono && <p><span className="text-tinta">Tono:</span> {brief.tono}</p>}
+            {brief.que_evitar && <p><span className="text-tinta">Qué evitar:</span> {brief.que_evitar}</p>}
+            {brief.destino_detalle && <p><span className="text-tinta">Dónde:</span> {brief.destino_detalle}</p>}
+            {proyectoId && (
+              <Link to={`/p/${proyectoId}/idea`} className="mt-1 inline-block text-acento underline underline-offset-2">
+                Editar en la Idea
+              </Link>
+            )}
+          </div>
+        )}
         {[
           ["que_se_muestra", "Qué se muestra", "Lo que tiene que aparecer en la imagen."],
-          ["composicion", "Composición", "Encuadre, punto de vista, luz."],
-          ["intencion", "Intención", "Para qué se usará la imagen."],
+          ["composicion", "Composición", "Punto de partida para dirigir: encuadre, punto de vista, luz. Se afina en el lienzo."],
+          ["intencion", "Intención propia (opcional)", "Solo si esta imagen persigue algo distinto de la intención del brief."],
         ].map(([clave, etiqueta, ayuda]) => (
           <Campo key={clave} etiqueta={etiqueta} ayuda={ayuda}>
             {editable ? (
@@ -185,7 +217,7 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
           </Campo>
         ))}
 
-        <Campo etiqueta="Elementos" ayuda="Solo los del reparto de este proyecto.">
+        <Campo etiqueta="Elementos" ayuda="Pulsa para elegir quién sale. Si no eliges ninguno, entran todos los del reparto.">
           <div className="flex flex-wrap items-center gap-2" data-testid="encargo-elementos">
             {reparto.length === 0 && (
               <span className="text-[14px] leading-[20px] text-tinta3">
@@ -227,48 +259,76 @@ function FormularioEncargo({ piezaId, encargo, editable, reparto, medios, onGuar
           </div>
         </Campo>
 
-        <Campo etiqueta="Referencias" ayuda="Imágenes de la biblioteca del espacio.">
-          {imagenes.length === 0 ? (
-            <p className="text-[14px] leading-[20px] text-tinta3">
-              No hay imágenes en la biblioteca de este espacio.
-            </p>
-          ) : (
-            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5" data-testid="encargo-referencias">
-              {imagenes.map((m) => {
-                const puesta = datos.referencias.includes(m.id);
-                if (!editable && !puesta) return null;
-                return (
+        <Campo etiqueta="Referencias" ayuda="Las imágenes que acompañan al encargo. Se suman a las de las fichas.">
+          <div className="flex flex-col gap-3" data-testid="encargo-referencias">
+            {datos.referencias.length === 0 ? (
+              <p className="text-[14px] leading-[20px] text-tinta3">Ninguna elegida.</p>
+            ) : (
+              <ul className="flex flex-wrap gap-3">
+                {datos.referencias.map((id: string) => (
+                  <li key={id} data-testid={`encargo-ref-${id}`}>
+                    {miniatura(
+                      id,
+                      editable && (
+                        <button
+                          aria-label="Quitar referencia"
+                          onClick={() => quitarRef(id)}
+                          className="absolute right-1 top-1 rounded-full bg-superficie p-1 text-tinta2 hover:text-error"
+                        >
+                          <X size={14} strokeWidth={1.9} />
+                        </button>
+                      )
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {editable && sugeridas.length > 0 && (
+              <div data-testid="encargo-sugeridas">
+                <p className="mb-2 text-[13px] leading-[18px] text-tinta2">Sugeridas de las fichas · pulsa para añadir</p>
+                <ul className="flex flex-wrap gap-3">
+                  {sugeridas.map((id) => (
+                    <li key={id}>
+                      <button data-testid={`encargo-sugerida-${id}`} onClick={() => ponerRef(id)} className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento">
+                        {miniatura(id, <span className="absolute bottom-1 right-1 rounded-full bg-superficie px-2 text-[12px] text-acento">+ añadir</span>)}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {editable && (
+              <div>
+                <Boton pequeno variante="secundario" data-testid="encargo-traer-biblioteca" onClick={() => setPicker(true)}>
+                  <Images size={16} strokeWidth={1.9} /> Traer de la biblioteca
+                </Boton>
+              </div>
+            )}
+          </div>
+          <Dialogo abierto={picker} onCerrar={() => setPicker(false)} titulo="Elegir de la biblioteca" ancho="max-w-[900px]" data-testid="encargo-picker">
+            {disponibles.length === 0 ? (
+              <p className="text-[14px] text-tinta2">No hay más imágenes en la biblioteca de este espacio.</p>
+            ) : (
+              <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                {disponibles.map((m) => (
                   <li key={m.id}>
                     <button
-                      data-testid={`encargo-ref-${m.id}`}
-                      disabled={!editable}
-                      aria-pressed={puesta}
-                      onClick={() =>
-                        set(
-                          "referencias",
-                          puesta
-                            ? datos.referencias.filter((x: any) => x !== m.id)
-                            : [...datos.referencias, m.id]
-                        )
-                      }
-                      className={
-                        "block w-full overflow-hidden rounded-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento " +
-                        (puesta ? "ring-2 ring-acento" : "border border-linea")
-                      }
+                      data-testid={`encargo-picker-${m.id}`}
+                      onClick={() => {
+                        ponerRef(m.id);
+                        setPicker(false);
+                      }}
+                      className="block w-full overflow-hidden rounded-card border border-linea hover:ring-2 hover:ring-acento focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
                     >
                       <span className="block aspect-[4/3] w-full bg-superficie2">
-                        <img
-                          src={api.urlMedio(m.id)}
-                          alt={m.nombre_original || ""}
-                          className="h-full w-full object-cover"
-                        />
+                        <img src={api.urlMedio(m.id)} alt={m.nombre_original || ""} className="h-full w-full object-cover" />
                       </span>
                     </button>
                   </li>
-                );
-              })}
-            </ul>
-          )}
+                ))}
+              </ul>
+            )}
+          </Dialogo>
         </Campo>
 
         <div className="max-w-[200px]">
@@ -310,6 +370,7 @@ export default function Guion() {
   const { data: guionData } = useGuion(pieza?.id);
   const { data: reparto } = useReparto(proyectoId);
   const { data: medios } = useMedios(espacioId, "imagen");
+  const { data: brief } = useDesarrollo(proyectoId);
   const { data: formatos } = useFormato(data?.proyecto?.tipo);
 
   const [leer, setLeer] = useState(false);
@@ -469,10 +530,10 @@ export default function Guion() {
             data-testid="aviso-aprobado"
           >
             <span className="flex items-center gap-2 text-[14px] leading-[20px] text-exito">
-              <Check size={18} strokeWidth={1.9} /> Guion aprobado (revisión {guion.revision}).
+              <Check size={18} strokeWidth={1.9} /> {esEncargo ? "Encargo aprobado" : "Guion aprobado"} (revisión {guion.revision}).
             </span>
             <span className="text-[13px] leading-[18px] text-tinta2">
-              Editarlo no lo desaprueba: abre una revisión en curso y el guion aprobado sigue vigente.
+              {esEncargo ? "Editarlo no lo desaprueba: abre una revisión en curso y el encargo aprobado sigue vigente." : "Editarlo no lo desaprueba: abre una revisión en curso y el guion aprobado sigue vigente."}
             </span>
             <Boton
               pequeno
@@ -480,7 +541,7 @@ export default function Guion() {
               data-testid="btn-editar-aprobado"
               onClick={() => accion(() => api.crearRevision(pieza.id))}
             >
-              <Pencil size={15} strokeWidth={1.9} /> Editar el guion (crea una revisión)
+              <Pencil size={15} strokeWidth={1.9} /> {esEncargo ? "Editar el encargo (crea una revisión)" : "Editar el guion (crea una revisión)"}
             </Boton>
           </div>
         )}
@@ -538,6 +599,9 @@ export default function Guion() {
                 medios={medios}
                 onGuardado={refrescar}
                 onCrearElemento={() => setNuevoElemento(true)}
+                brief={brief}
+                excluir={[espacio?.logo_id, espacio?.portada_id].filter(Boolean) as string[]}
+                proyectoId={proyectoId}
               />
             ) : escenas.length === 0 ? (
               <Tarjeta className="mt-8 p-10 text-center" data-testid="escenas-vacio">
@@ -588,7 +652,7 @@ export default function Guion() {
                   disabled={aprobado || falta.length > 0}
                   onClick={() => accion(() => api.aprobarGuion(pieza.id))}
                 >
-                  {aprobado ? "Guion aprobado" : esEncargo ? "Aprobar encargo" : "Aprobar guion"}
+                  {aprobado ? (esEncargo ? "Encargo aprobado" : "Guion aprobado") : esEncargo ? "Aprobar encargo" : "Aprobar guion"}
                 </Boton>
               )}
               <span className="text-[13px] leading-[18px] text-tinta2" data-testid="aviso-aprobar-guion">
@@ -607,6 +671,7 @@ export default function Guion() {
             proyectoId={proyectoId}
             tipo={proyecto.tipo}
             modo="guion"
+            esEncargo={guionData?.guion?.clase === "encargo"}
             piezaId={pieza?.id}
             escenas={escenas}
             preguntasFormato={preguntas}

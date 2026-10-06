@@ -24,6 +24,7 @@ interface PropsPanelAsistente {
   modo?: string;
   clase?: string | null;
   preguntasFormato?: any[];
+  esEncargo?: boolean;
   piezaId?: string | null;
   escenas?: any[];
   peticionPendiente?: any;
@@ -38,6 +39,7 @@ export default function PanelAsistente({
   modo = "desarrollo",
   clase = null,
   preguntasFormato = [],
+  esEncargo = false,
   piezaId = null,
   escenas = [],
   peticionPendiente = null,
@@ -142,6 +144,7 @@ export default function PanelAsistente({
           <div className="mt-4 flex flex-col gap-2">
             {modo === "guion" ? (
               <>
+                {!esEncargo && (
                 <Boton
                   pequeno
                   variante="secundario"
@@ -151,6 +154,7 @@ export default function PanelAsistente({
                 >
                   Proponer escenas
                 </Boton>
+                )}
                 <div className="flex gap-2">
                   <Selector
                     data-testid="select-clase-detectar"
@@ -173,8 +177,9 @@ export default function PanelAsistente({
                   </Boton>
                 </div>
                 <p className="text-[13px] leading-[18px] text-tinta2">
-                  {escenas.length} escena{escenas.length === 1 ? "" : "s"} en el guion. Pide una
-                  reescritura desde cada escena.
+                  {esEncargo
+                    ? "Detecta en tu idea elementos que todavía no están en el reparto."
+                    : `${escenas.length} escena${escenas.length === 1 ? "" : "s"} en el guion. Pide una reescritura desde cada escena.`}
                 </p>
               </>
             ) : modo === "elementos" ? (

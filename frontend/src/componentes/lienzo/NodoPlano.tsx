@@ -29,6 +29,7 @@ const ESTADOS: Record<string, string> = {
 // y todas las acciones con botón visible.
 export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPlano>>) {
   const { plano, etiqueta } = data;
+  const deEncargo = !!data.encargo;
   const acciones = useAccionesLienzo();
 
   const boton =
@@ -179,6 +180,7 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
           <ChevronRight size={15} strokeWidth={1.9} />
           </button>
         )}
+        {!deEncargo && (<>
         <button
           data-testid={`duplicar-${etiqueta}`}
           aria-label="Duplicar plano"
@@ -206,9 +208,10 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
         >
           <Trash2 size={14} strokeWidth={1.9} />
         </button>
+        </>)}
       </div>
 
-      {!plano.escena_id && (
+      {!plano.escena_id && !deEncargo && (
         <div className="mt-2 border-t border-linea pt-2">
           <p className="text-[12px] leading-[16px] text-aviso">
             Sin escena: no entra en el montaje hasta que tenga una.

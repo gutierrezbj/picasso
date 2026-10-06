@@ -19,11 +19,11 @@ export default function NodoEscena({ data, selected }: NodeProps<Node<DatosEscen
         (selected ? "border-acento ring-2 ring-acento" : "border-linea")
       }
     >
-      <div className="text-[12px] leading-[16px] text-tinta2">Escena {data.orden}</div>
+      <div className="text-[12px] leading-[16px] text-tinta2">{data.encargo ? "Encargo de imagen" : `Escena ${data.orden}`}</div>
       <div className="mt-1 text-[15px] leading-[22px] font-semibold text-tinta">{data.titulo}</div>
       <p className="mt-1 line-clamp-2 text-[13px] leading-[18px] text-tinta2">{data.resumen}</p>
       <div className="mt-2 text-[12px] leading-[16px] text-tinta2" data-testid={`escena-num-planos-${data.orden}`}>
-        {data.numPlanos} {data.numPlanos === 1 ? "plano" : "planos"}
+        {data.numPlanos} {data.encargo ? (data.numPlanos === 1 ? "imagen" : "imágenes") : data.numPlanos === 1 ? "plano" : "planos"}
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -35,6 +35,7 @@ export default function NodoEscena({ data, selected }: NodeProps<Node<DatosEscen
           {plegada ? <ChevronRight size={14} strokeWidth={1.9} /> : <ChevronDown size={14} strokeWidth={1.9} />}
           {plegada ? "Desplegar" : "Plegar"}
         </button>
+        {!data.encargo && (<>
         <button
           data-testid={`anadir-plano-${data.orden}`}
           onClick={() => acciones.anadirPlano(data.escenaId)}
@@ -49,12 +50,13 @@ export default function NodoEscena({ data, selected }: NodeProps<Node<DatosEscen
         >
           <Film size={14} strokeWidth={1.9} /> Guion gráfico
         </button>
+        </>)}
         <button
           data-testid={`ver-en-guion-${data.orden}`}
           onClick={acciones.verEnGuion}
           className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-[13px] leading-[18px] text-acento hover:bg-acentoSuave focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
         >
-          <FileText size={14} strokeWidth={1.9} /> Ver en guion
+          <FileText size={14} strokeWidth={1.9} /> {data.encargo ? "Editar el encargo" : "Ver en guion"}
         </button>
       </div>
     </div>

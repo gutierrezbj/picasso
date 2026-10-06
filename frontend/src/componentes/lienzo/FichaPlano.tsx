@@ -110,7 +110,7 @@ export default function FichaPlano({
         const fresco = await api.lienzo(plano.pieza_id);
         const actual = fresco.escenas
           .flatMap((e) => e.planos)
-          .concat(fresco.planos_sin_escena)
+          .concat(fresco.planos_sin_escena, fresco.imagenes || [])
           .find((p) => p.id === plano.id);
         const guardado = await api.editarPlano(plano.id, {
           ...cuerpo(),
@@ -236,6 +236,17 @@ export default function FichaPlano({
               onChange={(v) => setDireccion("protagonista_visual", v)}
             />
           </Campo>
+
+          {(plano.escena_id == null || datos.direccion.composicion) && (
+            <Campo etiqueta="Composición" ayuda="Punto de partida que trae el encargo. Afínalo aquí o con los campos de abajo.">
+              <AreaTexto
+                data-testid="direccion-composicion"
+                value={datos.direccion.composicion || ""}
+                onChange={(e) => setDireccion("composicion", e.target.value)}
+                className="min-h-[60px]"
+              />
+            </Campo>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             {(datos.modalidad === "video" ? CAMPOS_VIDEO : CAMPOS_IMAGEN).map(campoSelector)}

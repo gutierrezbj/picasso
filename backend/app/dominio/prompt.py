@@ -45,6 +45,7 @@ def _valores(plano: dict, continuidad: list[dict], desarrollo: dict | None) -> d
     intencion = ". ".join([t for t in (des.get("intencion"), des.get("premisa")) if t])
     return {
         "que_se_muestra": plano.get("que_se_muestra") or "",
+        "composicion": d.get("composicion") or "",
         "accion": d.get("accion") or "",
         "encuadre": d.get("encuadre") or "",
         "angulo": d.get("angulo") or "",

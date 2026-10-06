@@ -112,6 +112,13 @@ function Superficie({
     ]),
     vista.reparto.map((r) => r.id),
     vista.planos_sin_escena.map((p) => [p.id, p.updated_at]),
+    (vista.imagenes || []).map((p) => [
+      p.id,
+      p.updated_at,
+      p.estado_produccion,
+      p.toma_elegida?.medio_id ?? null,
+      p.desactualizado,
+    ]),
     layout.posiciones,
     layout.grupos_plegados,
     seleccion,
@@ -140,7 +147,7 @@ function Superficie({
   const conexiones = useMemo(() => construirConexiones(vista, layout), [vista, layout]);
 
   const planos: Plano[] = useMemo(
-    () => vista.escenas.flatMap((e) => e.planos).concat(vista.planos_sin_escena),
+    () => vista.escenas.flatMap((e) => e.planos).concat(vista.planos_sin_escena, vista.imagenes || []),
     [vista]
   );
 
@@ -149,6 +156,8 @@ function Superficie({
       const i = vista.escenas[n].planos.findIndex((p) => p.id === planoId);
       if (i >= 0) return `E${n + 1}·P${i + 1}`;
     }
+    const k = (vista.imagenes || []).findIndex((p) => p.id === planoId);
+    if (k >= 0) return `I${k + 1}`;
     return "P";
   };
 
@@ -274,7 +283,7 @@ function Superficie({
           data-testid="btn-editar-en-guion"
           className="inline-flex items-center gap-1 rounded-control px-3 py-1.5 text-[14px] leading-[20px] text-acento hover:bg-acentoSuave focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
         >
-          <FileText size={15} strokeWidth={1.9} /> Editar en el guion
+          <FileText size={15} strokeWidth={1.9} /> {vista.encargo ? "Editar el encargo" : "Editar en el guion"}
         </Link>
         <Boton
           pequeno
@@ -285,8 +294,9 @@ function Superficie({
           <Receipt size={15} strokeWidth={1.9} /> Registro
         </Boton>
         <span className="ml-auto text-[13px] leading-[18px] text-tinta2" data-testid="lienzo-resumen">
-          {vista.escenas.length} {vista.escenas.length === 1 ? "escena" : "escenas"} ·{" "}
-          {planos.length} {planos.length === 1 ? "plano" : "planos"} · revisión {vista.guion.revision}
+          {vista.encargo
+            ? `${planos.length} ${planos.length === 1 ? "imagen" : "imágenes"} · revisión ${vista.guion.revision}`
+            : `${vista.escenas.length} ${vista.escenas.length === 1 ? "escena" : "escenas"} · ${planos.length} ${planos.length === 1 ? "plano" : "planos"} · revisión ${vista.guion.revision}`}
         </span>
       </div>
 

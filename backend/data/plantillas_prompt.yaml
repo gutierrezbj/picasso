@@ -4,6 +4,7 @@
 imagen:
   lineas:
     - "{que_se_muestra}"
+    - "Composición: {composicion}"
     - "Encuadre: {encuadre}. Ángulo: {angulo}."
     - "Protagonista visual: {protagonista_visual}."
     - "Óptica: {optica}. Profundidad de campo: {profundidad_campo}."

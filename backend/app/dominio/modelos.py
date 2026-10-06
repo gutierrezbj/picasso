@@ -439,6 +439,7 @@ class Direccion(BaseModel):
     `encuadre` y `angulo`. Lo que no se muestra se guarda, no se pierde."""
 
     protagonista_visual: Optional[str] = None
+    composicion: Optional[str] = None  # punto de partida que trae el encargo de imagen (§6.4)
     encuadre: Optional[str] = None
     angulo: Optional[str] = None
     encuadre_inicio: Optional[str] = None
@@ -475,6 +476,7 @@ class Plano(BaseModel):
     correcciones: list[Correccion] = Field(default_factory=list)
     prompt_editado_a_mano: bool = False
     prompt_manual: Optional[str] = None
+    revision_encargo: Optional[int] = None  # revisión del encargo de la que salió (§6.4)
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
 

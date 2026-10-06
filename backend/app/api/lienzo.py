@@ -19,7 +19,9 @@ from app.dominio.modelos import (
     Correccion,
     CorreccionCrear,
     CorreccionEditar,
+    Direccion,
     LayoutLienzo,
+    Modalidad,
     MoverPlano,
     Plano,
     PlanoCrear,
@@ -245,6 +247,68 @@ async def _vista_plano(plano: dict, reparto: list[dict]) -> dict:
 # --- lienzo de una pieza -----------------------------------------------------
 
 
+async def sincronizar_planos_encargo(pieza: dict, guion: dict) -> list[str]:
+    """Encargo de imagen aprobado → un plano por imagen pedida (§6.4).
+    Crea los que faltan, quita los sobrantes sin tomas y pone al día los que
+    no tienen tomas cuando el encargo cambió de revisión. Devuelve avisos."""
+    if guion.get("clase") != "encargo" or guion.get("estado") != "aprobado":
+        return []
+    enc = guion.get("encargo") or {}
+    revision = guion.get("revision") or 1
+    n = max(int(enc.get("numero_imagenes") or 1), 1)
+    planos = [sin_id(p) for p in await db.planos.find({"pieza_id": pieza["id"], "escena_id": None}).sort("orden", 1).to_list(500)]
+    con_tomas = {p["id"] for p in planos if await db.tomas.count_documents({"plano_id": p["id"]}, limit=1)}
+    avisos: list[str] = []
+    elementos = list(enc.get("elementos") or []) or [
+        r["_id"] for r in await db.reparto.find({"proyecto_id": pieza["proyecto_id"]}, {"_id": 1}).to_list(200)
+    ]
+
+    def base(orden: int) -> dict:
+        return {
+            "que_se_muestra": enc.get("que_se_muestra") or "",
+            "elementos": elementos,
+            "revision_encargo": revision,
+        }
+
+    for p in planos:
+        if p["id"] in con_tomas or (p.get("revision_encargo") or 0) >= revision:
+            continue
+        d = dict(p.get("direccion") or {})
+        d["composicion"] = enc.get("composicion") or None
+        await db.planos.update_one({"_id": p["id"]}, {"$set": {**base(p["orden"]), "direccion": d, "updated_at": ahora()}})
+
+    sobrantes = planos[n:]
+    for p in reversed(sobrantes):
+        if p["id"] in con_tomas:
+            continue
+        await db.planos.delete_one({"_id": p["id"]})
+    quedan_con_tomas = [p for p in sobrantes if p["id"] in con_tomas]
+    if quedan_con_tomas:
+        avisos.append(
+            f"El encargo pide {n} imágenes, pero {len(quedan_con_tomas)} plano(s) de más ya tienen tomas y se conservan."
+        )
+
+    actuales = await db.planos.count_documents({"pieza_id": pieza["id"], "escena_id": None})
+    for orden in range(actuales, n):
+        plano = Plano(
+            pieza_id=pieza["id"],
+            escena_id=None,
+            orden=orden,
+            modalidad=Modalidad.imagen,
+            direccion=Direccion(composicion=enc.get("composicion") or None),
+            **base(orden),
+        )
+        doc = plano.model_dump(mode="json")
+        doc["_id"] = doc["id"]
+        await db.planos.insert_one(doc)
+
+    restantes = [sin_id(p) for p in await db.planos.find({"pieza_id": pieza["id"], "escena_id": None}).sort("orden", 1).to_list(500)]
+    for i, p in enumerate(restantes):
+        if p["orden"] != i:
+            await db.planos.update_one({"_id": p["id"]}, {"$set": {"orden": i}})
+    return avisos
+
+
 @router.get("/piezas/{pieza_id}/lienzo")
 async def lienzo_de_pieza(pieza_id: str):
     pieza = await _pieza(pieza_id)
@@ -253,6 +317,8 @@ async def lienzo_de_pieza(pieza_id: str):
     if not proy:
         raise HTTPException(404, "Proyecto no encontrado")
     reparto = await _reparto_con_ficha(pieza["proyecto_id"])
+    avisos_encargo = await sincronizar_planos_encargo(pieza, guion)
+    es_encargo = guion.get("clase") == "encargo"
 
     aprobadas = await db.escenas.find(
         {"guion_id": guion["id"], "borrador": False}
@@ -275,11 +341,15 @@ async def lienzo_de_pieza(pieza_id: str):
     ).sort("orden", 1).to_list(500)
 
     layout = await db.lienzos.find_one({"_id": pieza["proyecto_id"]})
+    vistas_huerfanos = [await _vista_plano(sin_id(p), reparto) for p in huerfanos]
     return {
         "pieza": pieza,
         "guion": guion,
         "escenas": escenas,
-        "planos_sin_escena": [await _vista_plano(sin_id(p), reparto) for p in huerfanos],
+        "planos_sin_escena": [] if es_encargo else vistas_huerfanos,
+        "imagenes": vistas_huerfanos if es_encargo else [],
+        "encargo": (guion.get("encargo") if es_encargo else None),
+        "avisos_encargo": avisos_encargo,
         "reparto": reparto,
         "layout": sin_id(layout) if layout else LayoutLienzo().model_dump(),
     }

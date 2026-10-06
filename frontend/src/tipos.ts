@@ -252,6 +252,7 @@ export type Modalidad = "imagen" | "video";
 
 export interface Direccion {
   protagonista_visual: string | null;
+  composicion?: string | null;
   encuadre: string | null;
   angulo: string | null;
   encuadre_inicio: string | null;
@@ -361,6 +362,9 @@ export interface VistaLienzo {
   guion: Guion;
   escenas: EscenaConPlanos[];
   planos_sin_escena: Plano[];
+  imagenes?: Plano[];
+  encargo?: { que_se_muestra?: string; numero_imagenes?: number } | null;
+  avisos_encargo?: string[];
   reparto: RepartoLienzo[];
   layout: LayoutLienzo;
 }
