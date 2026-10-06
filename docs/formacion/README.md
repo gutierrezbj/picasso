@@ -6,6 +6,7 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 
 | Ficha | Fuente | Estado de las mejoras |
 |---|---|---|
-| [avb-01-fundamentos.md](avb-01-fundamentos.md) | AI Video Bootcamp (Promptwise) · AI Creator Foundations: Course Content, AI Models, The Tools | Propuestas en el maestro §18, sin aprobar |
+| [avb-01-fundamentos.md](avb-01-fundamentos.md) | AI Video Bootcamp (Promptwise) · AI Creator Foundations: Course Content, AI Models, The Tools | §18.1–18.7, sin aprobar |
+| [avb-02-ai-chats.md](avb-02-ai-chats.md) | AI Video Bootcamp · AI Chats (transcripción, cheat sheet y 20 prompts por rol) | §18.3 ampliada y §18.8–18.11, sin aprobar |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
