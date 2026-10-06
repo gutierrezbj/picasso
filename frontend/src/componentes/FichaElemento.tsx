@@ -150,7 +150,7 @@ export default function FichaElemento({
   if (exigeReferencia && datos.referencias.length === 0)
     faltan.push("añade al menos una imagen de referencia");
   const faltaParaAprobar = faltan.length
-    ? `Para aprobar la versión, ${faltan.join(" y ")}.`
+    ? `Para darla por buena, ${faltan.join(" y ")}.`
     : null;
 
   return (
@@ -405,10 +405,11 @@ export default function FichaElemento({
       {editable && (
         <div className="flex flex-wrap items-center gap-3">
           <Boton data-testid="btn-aprobar-ficha" disabled={!!faltaParaAprobar} onClick={() => accion(() => api.aprobarFicha(ficha.id))}>
-            Aprobar versión
+            {`Dar por buena la v${ficha.version}`}
           </Boton>
           <span className="text-[13px] leading-[18px] text-tinta2" data-testid="aviso-aprobar">
-            {faltaParaAprobar || "Al aprobarla queda congelada; es la que usará la producción."}
+            {faltaParaAprobar ||
+              "Fija la descripción, los rasgos y las referencias: así es este elemento. No hace falta generar nada. Queda congelada y es la que usa la producción; si luego cambias algo, se crea una versión nueva."}
           </span>
         </div>
       )}
