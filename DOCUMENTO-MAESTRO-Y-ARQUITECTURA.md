@@ -99,7 +99,7 @@ Estudio (implícito, uno)
 
 **Proyecto**
 - `espacio_id`, `nombre`, `tipo`: `corto` | `anuncio` | `imagen` | `serie`, `formato_id?`, `formato_video`: relación de aspecto (`9:16`, `16:9`, `1:1`, `4:5`), `duracion_objetivo_s?`, `presupuesto_max?` (en la moneda configurada), `paso_actual` (derivado, §4), `pasos_omitidos` (ids de pasos opcionales que el usuario ha marcado "no hace falta"), `ultimo_acceso`, `ultima_ubicacion` (ruta y selección para "Retomar").
-- `fps`: `24` | `25` | `30` (por defecto 25), elegido al crear el proyecto y editable. Es el ritmo del montaje y del paquete de edición: todas las tomas se normalizan a él al exportar (§11).
+- `fps`: `24` | `25` | `30` (por defecto 25). No se pregunta al crear el proyecto ni en el brief: se cambia en Montaje (P8) y solo en los tipos con vídeo. Es el ritmo del montaje y del paquete de edición: todas las tomas se normalizan a él al exportar (§11).
 - `voz_narrador?` `{proveedor, voice_id, ajustes}`: la voz de los diálogos cuyo hablante es "narrador".
 
 **Desarrollo** (uno por proyecto)
@@ -285,7 +285,7 @@ No hay más. Un proyecto no aparece repetido en varias listas grandes. Si no hay
 
 - Cabecera del espacio con su identidad (logo, nombre) visible durante todo el trabajo dentro de él.
 - Lista de proyectos: nombre, tipo, **paso actual con su progreso** (p. ej. `Paso 5 de 7 · Guion`) y última actividad.
-- `Nuevo proyecto`: formulario de una pantalla con `nombre`, `tipo` (4 opciones, cada una con una línea que explica su recorrido) y `formato_video`. Al crear, lleva al paso 1. **No** se muestra ninguna elección de "crear un vídeo / crear una imagen / desarrollar un guion".
+- `Nuevo proyecto`: formulario de una pantalla con solo `nombre` y `tipo` (4 opciones, cada una con una línea que explica su recorrido). El formato y los fps **no** se preguntan aquí: el formato sale del destino, en el brief (§6.1), y los fps se ajustan en Montaje. Al crear, lleva al paso 1. **No** se muestra ninguna elección de "crear un vídeo / crear una imagen / desarrollar un guion".
 - Accesos a `Biblioteca` e `Identidad del espacio`.
 
 ### 5.3 Navegación dentro de un proyecto
@@ -300,10 +300,23 @@ No hay más. Un proyecto no aparece repetido en varias listas grandes. Si no hay
 
 ## 6. Idea, elementos y guion
 
-### 6.1 Desarrollo (P4)
+### 6.1 Desarrollo (P4): el brief
 
-- Columna de lectura (máx. ~68 caracteres por línea) con los campos del Desarrollo como bloques de texto con etiqueta visible.
-- Si hay formato, sus preguntas aparecen como bloques adicionales en su orden.
+*Rediseñado el 07-10-2026 al operarlo Juan, siguiendo el flujo de AVB (avb-03): primero dónde va, luego qué tienes en la cabeza y después qué debe provocar.* Columna de lectura (máx. ~68 caracteres por línea) en **tres bloques**, en este orden:
+
+1. **El encargo**: las restricciones que vienen de fuera.
+   - *¿Dónde se va a publicar?* (`destino`, obligatorio), una de estas opciones: Reels, TikTok o Shorts → 9:16 · Feed de Instagram o Facebook → 4:5 · YouTube o web → 16:9 · Presentación o pantalla → 16:9 · Cine o festival → 16:9 · Varias plataformas, cuadrado → 1:1 · Otro. Al elegirlo, Picasso **propone** el `formato_video` del proyecto y lo aplica; el usuario puede cambiarlo justo debajo. El formato no se puede cambiar si el proyecto ya tiene tomas (409 que lo explica; el impacto completo es cosa de la F8).
+   - *Concretando* (`destino_detalle`, opcional): «portada de jrgblanco.com».
+   - *¿Para quién?* (`publico`), en todos los tipos.
+   - *Duración*: corto y anuncio, en segundos (`duracion_objetivo_s` del proyecto); serie, la pregunta de capítulos del formato. Imagen no tiene duración.
+2. **Tu idea, tal cual** (`notas`, obligatorio): lo que tienes en la cabeza, sin ordenar. Debajo, según el tipo, la idea ordenada: corto con premisa y mundo; serie con premisa, arco general y mundo; anuncio con mensaje.
+3. **Lo que debe provocar**: intención (obligatoria), tono (una o dos palabras), **qué evitar** (`que_evitar`, §18.8) y, en anuncio, la llamada a la acción (pregunta del formato).
+
+- El asistente (§10) hace de puente: «Ordenar mi idea» reparte el bloque 2 en el 3 y en la idea ordenada. Siempre propone; nada se escribe sin aceptar.
+- Se quitan las preguntas que repetían otra: «¿Para qué se usará la imagen?» y «¿Dónde se va a ver?» son el destino; el «¿Qué quieres que sienta?» del corto es la intención. Las respuestas que ya hubiera se recuperan solas: el uso o el canal pasan a «Concretando» y el objetivo a la intención, si estaba vacía.
+- `que_evitar` se suma a los negativos de todos los planos del proyecto (§18.8).
+- **El encargo es la puerta de Obrador (Campaign OS):** cuando un encargo llegue de allí, ese bloque vendrá relleno.
+- Para dar la Idea por lista: destino, tu idea, intención y los obligatorios propios del tipo (premisa en corto y serie, mensaje en anuncio, arco en serie).
 - Panel lateral plegable **Asistente** (§10). Todo lo que proponga llega como propuesta con `Aceptar` / `Editar` / `Descartar`; nada se escribe en el Desarrollo sin aceptar.
 - Botón `Marcar desarrollo como listo`. Se puede volver a editar después.
 
