@@ -14,3 +14,18 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [ref-01-eternicodia.md](ref-01-eternicodia.md) | EterniCodia · galería completa de prompts (referencia, no curso) | §18.19 y 18.20 (aprobadas, F9); 18.19b y 18.21 sin aprobar |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
+
+## Mapa del AI Video Bootcamp frente a Picasso
+
+| Fase AVB | Qué toca en Picasso |
+|---|---|
+| 1 Initiate · 2 AI Foundations | ✅ Hechas: avb-01 a avb-05 |
+| 3 AI Images | Imagen real (F9), fichas, fotograma de inicio, 18.12 y 18.13 |
+| 4 AI Videos | Vídeo real (F9), 18.10b, movimiento de cámara |
+| 5 AI Advertising & UGC | Tipo anuncio, guion UGC (18.11), lipsync o personaje que habla |
+| 6 Advanced Flows | Vista de flujo (F8) |
+| 7 Social Media | Formato por destino (18.7), subtítulos (18.14) |
+| 8 AI Filmmaking | Tipos corto y serie, mesa de dirección |
+| 9 Cloning | Voz propia clonada y persona real (18.20) |
+
+Los módulos de *Resources* (Starter Prompts y Cheat Sheet) ya están recogidos en avb-02.
