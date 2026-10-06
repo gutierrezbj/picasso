@@ -201,6 +201,7 @@ export const api = {
   editarPieza: (id: string, datos: Record<string, unknown>) =>
     peticion<Pieza>(`/piezas/${id}`, { method: "PATCH", body: JSON.stringify(datos) }),
   borrarPieza: (id: string) => peticion(`/piezas/${id}`, { method: "DELETE" }),
+  borrarProyecto: (id: string) => peticion(`/proyectos/${id}`, { method: "DELETE" }),
 
   guion: (piezaId: string) => peticion<VistaGuion>(`/piezas/${piezaId}/guion`),
   escena: (id: string) => peticion<Escena>(`/escenas/${id}`),

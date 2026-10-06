@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, BookOpen, IdCard } from "lucide-react";
+import { Plus, BookOpen, IdCard, Trash2 } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
 import Tarjeta from "../componentes/Tarjeta";
 import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
+import DialogoConfirmar from "../componentes/DialogoConfirmar";
 import { Campo, Entrada, AreaTexto } from "../componentes/Campo";
 import Selector from "../componentes/Selector";
 import SubidorMedios from "../componentes/SubidorMedios";
@@ -262,6 +263,16 @@ export default function Espacio() {
   const { data: proyectos } = useProyectos(espacioId);
   const [dNuevo, setDNuevo] = useState(false);
   const [dIdent, setDIdent] = useState(false);
+  const [aBorrar, setABorrar] = useState<{ id: string; nombre: string } | null>(null);
+  const qc = useQueryClient();
+
+  const borrar = async () => {
+    if (!aBorrar) return;
+    await api.borrarProyecto(aBorrar.id);
+    setABorrar(null);
+    await qc.invalidateQueries({ queryKey: ["proyectos", espacioId] });
+    await qc.invalidateQueries({ queryKey: ["estudio"] });
+  };
 
   if (isLoading || !espacio) {
     return (
@@ -324,20 +335,31 @@ export default function Espacio() {
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {proyectos.map((p) => (
-              <button
-                key={p.id}
-                data-testid={`proyecto-${p.id}`}
-                onClick={() => navegar(p.ultima_ubicacion || `/p/${p.id}/idea`)}
-                className="flex flex-col gap-3 rounded-card border border-linea bg-superficie p-5 text-left transition-colors duration-[120ms] ease-suave hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[18px] leading-[24px] font-semibold text-tinta">{p.nombre}</span>
-                  <span className="rounded-full bg-superficie2 px-3 py-1 text-[13px] leading-[18px] text-tinta2">
-                    {NOMBRE_TIPO[p.tipo]}
-                  </span>
-                </div>
-                <span className="text-[14px] leading-[20px] text-tinta2">{p.progreso}</span>
-              </button>
+              <div key={p.id} className="relative">
+                <button
+                  data-testid={`proyecto-${p.id}`}
+                  onClick={() => navegar(p.ultima_ubicacion || `/p/${p.id}/idea`)}
+                  className="flex w-full flex-col gap-3 rounded-card border border-linea bg-superficie p-5 text-left transition-colors duration-[120ms] ease-suave hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[18px] leading-[24px] font-semibold text-tinta">{p.nombre}</span>
+                    <span className="rounded-full bg-superficie2 px-3 py-1 text-[13px] leading-[18px] text-tinta2">
+                      {NOMBRE_TIPO[p.tipo]}
+                    </span>
+                  </div>
+                  <span className="pr-10 text-[14px] leading-[20px] text-tinta2">{p.progreso}</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Borrar el proyecto ${p.nombre}`}
+                  title="Borrar proyecto"
+                  data-testid={`borrar-proyecto-${p.id}`}
+                  onClick={() => setABorrar({ id: p.id, nombre: p.nombre })}
+                  className="absolute bottom-4 right-4 rounded-control p-2 text-tinta2 hover:bg-superficie2 hover:text-error focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+                >
+                  <Trash2 size={18} strokeWidth={1.9} aria-hidden />
+                </button>
+              </div>
             ))}
           </div>
         )}
@@ -345,6 +367,20 @@ export default function Espacio() {
 
       <DialogoNuevoProyecto abierto={dNuevo} onCerrar={() => setDNuevo(false)} espacioId={espacioId} />
       <DialogoIdentidad abierto={dIdent} onCerrar={() => setDIdent(false)} espacio={espacio} />
+      <DialogoConfirmar
+        abierto={!!aBorrar}
+        titulo="Borrar proyecto"
+        mensaje={
+          <>
+            Se borrará «{aBorrar?.nombre}» con su idea, su guion, sus planos y su lienzo. Los medios de la
+            biblioteca y el registro de gastos se conservan. No se puede deshacer.
+          </>
+        }
+        etiquetaConfirmar="Borrar proyecto"
+        onConfirmar={borrar}
+        onCerrar={() => setABorrar(null)}
+        testid="dialogo-borrar-proyecto"
+      />
     </div>
   );
 }

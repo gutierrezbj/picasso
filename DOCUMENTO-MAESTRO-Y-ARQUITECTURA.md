@@ -883,3 +883,5 @@ Lo que Juan encuentra usando Picasso de verdad. Se arreglan en bloque o con la f
 | # | Dónde | Qué pasó | Arreglo propuesto |
 | --- | --- | --- | --- |
 | 19.1 | Crear espacio (07-10-2026, espacio «JRGB») | Al crear el espacio con su imagen tardó un rato sin ninguna señal. Son tres pasos seguidos: crear el espacio, subir la imagen y guardarla en él. Juan no sabía si debía esperar. | El botón pasa a «Creando el espacio…» y luego a «Subiendo la imagen…», desactivado mientras dura. Si la subida falla, el espacio queda creado y se avisa de que la imagen no entró, con «Reintentar». Mismo patrón en todas las altas con subida de archivos (proyecto, fichas, biblioteca). |
+| 19.2 | Espacio → proyectos (07-10-2026) | Juan creó «Navegante» como corto en vez de imagen. El tipo no se puede cambiar y la interfaz no permitía borrar el proyecto (la API sí podía). | **Hecho (07-10-2026):** papelera en cada tarjeta de proyecto, con confirmación que dice qué se borra (idea, guion, planos y lienzo) y qué se conserva (biblioteca y registro de gastos). Pendiente de valorar: permitir cambiar el tipo mientras el proyecto siga en el paso Idea. |
+
