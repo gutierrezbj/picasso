@@ -873,3 +873,13 @@ Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y que
 | 18.19b | **Ampliación de la 18.19 (aprobada), con el resto de EterniCodia.** *Fuente de luz* suma esquemas de estudio: tres puntos (principal, relleno y recorte), lateral a 45°, envolvente suave, clave baja, clave alta, foco circular detrás, haces volumétricos a contraluz, prisma o arcoíris y proyección de patrones. Campo nuevo *Fondo* (sobre todo para imagen, anuncio y producto): liso monocromático, degradado, texturizado pictórico, color saturado plano. *Negativos por defecto* (18.10): se añaden piel plástica, extremidades de más y sobreprocesado. *Pistas de realismo* (18.16b): poros visibles, vello facial fino e imperfecciones sutiles. *Recurso de composición*: manos que forman un marco, cenital, gran angular deformado y simetría estricta. | REF 01 | **APROBADA el 07-10-2026: con la 18.19 (F9)** |
 | 18.21 | **Catálogo de estilos (looks).** Cada estilo es una descripción reutilizable de rasgos visuales (trazo, paleta, materiales, luz típica, acabado), sin nombres de marcas, estudios ni artistas. Se aplica a una escena o se usa para crear una versión de ficha: el mismo personaje en otro estilo, conservando sus rasgos fijos. Semilla: ilustración 3D entre caricatura y realismo, ilustración de videojuego años 80, cubismo geométrico, pintura acrílica u óleo, collage gráfico, cyberpunk de neón, épica medieval realista, fantasía naturalista. Se edita en un YAML y lo amplía el usuario. | REF 01, punto 14; curso Higgsfield «Corto animado» | **Aplazada por decisión de Juan (07-10-2026): se aprueba y diseña justo antes del curso 2 (Corto animado)** |
 
+
+---
+
+## 19. Mejoras de uso detectadas al operar (sin aprobar)
+
+Lo que Juan encuentra usando Picasso de verdad. Se arreglan en bloque o con la fase que toque.
+
+| # | Dónde | Qué pasó | Arreglo propuesto |
+| --- | --- | --- | --- |
+| 19.1 | Crear espacio (07-10-2026, espacio «JRGB») | Al crear el espacio con su imagen tardó un rato sin ninguna señal. Son tres pasos seguidos: crear el espacio, subir la imagen y guardarla en él. Juan no sabía si debía esperar. | El botón pasa a «Creando el espacio…» y luego a «Subiendo la imagen…», desactivado mientras dura. Si la subida falla, el espacio queda creado y se avisa de que la imagen no entró, con «Reintentar». Mismo patrón en todas las altas con subida de archivos (proyecto, fichas, biblioteca). |
