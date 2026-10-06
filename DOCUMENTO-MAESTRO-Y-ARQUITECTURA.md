@@ -302,7 +302,7 @@ No hay más. Un proyecto no aparece repetido en varias listas grandes. Si no hay
 
 ### 6.1 Desarrollo (P4): el brief
 
-*Rediseñado el 07-10-2026 al operarlo Juan, siguiendo el flujo de AVB (avb-03): primero dónde va, luego qué tienes en la cabeza y después qué debe provocar.* Columna de lectura (máx. ~68 caracteres por línea) en **tres bloques**, en este orden:
+*Rediseñado el 07-10-2026 al operarlo Juan. Primera versión: el encargo primero, como en AVB (avb-03). Decisión final de Juan ese mismo día: **primero la idea**, porque quien crea lo suyo empieza por una idea y Picasso le ayuda a desarrollarla; el destino puede salir de la idea, y el asistente puede proponerlo. Cuando el encargo llegue de Obrador vendrá relleno, así que el orden no le afecta. Hasta el lienzo no se produce nada, así que decidir el formato al final de la Idea no tiene coste.* Columna de lectura (máx. ~68 caracteres por línea) en **tres bloques**, en este orden: tu idea → lo que debe provocar → el encargo. Se describen abajo con su numeración original:
 
 1. **El encargo**: las restricciones que vienen de fuera.
    - *¿Dónde se va a publicar?* (`destino`, obligatorio), una de estas opciones: Reels, TikTok o Shorts → 9:16 · Feed de Instagram o Facebook → 4:5 · YouTube o web → 16:9 · Presentación o pantalla → 16:9 · Cine o festival → 16:9 · Varias plataformas, cuadrado → 1:1 · Otro. Al elegirlo, Picasso **propone** el `formato_video` del proyecto y lo aplica; el usuario puede cambiarlo justo debajo. El formato no se puede cambiar si el proyecto ya tiene tomas (409 que lo explica; el impacto completo es cosa de la F8).

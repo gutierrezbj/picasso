@@ -205,8 +205,26 @@ export default function Desarrollo() {
 
           <div className="mt-8 flex max-w-[68ch] flex-col gap-10" data-testid="desarrollo-form">
             {bloque(
+              "Tu idea",
+              "Lo que tienes en la cabeza. Escríbelo sin ordenar; el asistente te ayuda a repartirlo.",
+              <>
+                {campo("notas")}
+                {(IDEA_ORDENADA[tipo] || []).map(campo)}
+              </>,
+              "bloque-idea"
+            )}
+            {bloque(
+              "Lo que debe provocar",
+              "Qué tiene que sentir o entender quien lo vea, y qué no quieres.",
+              <>
+                {PROVOCAR.map(campo)}
+                {preguntasProvocar.map(pregunta)}
+              </>,
+              "bloque-provocar"
+            )}
+            {bloque(
               "El encargo",
-              "Dónde va a vivir y para quién. Decide el formato antes de imaginar nada.",
+              "Dónde va a vivir y para quién. El destino propone el formato; hace falta para dar la idea por lista.",
               <>
                 <Campo etiqueta="¿Dónde se va a publicar? *" htmlFor="destino">
                   <Selector
@@ -254,24 +272,6 @@ export default function Desarrollo() {
               </>,
               "bloque-encargo"
             )}
-            {bloque(
-              "Tu idea",
-              "Lo que tienes en la cabeza. Escríbelo sin ordenar; el asistente te ayuda a repartirlo.",
-              <>
-                {campo("notas")}
-                {(IDEA_ORDENADA[tipo] || []).map(campo)}
-              </>,
-              "bloque-idea"
-            )}
-            {bloque(
-              "Lo que debe provocar",
-              "Qué tiene que sentir o entender quien lo vea, y qué no quieres.",
-              <>
-                {PROVOCAR.map(campo)}
-                {preguntasProvocar.map(pregunta)}
-              </>,
-              "bloque-provocar"
-            )}
           </div>
 
           <div className="mt-8">
@@ -286,7 +286,7 @@ export default function Desarrollo() {
             )}
             {!listo && !requeridosOk && (
               <p className="mt-2 text-[13px] text-tinta2">
-                Para marcarlo como listo faltan los campos con *: el destino, tu idea y la intención (y los propios del tipo).
+                Para marcarlo como listo faltan los campos con *: tu idea, la intención y el destino (y los propios del tipo).
               </p>
             )}
           </div>
