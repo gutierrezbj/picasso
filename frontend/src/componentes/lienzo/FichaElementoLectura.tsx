@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import type { RepartoLienzo } from "../../tipos";
 
@@ -30,6 +30,7 @@ function Bloque({ titulo, children }: { titulo: string; children: React.ReactNod
 export default function FichaElementoLectura({ entrada, urlMedio, rutaPaso }: Props) {
   const ficha = entrada.ficha;
   const referencias = ficha?.referencias || [];
+  const [ampliada, setAmpliada] = useState<number | null>(null);
 
   return (
     <div data-testid="ficha-elemento-lectura">
@@ -72,15 +73,22 @@ export default function FichaElementoLectura({ entrada, urlMedio, rutaPaso }: Pr
         {referencias.length === 0 ? (
           <span className="text-tinta3">— sin referencias —</span>
         ) : (
-          <ul className="flex flex-col gap-3" data-testid="lectura-referencias">
+          <ul className="flex flex-wrap gap-2" data-testid="lectura-referencias">
             {referencias.map((r, i) => (
-              <li key={i}>
-                <img
-                  src={urlMedio(r.medio_id)}
-                  alt={ROLES[r.rol] || r.rol}
-                  className="w-full rounded-control border border-linea object-contain"
-                />
-                <span className="mt-1 block text-[12px] leading-[16px] text-tinta2">
+              <li key={i} className="w-20">
+                <button
+                  data-testid={`ampliar-referencia-${i}`}
+                  onClick={() => setAmpliada(i)}
+                  title="Ampliar"
+                  className="block h-20 w-20 overflow-hidden rounded-control border border-linea bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+                >
+                  <img
+                    src={urlMedio(r.medio_id)}
+                    alt={ROLES[r.rol] || r.rol}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+                <span className="mt-1 block truncate text-[12px] leading-[16px] text-tinta2">
                   {ROLES[r.rol] || r.rol}
                 </span>
               </li>
@@ -88,6 +96,22 @@ export default function FichaElementoLectura({ entrada, urlMedio, rutaPaso }: Pr
           </ul>
         )}
       </Bloque>
+
+      {ampliada !== null && referencias[ampliada] && (
+        <div
+          data-testid="referencia-ampliada"
+          role="dialog"
+          aria-label="Referencia ampliada"
+          onClick={() => setAmpliada(null)}
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/60 p-8"
+        >
+          <img
+            src={urlMedio(referencias[ampliada].medio_id)}
+            alt={ROLES[referencias[ampliada].rol] || referencias[ampliada].rol}
+            className="max-h-full max-w-full rounded-panel object-contain"
+          />
+        </div>
+      )}
 
       {rutaPaso && (
         <Link

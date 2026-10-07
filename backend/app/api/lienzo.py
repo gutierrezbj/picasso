@@ -195,7 +195,7 @@ def _estado_produccion(plano: dict, numero_tomas: int, en_curso: bool) -> str:
         return "con_tomas"
     d = plano.get("direccion") or {}
     dirigido = bool(plano.get("que_se_muestra")) and any(
-        d.get(k) for k in ("encuadre", "encuadre_inicio", "angulo", "angulo_inicio")
+        d.get(k) for k in ("encuadre", "encuadre_inicio", "angulo", "angulo_inicio", "composicion")
     )
     return "dirigido" if dirigido else "sin_dirigir"
 

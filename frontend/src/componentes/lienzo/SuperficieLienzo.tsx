@@ -30,7 +30,9 @@ import {
   ANCHO_PLANO,
   construirConexiones,
   construirNodos,
+  idEscena,
   idPlano,
+  ID_ENCARGO,
   type NodoLienzo,
 } from "../../lib/lienzo";
 import { api } from "../../api/cliente";
@@ -221,9 +223,41 @@ function Superficie({
     urlMedio: api.urlMedio,
   };
 
-  // Posición ≠ orden (§7.4): arrastrar solo guarda el layout.
-  const alSoltarNodo = (_: unknown, nodo: Node) =>
-    guardar({ posiciones: { ...layout.posiciones, [nodo.id]: nodo.position } });
+  const hijosDe = (nodoId: string): string[] => {
+    if (nodoId === idEscena(ID_ENCARGO)) return (vista.imagenes || []).map((p) => idPlano(p.id));
+    const grupo = vista.escenas.find((e) => idEscena(e.escena.id) === nodoId);
+    return grupo ? grupo.planos.map((p) => idPlano(p.id)) : [];
+  };
+
+  const ultimaPosicion = useRef<{ x: number; y: number } | null>(null);
+
+  const alArrastrarNodo = (_: unknown, nodo: Node) => {
+    const previa = ultimaPosicion.current;
+    ultimaPosicion.current = { ...nodo.position };
+    if (!previa || nodo.type !== "escena") return;
+    const dx = nodo.position.x - previa.x;
+    const dy = nodo.position.y - previa.y;
+    if (!dx && !dy) return;
+    const hijos = new Set(hijosDe(nodo.id));
+    setNodos((lista) =>
+      lista.map((n) =>
+        hijos.has(n.id) ? { ...n, position: { x: n.position.x + dx, y: n.position.y + dy } } : n
+      )
+    );
+  };
+
+  // Posición ≠ orden (§7.4): arrastrar solo guarda el layout. El grupo arrastra sus planos.
+  const alSoltarNodo = (_: unknown, nodo: Node) => {
+    ultimaPosicion.current = null;
+    const posiciones = { ...layout.posiciones, [nodo.id]: nodo.position };
+    if (nodo.type === "escena") {
+      const hijos = new Set(hijosDe(nodo.id));
+      nodos.forEach((n) => {
+        if (hijos.has(n.id)) posiciones[n.id] = n.position;
+      });
+    }
+    guardar({ posiciones });
+  };
 
   const alMover = (_: unknown, viewport: Viewport) => guardar({ viewport });
 
@@ -306,6 +340,8 @@ function Superficie({
           edges={conexiones}
           nodeTypes={tiposNodo}
           onNodesChange={onNodosChange}
+          onNodeDragStart={(_, n) => (ultimaPosicion.current = { ...n.position })}
+          onNodeDrag={alArrastrarNodo}
           onNodeDragStop={alSoltarNodo}
           onNodeClick={alPulsarNodo}
           onMoveEnd={alMover}
@@ -322,6 +358,7 @@ function Superficie({
       {planoFicha && (
         <FichaContextual
           testid="ficha-contextual-plano"
+          ancho={460}
           titulo={`Plano ${etiquetaDe(planoFicha.id)}`}
           subtitulo={planoFicha.modalidad === "video" ? "Vídeo" : "Imagen"}
           tarjeta={tarjetaFicha()}
@@ -330,6 +367,7 @@ function Superficie({
           <FichaPlano
             key={planoFicha.id + pestanaFicha}
             pestanaInicial={pestanaFicha}
+            deEncargo={!!vista.encargo}
             plano={planoFicha}
             relacion={relacion}
             moneda={moneda}

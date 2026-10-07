@@ -18,6 +18,7 @@ interface Props {
   relacion: string;
   moneda: string;
   pestanaInicial?: Pestana;
+  deEncargo?: boolean;
   reparto: RepartoLienzo[];
   opciones: OpcionesDireccion;
   urlMedio: (medioId: string) => string;
@@ -62,12 +63,28 @@ const ETIQUETAS_VIDEO: Partial<Record<keyof Direccion, string>> = {
 const BASE_OPCION = (clave: keyof Direccion): string =>
   String(clave).replace("_inicio", "").replace("_final", "");
 
+const CAMPOS_CHOQUE: (keyof Direccion)[] = ["encuadre", "angulo", "optica"];
+
+const normalizar = (t: string) =>
+  t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+function mencionEn(texto: string, lista: string[]): { opcion: string; desde: number; hasta: number } | null {
+  const plano = normalizar(texto);
+  const ordenadas = [...lista].sort((a, b) => b.length - a.length);
+  for (const opcion of ordenadas) {
+    const desde = plano.indexOf(normalizar(opcion));
+    if (desde >= 0) return { opcion, desde, hasta: desde + opcion.length };
+  }
+  return null;
+}
+
 export default function FichaPlano({
   plano,
   etiqueta,
   relacion,
   moneda,
   pestanaInicial = "direccion",
+  deEncargo = false,
   reparto,
   opciones,
   urlMedio,
@@ -139,6 +156,7 @@ export default function FichaPlano({
     <Campo key={String(clave)} etiqueta={etiquetaDe(clave)}>
       <Selector
         data-testid={`direccion-${String(clave)}`}
+        compacto
         valor={(datos.direccion[clave] as string) || ""}
         opciones={opcionesDe(clave)}
         onChange={(v) => setDireccion(clave, v)}
@@ -160,6 +178,22 @@ export default function FichaPlano({
         },
       };
     });
+
+  const composicion = datos.direccion.composicion || "";
+  const choques =
+    datos.modalidad === "imagen" && composicion
+      ? CAMPOS_CHOQUE.flatMap((clave) => {
+          const elegido = datos.direccion[clave] as string | null;
+          const mencion = mencionEn(composicion, opciones[clave]?.opciones || []);
+          if (!elegido || !mencion || normalizar(mencion.opcion) === normalizar(elegido)) return [];
+          return [{ clave, elegido, ...mencion }];
+        })
+      : [];
+
+  const mandaElCampo = (c: (typeof choques)[number]) => {
+    const valor = c.desde === 0 ? c.elegido : c.elegido.charAt(0).toLowerCase() + c.elegido.slice(1);
+    setDireccion("composicion", composicion.slice(0, c.desde) + valor + composicion.slice(c.hasta));
+  };
 
   const pendientes = plano.correcciones.filter((c) => c.estado === "pendiente");
   const hechas = plano.correcciones.filter((c) => c.estado === "hecha");
@@ -184,14 +218,14 @@ export default function FichaPlano({
         {pestanaBtn("direccion", "Dirección")}
         {pestanaBtn("producir", "Producir")}
         {pestanaBtn("tomas", `Tomas${plano.numero_tomas ? ` (${plano.numero_tomas})` : ""}`)}
-        {pestanaBtn("voces", "Voces")}
+        {!deEncargo && pestanaBtn("voces", "Voces")}
         {pestanaBtn("continuidad", "Continuidad")}
         {pestanaBtn("correcciones", `Correcciones${pendientes.length ? ` (${pendientes.length})` : ""}`)}
       </div>
 
       {pestana === "direccion" && (
         <div className="mt-4 flex flex-col gap-4">
-          <Campo etiqueta="Qué se muestra" ayuda="Lo único obligatorio (§8).">
+          <Campo etiqueta="Qué se muestra" ayuda="Lo único obligatorio.">
             <AreaTexto
               data-testid="plano-que-se-muestra"
               value={datos.que_se_muestra}
@@ -200,6 +234,7 @@ export default function FichaPlano({
             />
           </Campo>
 
+          {!deEncargo && (
           <div className="grid grid-cols-2 gap-4">
             <Campo etiqueta="Modalidad">
               <Selector
@@ -223,6 +258,7 @@ export default function FichaPlano({
               />
             </Campo>
           </div>
+          )}
 
           <Campo etiqueta="Protagonista visual">
             <Selector
@@ -245,12 +281,30 @@ export default function FichaPlano({
                 onChange={(e) => setDireccion("composicion", e.target.value)}
                 className="min-h-[60px]"
               />
+              {choques.map((c) => (
+                <div
+                  key={String(c.clave)}
+                  data-testid={`choque-${String(c.clave)}`}
+                  className="mt-2 rounded-control border border-aviso bg-superficie2 p-2 text-[13px] leading-[18px] text-tinta"
+                >
+                  La composición dice «{c.opcion.toLowerCase()}» y en {etiquetaDe(c.clave)} has elegido «
+                  {c.elegido.toLowerCase()}». El modelo recibiría las dos. ¿Cuál manda?
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Boton pequeno variante="secundario" data-testid={`choque-manda-campo-${String(c.clave)}`} onClick={() => mandaElCampo(c)}>
+                      {c.elegido}
+                    </Boton>
+                    <Boton pequeno variante="secundario" data-testid={`choque-manda-composicion-${String(c.clave)}`} onClick={() => setDireccion(c.clave, c.opcion)}>
+                      {c.opcion} (la composición)
+                    </Boton>
+                  </div>
+                </div>
+              ))}
             </Campo>
           )}
 
           <div className="grid grid-cols-2 gap-4">
             {(datos.modalidad === "video" ? CAMPOS_VIDEO : CAMPOS_IMAGEN).map(campoSelector)}
-            {CAMPOS_COMUNES.map(campoSelector)}
+            {CAMPOS_COMUNES.filter((c) => datos.modalidad === "video" || c !== "movimiento_camara").map(campoSelector)}
           </div>
 
           {datos.modalidad === "video" && (
@@ -289,7 +343,10 @@ export default function FichaPlano({
             />
           </Campo>
 
-          <Campo etiqueta="Elementos del plano" ayuda="Subconjunto de los de la escena.">
+          <Campo
+            etiqueta={deEncargo ? "Quién sale en la imagen" : "Elementos del plano"}
+            ayuda={deEncargo ? "Del reparto del proyecto." : "Subconjunto de los de la escena."}
+          >
             <div className="flex flex-wrap gap-2" data-testid="plano-elementos">
               {reparto.map((r) => {
                 const activo = datos.elementos.includes(r.id);
@@ -360,6 +417,7 @@ export default function FichaPlano({
             )}
           </Campo>
 
+          {!deEncargo && (
           <div>
             <label className="flex items-center gap-2 text-[14px] leading-[20px] text-tinta">
               <input
@@ -380,6 +438,7 @@ export default function FichaPlano({
               </p>
             )}
           </div>
+          )}
 
           <div className="border-t border-linea pt-4">
             <PanelPrompt planoId={plano.id} sello={plano.updated_at} />
@@ -406,7 +465,7 @@ export default function FichaPlano({
         />
       )}
 
-      {pestana === "voces" && <PanelVoces plano={plano} onCambiado={onCambiado} />}
+      {pestana === "voces" && !deEncargo && <PanelVoces plano={plano} onCambiado={onCambiado} />}
 
       {pestana === "continuidad" && (
         <div className="mt-4 flex flex-col gap-5" data-testid="pestana-continuidad-contenido">

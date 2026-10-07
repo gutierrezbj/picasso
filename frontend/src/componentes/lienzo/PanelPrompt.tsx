@@ -120,7 +120,7 @@ export default function PanelPrompt({ planoId, sello }: Props) {
               .join(" · ")}
       </p>
       <p className="mt-1 text-[12px] leading-[16px] text-tinta3">
-        Nunca se piden textos ni rótulos al modelo (§8).
+        Nunca se piden textos ni rótulos al modelo.
       </p>
     </div>
   );

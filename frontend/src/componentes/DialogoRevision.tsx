@@ -217,7 +217,7 @@ export default function DialogoRevision({
               ))}
             </ul>
             <p className="mt-3 text-[13px] leading-[18px] text-tinta2">
-              Sus planos pasarán a «sin escena» y se conservan hasta que los borres (§13).
+              Sus planos pasarán a «sin escena» y se conservan hasta que los borres.
             </p>
           </section>
         )}
@@ -235,7 +235,7 @@ export default function DialogoRevision({
               ))}
             </ul>
             <p className="mt-3 text-[13px] leading-[18px] text-tinta2">
-              Reordenar solo cambia el montaje (§13).
+              Reordenar solo cambia el montaje.
             </p>
           </section>
         )}

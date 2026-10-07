@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Play, RefreshCw, Search, Grid2X2, Trash2 } from "lucide-react";
+import { AlertTriangle, Play, RefreshCw, Search, Grid2X2, Trash2, Loader2 } from "lucide-react";
 import Boton from "../Boton";
 import Selector from "../Selector";
 import { Campo, Entrada, AreaTexto } from "../Campo";
@@ -80,8 +80,18 @@ export default function PanelProducir({
   const { data: produccion, refetch } = useQuery({
     queryKey: ["produccion", plano.id],
     queryFn: () => api.produccion(plano.id),
-    refetchInterval: 4000,
+    refetchInterval: (q) =>
+      (q.state.data?.operaciones || []).some((op) =>
+        ["autorizada", "enviada", "en_curso"].includes(op.estado)
+      )
+        ? 1500
+        : 4000,
   });
+
+  const enMarcha = (produccion?.operaciones || []).filter((op) =>
+    ["autorizada", "enviada", "en_curso"].includes(op.estado)
+  );
+  const ocupado = trabajando || enMarcha.length > 0;
 
   const acciones: Accion[] = [
     ...(modalidad === "video" ? ACCIONES_VIDEO : ACCIONES_IMAGEN),
@@ -363,6 +373,16 @@ export default function PanelProducir({
         </div>
       )}
 
+      {plano.estado_produccion === "sin_dirigir" && (
+        <p
+          data-testid="aviso-sin-dirigir"
+          className="rounded-control border border-aviso bg-superficie2 p-2 text-[13px] leading-[18px] text-tinta"
+        >
+          Este plano va sin dirigir: el modelo decidirá por su cuenta el encuadre, el ángulo y la
+          luz. Puedes producir igualmente, o dirigirlo antes en la pestaña Dirección.
+        </p>
+      )}
+
       <Campo etiqueta="Qué se produce">
         <Selector
           data-testid="producir-accion"
@@ -455,6 +475,43 @@ export default function PanelProducir({
         </Campo>
       )}
 
+      {modalidad !== "video" && (
+        <div className="rounded-card border border-linea p-3">
+          <p className="text-[14px] leading-[20px] font-semibold text-tinta">
+            Explorar encuadres
+          </p>
+          <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
+            Genera varias imágenes del mismo plano cambiando solo encuadre y ángulo. Son tomas de
+            exploración: elegir una fija esos valores.
+          </p>
+          <div className="mt-2 flex items-end gap-2">
+            <Campo etiqueta="Cuántas">
+              <Entrada
+                data-testid="explorar-cuantas"
+                type="number"
+                min="2"
+                max="8"
+                value={variantes}
+                onChange={(e) => setVariantes(e.target.value)}
+                className="w-20"
+              />
+            </Campo>
+            <Boton
+              pequeno
+              variante="secundario"
+              data-testid="btn-explorar-encuadres"
+              disabled={!modelo?.elegible || ocupado}
+              onClick={() => conAviso(costeExploracion, (c) => producir(true, c))}
+            >
+              <Grid2X2 size={15} strokeWidth={1.9} />
+              {costeExploracion === null
+                ? "Explorar (coste sin verificar)"
+                : `Explorar por ${formatoMoneda(costeExploracion, moneda)}`}
+            </Boton>
+          </div>
+        </div>
+      )}
+
       <div
         data-testid="presupuesto-plano"
         className="rounded-card border border-linea bg-superficie2 p-3 text-[13px] leading-[18px] text-tinta2"
@@ -483,51 +540,28 @@ export default function PanelProducir({
       <div className="flex flex-wrap items-center gap-2">
         <Boton
           data-testid="btn-producir"
-          disabled={!modelo?.elegible || trabajando || (accion === "generar_voz" && !texto.trim())}
+          disabled={!modelo?.elegible || ocupado || (accion === "generar_voz" && !texto.trim())}
           onClick={() => conAviso(coste, (c) => producir(false, c))}
         >
-          <Play size={15} strokeWidth={1.9} />
-          {coste === null
-            ? "Producir (coste sin verificar)"
-            : `Producir por ${formatoMoneda(coste, moneda)}`}
+          {ocupado ? (
+            <>
+              <Loader2 size={15} strokeWidth={1.9} className="animate-spin" /> Produciendo…
+            </>
+          ) : (
+            <>
+              <Play size={15} strokeWidth={1.9} />
+              {coste === null
+                ? "Producir (coste sin verificar)"
+                : `Producir por ${formatoMoneda(coste, moneda)}`}
+            </>
+          )}
         </Boton>
       </div>
-
-      {modalidad !== "video" && (
-        <div className="rounded-card border border-linea p-3">
-          <p className="text-[14px] leading-[20px] font-semibold text-tinta">
-            Explorar encuadres
-          </p>
-          <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
-            Genera varias imágenes del mismo plano cambiando solo encuadre y ángulo. Son tomas de
-            exploración: elegir una fija esos valores.
-          </p>
-          <div className="mt-2 flex items-end gap-2">
-            <Campo etiqueta="Cuántas">
-              <Entrada
-                data-testid="explorar-cuantas"
-                type="number"
-                min="2"
-                max="8"
-                value={variantes}
-                onChange={(e) => setVariantes(e.target.value)}
-                className="w-20"
-              />
-            </Campo>
-            <Boton
-              pequeno
-              variante="secundario"
-              data-testid="btn-explorar-encuadres"
-              disabled={!modelo?.elegible || trabajando}
-              onClick={() => conAviso(costeExploracion, (c) => producir(true, c))}
-            >
-              <Grid2X2 size={15} strokeWidth={1.9} />
-              {costeExploracion === null
-                ? "Explorar (coste sin verificar)"
-                : `Explorar por ${formatoMoneda(costeExploracion, moneda)}`}
-            </Boton>
-          </div>
-        </div>
+      {ocupado && (
+        <p data-testid="produciendo" className="-mt-2 text-[13px] leading-[18px] text-tinta2">
+          El motor está trabajando en este plano. Cuando termine, la toma aparece en Tomas y en la
+          tarjeta. No hace falta volver a pulsar.
+        </p>
       )}
 
       {error && (

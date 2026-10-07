@@ -31,6 +31,7 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
   const { plano, etiqueta } = data;
   const deEncargo = !!data.encargo;
   const acciones = useAccionesLienzo();
+  const sinDirigir = plano.estado_produccion === "sin_dirigir";
 
   const boton =
     "flex h-8 w-8 items-center justify-center rounded-control border border-linea bg-superficie text-tinta2 hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento";
@@ -104,12 +105,14 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
       <p className="mt-2 line-clamp-2 text-[13px] leading-[18px] text-tinta">
         {plano.que_se_muestra || <span className="text-tinta3">sin describir</span>}
       </p>
-      <p
-        className="mt-1 line-clamp-2 text-[12px] leading-[16px] text-tinta2"
-        data-testid={`resumen-direccion-${etiqueta}`}
-      >
-        {plano.resumen_direccion || "sin dirigir"}
-      </p>
+      {plano.resumen_direccion && (
+        <p
+          className="mt-1 line-clamp-2 text-[12px] leading-[16px] text-tinta2"
+          data-testid={`resumen-direccion-${etiqueta}`}
+        >
+          {plano.resumen_direccion}
+        </p>
+      )}
 
       {plano.plano_anterior_encadenado && (
         <p
@@ -136,20 +139,29 @@ export default function NodoPlano({ id, data, selected }: NodeProps<Node<DatosPl
         </p>
       )}
 
+      {sinDirigir && (
+        <p data-testid={`ayuda-pasos-${etiqueta}`} className="mt-2 text-[12px] leading-[16px] text-tinta2">
+          Primero dirige: decide cómo se ve. Después produce: genera la toma y la eliges.
+        </p>
+      )}
+
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <button
           data-testid={`dirigir-${etiqueta}`}
           onClick={() => acciones.abrirFicha(id)}
           className="inline-flex items-center gap-1 rounded-control bg-acento px-2 py-1 text-[13px] leading-[18px] text-white hover:bg-acentoTinta focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
         >
-          <SlidersHorizontal size={14} strokeWidth={1.9} /> Dirigir
+          <SlidersHorizontal size={14} strokeWidth={1.9} /> 1 Dirigir
         </button>
         <button
           data-testid={`producir-${etiqueta}`}
           onClick={() => acciones.abrirFicha(id, "producir")}
-          className="inline-flex items-center gap-1 rounded-control border border-linea bg-superficie px-2 py-1 text-[13px] leading-[18px] text-tinta hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento"
+          className={
+            "inline-flex items-center gap-1 rounded-control border border-linea bg-superficie px-2 py-1 text-[13px] leading-[18px] hover:bg-superficie2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-acento " +
+            (sinDirigir ? "text-tinta3" : "text-tinta")
+          }
         >
-          <Play size={14} strokeWidth={1.9} /> Producir
+          <Play size={14} strokeWidth={1.9} /> 2 Producir
         </button>
         <button
           data-testid={`ver-tomas-${etiqueta}`}

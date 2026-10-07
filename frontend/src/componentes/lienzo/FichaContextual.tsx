@@ -28,6 +28,7 @@ export default function FichaContextual({
 
   const cabeDerecha = tarjeta.derecha + MARGEN + ancho <= anchoVentana - MARGEN;
   const cabeIzquierda = tarjeta.izquierda - MARGEN - ancho >= MARGEN;
+  const arriba = Math.max(MARGEN + 56, Math.min(tarjeta.arriba, altoVentana - 420));
   const lado = cabeDerecha ? "derecha" : cabeIzquierda ? "izquierda" : "bandeja";
 
   const estilo: React.CSSProperties =
@@ -35,9 +36,9 @@ export default function FichaContextual({
       ? { left: 0, right: 0, bottom: 0, width: "100%", maxHeight: "60vh" }
       : {
           left: lado === "derecha" ? tarjeta.derecha + MARGEN : tarjeta.izquierda - MARGEN - ancho,
-          top: Math.max(MARGEN + 56, Math.min(tarjeta.arriba, altoVentana - 260)),
+          top: arriba,
           width: ancho,
-          maxHeight: "calc(100vh - 140px)",
+          maxHeight: altoVentana - arriba - MARGEN,
         };
 
   return (
@@ -47,7 +48,7 @@ export default function FichaContextual({
       role="dialog"
       aria-label={titulo}
       style={estilo}
-      className="fixed z-40 overflow-auto rounded-panel border border-linea bg-superficie p-5 shadow-context"
+      className="nowheel fixed z-40 overflow-auto overscroll-contain rounded-panel border border-linea bg-superficie p-5 shadow-context"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

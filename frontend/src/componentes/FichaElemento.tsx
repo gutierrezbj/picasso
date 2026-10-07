@@ -200,7 +200,7 @@ export default function FichaElemento({
               Actualizar a v{ultimaAprobada}
             </Boton>
             <span className="text-[13px] leading-[18px] text-tinta2">
-              El análisis de impacto de este cambio (§13) se construye en la Fase 8.
+              El análisis de impacto de este cambio llegará más adelante.
             </span>
           </div>
         )}

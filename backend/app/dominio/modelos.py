@@ -677,7 +677,7 @@ class EntradaOperacion(BaseModel):
             if getattr(self, campo):
                 raise ValueError(f"«{accion}» no lleva «{campo}».")
         if self.n_variantes > 1 and accion not in ("generar_imagen", "imagen_con_referencias"):
-            raise ValueError("Las variantes solo se piden al generar imágenes (§8, §6.2).")
+            raise ValueError("Las variantes solo se piden al generar imágenes.")
         if self.n_variantes != max(1, len(self.variantes) or self.n_variantes):
             raise ValueError("El número de variantes no cuadra con la lista de variantes.")
         return self
