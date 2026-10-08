@@ -11,7 +11,7 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [avb-03-workflow.md](avb-03-workflow.md) | AI Video Bootcamp · AI Creator Workflow (transcripción y guía) | §18.10b (aprobada, F9); 18.12–18.14 sin aprobar |
 | [avb-04-prompting.md](avb-04-prompting.md) | AI Video Bootcamp · Prompting (transcripción y The AVB Prompt Framework) | §18.15–18.17 (aprobadas, F9) |
 | [avb-05-prompting-2.md](avb-05-prompting-2.md) | AI Video Bootcamp · Prompting 2 (transcripción) | §18.3b, 18.16b y 18.18 (aprobadas, F9) |
-| [avb-06-imagen-basicos.md](avb-06-imagen-basicos.md) | AI Video Bootcamp · Fase 3 AI Images: AI Image Overview (transcripción y guía) | §18.22 y 18.23 sin aprobar; valida el formato por proyecto |
+| [avb-06-imagen-basicos.md](avb-06-imagen-basicos.md) | AI Video Bootcamp · Fase 3 AI Images: AI Image Overview (transcripción y guía) | §18.22 y 18.23 (aprobadas, F9); valida el formato por proyecto |
 | [ref-01-eternicodia.md](ref-01-eternicodia.md) | EterniCodia · galería completa de prompts (referencia, no curso) | §18.19 y 18.20 (aprobadas, F9); 18.19b y 18.21 sin aprobar |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
