@@ -14,7 +14,7 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [avb-06-imagen-basicos.md](avb-06-imagen-basicos.md) | AI Video Bootcamp · Fase 3 AI Images: AI Image Overview (transcripción y guía) | §18.22 y 18.23 (aprobadas, F9); valida el formato por proyecto |
 | [ref-01-eternicodia.md](ref-01-eternicodia.md) | EterniCodia · galería completa de prompts (referencia, no curso) | §18.19 y 18.20 (aprobadas, F9); 18.19b y 18.21 sin aprobar |
 | [ref-02-beailabs-carteles.md](ref-02-beailabs-carteles.md) | beailabs · guía de estilos y generación de carteles (referencia, no curso) | §18.21b (con la 18.21); 18.24 y 18.25 sin aprobar; 18.26 (aprobada, F9) |
-| [eva-01-avatar-consistente.md](eva-01-avatar-consistente.md) | Protocolo EVA · reto 21 días, «Crea tu Avatar IA» (tarea del día 2 y guía de prompts; solo método, el material es exclusivo) | 18.27 y 18.28 sin aprobar; amplía 19.6 y 18.16b |
+| [eva-01-avatar-consistente.md](eva-01-avatar-consistente.md) | Protocolo EVA · reto 21 días, «Crea tu Avatar IA» (tarea del día 2 y guía de prompts; solo método, el material es exclusivo) | 18.27 y 18.28 (aprobadas, F9); amplía 19.6 y 18.16b |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
 
