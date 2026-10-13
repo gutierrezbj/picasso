@@ -128,6 +128,7 @@ export interface Elemento {
   espacio_id: string;
   clase: ClaseElemento;
   nombre: string;
+  persona_real?: boolean;
   fichas: FichaVersion[];
   ficha?: FichaVersion | null;
   ficha_vigente?: number | null;

@@ -87,6 +87,21 @@
   coste: {unidad: imagen, valor: 0.04, moneda: USD, verificado: false}
   formato: {fps: 24, png_lado_largo: 1024, lado_largo: 1024}
 
+# --- Proveedores reales (Fase 9) ----------------------------------------------
+
+# Verificado en fal.ai el 13-10-2026: fal-ai/nano-banana-pro y /edit, 0,15 $ por
+# imagen (4K al doble; aquí se pide 2K), hasta 14 imágenes en image_urls.
+- id: fal-nano-banana-pro
+  nombre_visible: "Nano Banana Pro (fal)"
+  acciones: [generar_imagen, imagen_con_referencias, editar_imagen]
+  proveedores: [fal]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 6, audio: false}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: imagen, valor: 0.15, moneda: USD, verificado: true}
+  formato: {png_lado_largo: 2048}
+  nota: "Precio publicado en fal.ai/models/fal-ai/nano-banana-pro, verificado el 13-10-2026."
+
 # --- Plantillas de los proveedores reales (Fase 9) ---------------------------
 # No son elegibles mientras lleven `plantilla: true`. Rellena id, nombre_visible,
 # lo que admite y el precio, y quita la marca.

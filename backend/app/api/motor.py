@@ -20,6 +20,7 @@ from app.api.lienzo import (
     _plano,
     _planos_de_escena,
     _prompt,
+    referencias_ordenadas,
     _renumerar,
     _reparto_con_ficha,
     _vista_plano,
@@ -220,30 +221,18 @@ async def _construir_entradas(
         raise HTTPException(422, f"El modelo «{modelo_id}» no está en el catálogo.")
     reparto = await _reparto_con_ficha(proy["id"])
     continuidad = await _continuidad(plano, reparto)
-    base = prompt_manual if prompt_manual is not None else (await _prompt(plano))["texto"] or ""
     es_video = accion in (Accion.generar_video,)
-    prompt = base
-    if correccion and (es_video or accion in (Accion.generar_imagen, Accion.imagen_con_referencias)):
-        prompt = f"{base}\nCorrección: {correccion}".strip()
 
     referencias: list[ReferenciaEntrada] = []
+    descritas: list[dict[str, Any]] = []
     if modelo.admite.referencias:
-        for c in continuidad:
-            for r in c["referencias"]:
-                medio = await _medio(r.get("medio_id"))
-                if medio and all(x.medio_id != medio["id"] for x in referencias):
-                    referencias.append(
-                        ReferenciaEntrada(
-                            medio_id=medio["id"], ruta=_ruta(medio), rol=r.get("rol") or "otra"
-                        )
-                    )
-        if plano.get("escena_id") is None:
-            guion = await db.guiones.find_one({"pieza_id": plano["pieza_id"]})
-            if guion and guion.get("clase") == "encargo":
-                for medio_id in (guion.get("encargo") or {}).get("referencias") or []:
-                    medio = await _medio(medio_id)
-                    if medio and all(x.medio_id != medio["id"] for x in referencias):
-                        referencias.append(ReferenciaEntrada(medio_id=medio["id"], ruta=_ruta(medio), rol="otra"))
+        for r in await referencias_ordenadas(plano, continuidad):
+            medio = await _medio(r["medio_id"])
+            if medio:
+                referencias.append(
+                    ReferenciaEntrada(medio_id=medio["id"], ruta=_ruta(medio), rol=r["rol"])
+                )
+                descritas.append(r)
         if es_video and toma_origen_id:
             toma = await db.tomas.find_one({"_id": toma_origen_id})
             medio = await _medio((toma or {}).get("medio_id"))
@@ -252,7 +241,20 @@ async def _construir_entradas(
                     0,
                     ReferenciaEntrada(medio_id=medio["id"], ruta=_ruta(medio), rol="detalle"),
                 )
+                descritas.insert(
+                    0, {"medio_id": medio["id"], "rol": "otra", "nombre": None, "clase": "toma"}
+                )
         referencias = referencias[: modelo.admite.referencias]
+        descritas = descritas[: modelo.admite.referencias]
+
+    base = (
+        prompt_manual
+        if prompt_manual is not None
+        else (await _prompt(plano, descritas))["texto"] or ""
+    )
+    prompt = base
+    if correccion and (es_video or accion in (Accion.generar_imagen, Accion.imagen_con_referencias)):
+        prompt = f"{base}\nCorrección: {correccion}".strip()
 
     imagen_entrada: Optional[MedioEntrada] = None
     if accion == Accion.editar_imagen:

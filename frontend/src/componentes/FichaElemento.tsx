@@ -81,6 +81,7 @@ export default function FichaElemento({
     nota_cambio: ficha.nota_cambio || "",
   });
   const [nombre, setNombre] = useState(elemento.nombre);
+  const [personaReal, setPersonaReal] = useState(!!elemento.persona_real);
   const [error, setError] = useState(null);
   const updatedFicha = useRef(ficha.updated_at);
   const updatedElemento = useRef(elemento.updated_at);
@@ -180,6 +181,38 @@ export default function FichaElemento({
           </Campo>
         </div>
       </div>
+
+      {elemento.clase === "personaje" && (
+        <div>
+          <label className="flex items-center gap-2 text-[14px] leading-[20px] text-tinta">
+            <input
+              type="checkbox"
+              data-testid="persona-real"
+              checked={personaReal}
+              onChange={async (e) => {
+                const valor = e.target.checked;
+                setPersonaReal(valor);
+                try {
+                  const guardado = await api.editarElemento(elemento.id, {
+                    persona_real: valor,
+                    updated_at: updatedElemento.current,
+                  });
+                  updatedElemento.current = guardado.updated_at;
+                  onCambiada?.({ recargarLista: true });
+                } catch (err) {
+                  setPersonaReal(!valor);
+                  setError(err.message);
+                }
+              }}
+              className="h-4 w-4 accent-[var(--color-acento)]"
+            />
+            Es una persona real
+          </label>
+          <p className="mt-1 text-[12px] leading-[16px] text-tinta2">
+            El prompt pedirá mantener su cara exacta, con sus rasgos, edad y proporciones, tal como sale en sus fotos de referencia.
+          </p>
+        </div>
+      )}
 
       <div className="rounded-card border border-linea bg-superficie2 px-4 py-3">
         <p className="text-[13px] leading-[18px] text-tinta2" data-testid="info-version-fijada">

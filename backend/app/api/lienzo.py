@@ -123,8 +123,42 @@ async def _continuidad(plano: dict, reparto: list[dict]) -> list[dict]:
                 "rasgos_variables": ficha.get("rasgos_variables") or [],
                 "rasgos_variables_aplican": aplican.get(rid) or [],
                 "referencias": ficha.get("referencias") or [],
+                "persona_real": bool(r["elemento"].get("persona_real")),
             }
         )
+    return salida
+
+
+async def referencias_ordenadas(plano: dict, continuidad: list[dict]) -> list[dict]:
+    """Las referencias en el orden en que viajan a la operación (§18.22): primero
+    las de las fichas del plano y después las del encargo, sin repetir medios."""
+    salida: list[dict] = []
+    vistos: set[str] = set()
+    for c in continuidad:
+        for r in c["referencias"]:
+            mid = r.get("medio_id")
+            if not mid or mid in vistos:
+                continue
+            vistos.add(mid)
+            salida.append(
+                {
+                    "medio_id": mid,
+                    "rol": r.get("rol") or "otra",
+                    "nombre": c["nombre"],
+                    "clase": c["clase"],
+                    "persona_real": c.get("persona_real", False),
+                }
+            )
+    if plano.get("escena_id") is None:
+        guion = await db.guiones.find_one({"pieza_id": plano["pieza_id"]})
+        if guion and guion.get("clase") == "encargo":
+            for mid in (guion.get("encargo") or {}).get("referencias") or []:
+                if mid in vistos:
+                    continue
+                vistos.add(mid)
+                salida.append(
+                    {"medio_id": mid, "rol": "otra", "nombre": None, "clase": None, "persona_real": False}
+                )
     return salida
 
 
@@ -627,12 +661,16 @@ async def borrar_correccion(plano_id: str, correccion_id: str):
 # --- vista previa del prompt (§8) -------------------------------------------
 
 
-async def _prompt(plano: dict) -> dict:
+async def _prompt(plano: dict, referencias: list[dict] | None = None) -> dict:
     pieza = await db.piezas.find_one({"_id": plano["pieza_id"]})
     reparto = await _reparto_con_ficha(pieza["proyecto_id"])
     continuidad = await _continuidad(plano, reparto)
     desarrollo = await db.desarrollos.find_one({"_id": pieza["proyecto_id"]})
-    automatico = constructor_prompt.construir(plano, continuidad, sin_id(desarrollo))
+    if referencias is None:
+        referencias = await referencias_ordenadas(plano, continuidad)
+    automatico = constructor_prompt.construir(
+        plano, continuidad, sin_id(desarrollo), referencias
+    )
     return {
         "texto": plano.get("prompt_manual") if plano.get("prompt_editado_a_mano") else automatico,
         "automatico": automatico,

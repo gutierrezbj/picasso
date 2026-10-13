@@ -28,12 +28,14 @@ from app.motor import catalogo as cat
 from app.motor import estados, eventos
 from app.motor import operaciones as ops
 from app.motor.contrato import ErrorProveedor, EstadoRemotoNombre, Proveedor, SinRespuesta
+from app.motor.proveedores.fal import ProveedorFal
 from app.motor.proveedores.simulado import ProveedorSimulado
 
 CONCURRENCIA = int(os.environ.get("CONCURRENCIA_PROVEEDOR") or 2)
 
 _PROVEEDORES: dict[str, Proveedor] = {
     "simulado": ProveedorSimulado(config.DATA_DIR / "simulado"),
+    "fal": ProveedorFal(),
 }
 
 _semaforos: dict[str, asyncio.Semaphore] = {}
@@ -177,6 +179,8 @@ async def _seguir(op_id: str, id_remoto: str, limite_s: float = 120.0) -> None:
     prov = proveedor(op["proveedor"])
     if prov is None:
         return
+    limite_s = getattr(prov, "limite_s", limite_s)
+    intervalo = getattr(prov, "intervalo_s", 0.4)
     esperado = 0.0
     while esperado < limite_s:
         try:
@@ -200,8 +204,8 @@ async def _seguir(op_id: str, id_remoto: str, limite_s: float = 120.0) -> None:
                 {"error": estado.error or "El proveedor ha devuelto un error."},
             )
             return
-        await asyncio.sleep(0.4)
-        esperado += 0.4
+        await asyncio.sleep(intervalo)
+        esperado += intervalo
     await _incierta(op_id, "El seguimiento ha tardado demasiado. Comprueba desde el registro.")
 
 
@@ -289,16 +293,18 @@ def _medidas(ruta: Path) -> dict[str, Any]:
     }
 
 
-async def _crear_medio(espacio_id: str, op_id: str, extension: str, datos: bytes) -> dict[str, Any]:
+async def _crear_medio(
+    espacio_id: str, op_id: str, extension: str, datos: bytes, proveedor_id: str = "simulado"
+) -> dict[str, Any]:
     medio = Medio(
         espacio_id=espacio_id,
         clase=CLASE_POR_EXTENSION.get(extension, "documento"),
         ruta="",
         mime=mimetypes.types_map.get(extension, "application/octet-stream"),
-        nombre_original=f"simulado{extension}",
+        nombre_original=f"{proveedor_id}{extension}",
         origen="generado",
         operacion_id=op_id,
-        etiqueta_demo=True,
+        etiqueta_demo=proveedor_id == "simulado",
         hash=hashlib.sha256(datos).hexdigest(),
     )
     medio.ruta = almacen.guardar(espacio_id, medio.id, extension, datos)
@@ -341,9 +347,15 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
     medios: list[tuple[int, dict[str, Any]]] = []
     for url in urls:
         datos = await prov.descargar(url)
-        extension = Path(url).suffix or ".png"
-        medio = await _crear_medio(op["espacio_id"], op_id, extension, datos)
-        medios.append((_indice_de_url(url), medio))
+        base, _, fragmento = url.partition("#")
+        extension = Path(base.split("?", 1)[0]).suffix or ".png"
+        medio = await _crear_medio(op["espacio_id"], op_id, extension, datos, prov.id)
+        medios.append((int(fragmento) if fragmento.isdigit() else _indice_de_url(base), medio))
+
+    if coste_real is None and prov.id != "simulado":
+        m = cat.modelo(entradas.modelo)
+        if m and m.coste.valor is not None and m.coste.unidad == "imagen":
+            coste_real = cat.a_centimos(m.coste.valor * len(medios))
 
     tomas: list[dict[str, Any]] = []
     if op["destino"]["tipo"] == "ficha":

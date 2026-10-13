@@ -37,7 +37,15 @@ ok(por_id["sim-editar"]["coste"]["unidad"] == "operacion", "sim-editar se cobra 
 ok(por_id["sim-video"]["coste"]["unidad"] == "segundo", "sim-video se cobra por segundo")
 ok(por_id["sim-voz"]["coste"]["unidad"] == "caracter", "sim-voz se cobra por carácter")
 ok(por_id["sim-sin-precio"]["coste"]["valor"] is None, "sim-sin-precio: coste sin verificar")
-ok(all(not m["coste"]["verificado"] for m in catalogo), "ningún precio está verificado")
+ok(
+    all(not m["coste"]["verificado"] for m in catalogo if "simulado" in m["proveedores"]),
+    "ningún precio simulado está verificado",
+)
+ok(
+    por_id["fal-nano-banana-pro"]["coste"]["verificado"]
+    and not por_id["fal-nano-banana-pro"]["elegible"],
+    "Nano Banana Pro (fal): precio verificado y no elegible sin FAL_KEY",
+)
 ok(
     not por_id["fal-plantilla-video"]["elegible"]
     and por_id["fal-plantilla-video"]["motivo_no_elegible"],

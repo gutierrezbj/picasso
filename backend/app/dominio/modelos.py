@@ -230,6 +230,7 @@ class ElementoCrear(BaseModel):
 
 class ElementoEditar(BaseModel):
     nombre: Optional[str] = None
+    persona_real: Optional[bool] = None
     updated_at: str
 
 
@@ -238,6 +239,7 @@ class Elemento(BaseModel):
     espacio_id: str
     clase: ClaseElemento
     nombre: str
+    persona_real: bool = False
     ficha_vigente: int = 1
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
