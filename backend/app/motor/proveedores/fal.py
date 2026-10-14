@@ -42,6 +42,9 @@ PUNTO_DE_LLAMADA: dict[str, dict[str, str]] = {
         "hablando": "fal-ai/bytedance/omnihuman/v1.5",
         "resolucion": "720p",
     },
+    "fal-kling-avatar-v2-pro": {
+        "hablando": "fal-ai/kling-video/ai-avatar/v2/pro",
+    },
 }
 
 _TIEMPO = httpx.Timeout(30.0, read=120.0)
@@ -127,7 +130,11 @@ class ProveedorFal:
         os.environ.setdefault("FAL_KEY", self._clave())
         foto = await fal_client.upload_file_async(op.retrato.ruta)
         audio = await fal_client.upload_file_async(op.audio_entrada.ruta)
-        cuerpo = {"image_url": foto, "audio_url": audio, "resolution": llamada["resolucion"]}
+        cuerpo: dict[str, Any] = {"image_url": foto, "audio_url": audio}
+        if llamada.get("resolucion"):
+            cuerpo["resolution"] = llamada["resolucion"]
+        if op.prompt:
+            cuerpo["prompt"] = op.prompt
         return [(llamada["hablando"], cuerpo)]
 
     async def enviar(self, op: EntradaOperacion, clave_idempotencia: str) -> str:

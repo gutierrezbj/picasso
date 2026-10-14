@@ -115,6 +115,19 @@
   formato: {fps: 25, lado_largo: 1280, hz: 48000}
   nota: "Precio publicado en fal.ai/models/fal-ai/bytedance/omnihuman/v1.5, verificado el 14-10-2026. La duración la marca la voz."
 
+# Verificado en fal.ai el 14-10-2026: fal-ai/kling-video/ai-avatar/v2/pro, 0,115 $ por
+# segundo; entrada image_url, audio_url y prompt; el vídeo dura lo que el audio.
+- id: fal-kling-avatar-v2-pro
+  nombre_visible: "Kling AI Avatar v2 Pro · personaje hablando (fal)"
+  acciones: [personaje_hablando]
+  proveedores: [fal]
+  admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
+  duraciones_s: []
+  relaciones: ["9:16", "16:9", "1:1", "4:5"]
+  coste: {unidad: segundo, valor: 0.115, moneda: USD, verificado: true}
+  formato: {fps: 25, lado_largo: 1280, hz: 48000}
+  nota: "Precio publicado en fal.ai/models/fal-ai/kling-video/ai-avatar/v2/pro, verificado el 14-10-2026. Admite prompt."
+
 # Verificado en elevenlabs.io/pricing/api el 14-10-2026: 0,08 $ por 1.000
 # caracteres en Eleven v3 y Multilingual v2, igual en todos los planes.
 - id: elevenlabs-multilingual-v2

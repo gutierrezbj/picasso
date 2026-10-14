@@ -221,7 +221,9 @@ async def _construir_entradas(
     if modelo is None:
         raise HTTPException(422, f"El modelo «{modelo_id}» no está en el catálogo.")
     if accion == Accion.personaje_hablando:
-        return await _entradas_hablando(plano, modelo_id, toma_origen_id, simular, retrato_medio_id)
+        return await _entradas_hablando(
+            plano, modelo_id, toma_origen_id, simular, retrato_medio_id, prompt_manual
+        )
     reparto = await _reparto_con_ficha(proy["id"])
     continuidad = await _continuidad(plano, reparto)
     es_video = accion in (Accion.generar_video,)
@@ -349,6 +351,7 @@ async def _entradas_hablando(
     toma_origen_id: Optional[str],
     simular: SimulacionPrueba,
     retrato_medio_id: Optional[str] = None,
+    prompt_manual: Optional[str] = None,
 ) -> tuple[EntradaOperacion, str]:
     """Personaje que habla, ruta B (§9.7): foto de partida (una toma de imagen del
     plano o la foto real de la ficha de un personaje del plano) + la voz elegida
@@ -386,16 +389,38 @@ async def _entradas_hablando(
             409,
             "Este plano no tiene voz elegida: en la pestaña Voces, produce y elige la voz del diálogo que suena aquí.",
         )
+    prompt = prompt_manual if prompt_manual is not None else await _prompt_hablando(plano)
     entradas = EntradaOperacion(
         accion=Accion.personaje_hablando,
         modelo=modelo_id,
+        prompt=prompt,
         retrato=MedioEntrada(medio_id=foto["id"], ruta=_ruta(foto)),
         audio_entrada=MedioEntrada(medio_id=audio["id"], ruta=_ruta(audio)),
         duracion_s=audio.get("duracion_s") or ficheros.duracion_de(_ruta(audio)),
         etiqueta_destino=await etiqueta_plano(plano),
         simular_resultado=simular,
     )
-    return entradas, "Foto de partida + voz elegida del diálogo"
+    return entradas, prompt
+
+
+async def _prompt_hablando(plano: dict[str, Any]) -> str:
+    """§19.26: lo que se le pide al modelo que hace hablar. Sale de la dirección
+    del plano y del brief; se ve y se edita antes de autorizar."""
+    _, proy = await _pieza_proyecto(plano["pieza_id"])
+    des = await db.desarrollos.find_one({"_id": proy["id"]}) or {}
+    d = plano.get("direccion") or {}
+    lineas = [
+        f"Scene: {plano.get('que_se_muestra')}." if plano.get("que_se_muestra") else "",
+        "The person speaks directly to camera, natural and conversational.",
+        f"Tone: {des.get('tono')}." if des.get("tono") else "",
+        f"Intent: {des.get('intencion')}." if des.get("intencion") else "",
+        f"Mood: {d.get('ambiente')}." if d.get("ambiente") else "",
+        "Clear, precise articulation: lips perfectly synchronized with the audio, a distinct mouth shape for every syllable, teeth and tongue visible when natural.",
+        "Subtle natural head movement, natural blinking, eyes on camera, relaxed small hand gestures.",
+        "Keep the face and identity exactly as in the photo.",
+        "Avoid: sticky or smeared lips, mumbling mouth, lip-sync drift, exaggerated expressions, jitter, face distortion.",
+    ]
+    return "\n".join(l for l in lineas if l)
 
 
 async def _ficha_y_elemento(ficha_id: str) -> tuple[dict[str, Any], dict[str, Any]]:

@@ -634,7 +634,7 @@ _PROHIBE: dict[str, tuple[str, ...]] = {
     ),
     "personaje_hablando": (
         "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
-        "video_entrada", "texto", "prompt",
+        "video_entrada", "texto",
     ),
 }
 
