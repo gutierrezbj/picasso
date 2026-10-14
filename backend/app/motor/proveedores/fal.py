@@ -74,7 +74,7 @@ def _prompt_variante(prompt: str, encuadre: str | None, angulo: str | None) -> s
 class ProveedorFal:
     id = "fal"
     intervalo_s = 2.0
-    limite_s = 300.0
+    limite_s = 900.0
 
     def _clave(self) -> str:
         return os.environ.get("FAL_KEY") or ""
