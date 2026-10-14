@@ -105,8 +105,24 @@ export default function PanelProducir({
     queryFn: () => api.tomas(plano.id),
     enabled: hablando,
   });
-  const fotos = (vistaTomas?.tomas || []).filter((t) => t.medio?.clase === "imagen");
-  const foto = fotos.find((t) => t.id === fotoId) || fotos[fotos.length - 1] || null;
+  const fotosReales = plano.continuidad
+    .filter((c) => c.clase === "personaje")
+    .flatMap((c) =>
+      c.referencias.map((r) => ({
+        clave: `ref:${r.medio_id}`,
+        medioId: r.medio_id,
+        texto: `Foto real de ${c.nombre}${c.persona_real ? " (persona real)" : ""}`,
+        real: !!c.persona_real,
+      }))
+    );
+  const fotos = [
+    ...fotosReales,
+    ...(vistaTomas?.tomas || [])
+      .filter((t) => t.medio?.clase === "imagen")
+      .map((t) => ({ clave: `toma:${t.id}`, medioId: t.medio!.id, texto: `Toma ${t.numero}`, real: false })),
+  ];
+  const foto =
+    fotos.find((f) => f.clave === fotoId) || fotos.find((f) => f.real) || fotos[fotos.length - 1] || null;
 
   const acciones: Accion[] = [
     ...(modalidad === "video" ? ACCIONES_VIDEO : ACCIONES_IMAGEN),
@@ -160,7 +176,8 @@ export default function PanelProducir({
     duracion_s: accion === "generar_video" ? duracionEfectiva : null,
     texto: accion === "generar_voz" ? texto : null,
     n_variantes: exploracion ? Number(variantes) || 4 : 1,
-    toma_origen_id: hablando ? foto?.id : undefined,
+    toma_origen_id: hablando && foto?.clave.startsWith("toma:") ? foto.clave.slice(5) : undefined,
+    retrato_medio_id: hablando && foto?.clave.startsWith("ref:") ? foto.medioId : undefined,
     simular_resultado: simular,
   });
 
@@ -449,17 +466,17 @@ export default function PanelProducir({
       {hablando && (
         <Campo
           etiqueta="Foto de partida"
-          ayuda="Una toma de imagen de este plano. La voz es la elegida del diálogo que suena aquí (pestaña Voces), y su duración marca el precio."
+          ayuda="Con una persona real, su foto real: la cara se conserva, no se genera. La voz es la elegida del diálogo que suena aquí (pestaña Voces) y su duración marca el precio."
         >
           {fotos.length === 0 ? (
             <p data-testid="sin-foto-partida" className="text-[13px] leading-[18px] text-aviso">
-              Este plano aún no tiene ninguna toma de imagen. Produce primero la foto con «Imagen con referencias».
+              No hay foto de partida: añade la foto del personaje a su ficha o produce una imagen en este plano.
             </p>
           ) : (
             <div className="flex items-center gap-3">
-              {foto?.medio && (
+              {foto && (
                 <img
-                  src={api.urlMedio(foto.medio.id)}
+                  src={api.urlMedio(foto.medioId)}
                   alt="Foto de partida"
                   className="h-16 w-16 rounded-control border border-linea object-cover"
                 />
@@ -467,8 +484,8 @@ export default function PanelProducir({
               <div className="flex-1">
                 <Selector
                   data-testid="producir-foto-partida"
-                  valor={foto?.id || ""}
-                  opciones={fotos.map((t) => ({ valor: t.id, texto: `Toma ${t.numero}` }))}
+                  valor={foto?.clave || ""}
+                  opciones={fotos.map((f) => ({ valor: f.clave, texto: f.texto }))}
                   onChange={setFotoId}
                 />
               </div>

@@ -295,6 +295,7 @@ export interface ContinuidadElemento {
   rasgos_variables: string[];
   rasgos_variables_aplican: string[];
   referencias: Referencia[];
+  persona_real?: boolean;
 }
 
 export interface Plano {

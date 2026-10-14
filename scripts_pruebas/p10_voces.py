@@ -185,6 +185,10 @@ req("POST", f"/api/operaciones/{prep['id']}/autorizar", {})
 ok(esperar(prep["id"])["estado"] == "completada", "el personaje hablando se produce")
 ultima = req("GET", f"/api/planos/{destino['id']}/tomas")["tomas"][-1]
 ok(ultima["medio"]["clase"] == "video", "sale una toma de vídeo en el plano")
+ok(estado_http("POST", "/api/operaciones", {
+    "destino_id": destino["id"], "accion": "personaje_hablando",
+    "modelo": "sim-personaje-hablando", "retrato_medio_id": foto["medio_id"],
+}) == 409, "como foto real solo vale una referencia de un personaje del plano (409)")
 
 # --- el diálogo cambia: voz desactualizada ------------------------------------------------
 def cambiar_texto(escenas):

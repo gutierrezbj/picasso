@@ -215,12 +215,13 @@ async def _construir_entradas(
     prompt_manual: Optional[str] = None,
     correccion: Optional[str] = None,
     simular: SimulacionPrueba = SimulacionPrueba.normal,
+    retrato_medio_id: Optional[str] = None,
 ) -> tuple[EntradaOperacion, str]:
     modelo = cat.modelo(modelo_id)
     if modelo is None:
         raise HTTPException(422, f"El modelo «{modelo_id}» no está en el catálogo.")
     if accion == Accion.personaje_hablando:
-        return await _entradas_hablando(plano, modelo_id, toma_origen_id, simular)
+        return await _entradas_hablando(plano, modelo_id, toma_origen_id, simular, retrato_medio_id)
     reparto = await _reparto_con_ficha(proy["id"])
     continuidad = await _continuidad(plano, reparto)
     es_video = accion in (Accion.generar_video,)
@@ -343,16 +344,33 @@ ENCARGO_POR_CLASE: dict[str, str] = {
 
 
 async def _entradas_hablando(
-    plano: dict[str, Any], modelo_id: str, toma_origen_id: Optional[str], simular: SimulacionPrueba
+    plano: dict[str, Any],
+    modelo_id: str,
+    toma_origen_id: Optional[str],
+    simular: SimulacionPrueba,
+    retrato_medio_id: Optional[str] = None,
 ) -> tuple[EntradaOperacion, str]:
     """Personaje que habla, ruta B (§9.7): foto de partida (una toma de imagen del
-    plano) + la voz elegida del diálogo que suena en este plano (§11.1)."""
-    toma = await db.tomas.find_one({"_id": toma_origen_id or ""})
-    foto = await _medio((toma or {}).get("medio_id"))
-    if not toma or toma.get("plano_id") != plano["id"] or not foto or foto["clase"] != "imagen":
-        raise HTTPException(
-            409, "Elige una foto de partida: una toma de imagen de este plano."
-        )
+    plano o la foto real de la ficha de un personaje del plano) + la voz elegida
+    del diálogo que suena en este plano (§11.1)."""
+    if retrato_medio_id:
+        _, proy = await _pieza_proyecto(plano["pieza_id"])
+        continuidad = await _continuidad(plano, await _reparto_con_ficha(proy["id"]))
+        de_ficha = {
+            r.get("medio_id") for c in continuidad if c["clase"] == "personaje" for r in c["referencias"]
+        }
+        foto = await _medio(retrato_medio_id) if retrato_medio_id in de_ficha else None
+        if not foto or foto["clase"] != "imagen":
+            raise HTTPException(
+                409, "Esa foto no es una referencia de un personaje de este plano."
+            )
+    else:
+        toma = await db.tomas.find_one({"_id": toma_origen_id or ""})
+        foto = await _medio((toma or {}).get("medio_id"))
+        if not toma or toma.get("plano_id") != plano["id"] or not foto or foto["clase"] != "imagen":
+            raise HTTPException(
+                409, "Elige una foto de partida: una toma de imagen de este plano o la foto de la ficha."
+            )
     primero = (await _planos_de_escena(plano["escena_id"]) or [{}])[0] if plano.get("escena_id") else {}
     filtro: dict[str, Any] = {"toma_elegida_id": {"$ne": None}, "plano_id": plano["id"]}
     if primero.get("id") == plano["id"]:
@@ -608,6 +626,7 @@ async def preparar_operacion(datos: PrepararOperacion):
             prompt_manual=datos.prompt_manual,
             correccion=correccion_texto,
             simular=datos.simular_resultado,
+            retrato_medio_id=datos.retrato_medio_id,
         )
         return await ops.crear_operacion(
             proyecto_id=proy["id"],
@@ -689,6 +708,9 @@ async def editar_operacion(operacion_id: str, datos: EditarOperacion):
             else previas.prompt,
             correccion=correccion_texto,
             simular=datos.simular_resultado or previas.simular_resultado,
+            retrato_medio_id=previas.retrato.medio_id
+            if previas.retrato and not op.get("toma_origen_id")
+            else None,
         )
         return await ops.editar(operacion_id, entradas, prompt_visible)
     except estados.TransicionNoPermitida as e:

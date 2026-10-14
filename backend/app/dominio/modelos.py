@@ -819,6 +819,7 @@ class PrepararOperacion(BaseModel):
     n_variantes: Optional[int] = None
     correccion_id: Optional[str] = None
     toma_origen_id: Optional[str] = None
+    retrato_medio_id: Optional[str] = None
     prompt_manual: Optional[str] = None
     simular_resultado: SimulacionPrueba = SimulacionPrueba.normal
 
