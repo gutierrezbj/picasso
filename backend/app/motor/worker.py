@@ -28,6 +28,7 @@ from app.motor import catalogo as cat
 from app.motor import estados, eventos
 from app.motor import operaciones as ops
 from app.motor.contrato import ErrorProveedor, EstadoRemotoNombre, Proveedor, SinRespuesta
+from app.motor.proveedores.elevenlabs import ProveedorElevenLabs
 from app.motor.proveedores.fal import ProveedorFal
 from app.motor.proveedores.simulado import ProveedorSimulado
 
@@ -36,6 +37,7 @@ CONCURRENCIA = int(os.environ.get("CONCURRENCIA_PROVEEDOR") or 2)
 _PROVEEDORES: dict[str, Proveedor] = {
     "simulado": ProveedorSimulado(config.DATA_DIR / "simulado"),
     "fal": ProveedorFal(),
+    "elevenlabs": ProveedorElevenLabs(config.DATA_DIR / "elevenlabs"),
 }
 
 _semaforos: dict[str, asyncio.Semaphore] = {}
