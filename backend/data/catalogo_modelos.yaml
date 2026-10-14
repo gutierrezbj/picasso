@@ -126,7 +126,7 @@
   relaciones: []
   coste: {unidad: caracter, valor: 0.00008, moneda: USD, verificado: true}
   formato: {hz: 44100}
-  nota: "Precio publicado en elevenlabs.io/pricing/api, verificado el 14-10-2026."
+  nota: "Precio publicado en elevenlabs.io/pricing/api, verificado el 14-10-2026. Con voces clonadas al instante se parece más a la persona que v3 (prueba con Tania, 14-10)."
 
 - id: elevenlabs-v3
   nombre_visible: "ElevenLabs · v3 (más expresiva)"
