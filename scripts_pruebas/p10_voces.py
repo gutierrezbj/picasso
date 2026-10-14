@@ -158,6 +158,34 @@ ok(estado_http("PATCH", f"/api/voces/{ids[0]}", {"desfase_s": -1}) == 422,
 vista = req("PATCH", f"/api/voces/{ids[0]}", {"plano_id": planos_escena[1]["id"], "desfase_s": 0.5})
 ok(vista["plano_id"] == planos_escena[1]["id"] and vista["desfase_s"] == 0.5, "la voz se mueve de plano y desfase")
 
+# --- personaje hablando: foto de partida + voz elegida (§9.7) ------------------------------
+destino = planos_escena[1]
+ok(estado_http("POST", "/api/operaciones", {
+    "destino_id": destino["id"], "accion": "personaje_hablando", "modelo": "sim-personaje-hablando",
+}) == 409, "personaje hablando sin foto de partida: 409")
+foto_op = req("POST", "/api/operaciones", {
+    "destino_id": destino["id"], "accion": "generar_imagen", "modelo": "sim-imagen",
+})["operacion"]
+req("POST", f"/api/operaciones/{foto_op['id']}/autorizar", {})
+ok(esperar(foto_op["id"])["estado"] == "completada", "la foto de partida se produce en el plano")
+foto = req("GET", f"/api/planos/{destino['id']}/tomas")["tomas"][-1]
+ok(estado_http("POST", "/api/operaciones", {
+    "destino_id": planos_escena[0]["id"], "accion": "personaje_hablando",
+    "modelo": "sim-personaje-hablando", "toma_origen_id": foto["id"],
+}) == 409, "la foto de partida tiene que ser de ese mismo plano (409)")
+prep = req("POST", "/api/operaciones", {
+    "destino_id": destino["id"], "accion": "personaje_hablando",
+    "modelo": "sim-personaje-hablando", "toma_origen_id": foto["id"],
+})["operacion"]
+dur = prep["entradas"]["duracion_s"]
+ok(dur and prep["entradas"]["audio_entrada"] and prep["entradas"]["retrato"],
+   "la operación lleva la foto, la voz elegida y su duración")
+ok(abs(float(prep["coste_estimado"]) - round(0.25 * dur, 2)) < 0.011, "el precio sale de la duración de la voz")
+req("POST", f"/api/operaciones/{prep['id']}/autorizar", {})
+ok(esperar(prep["id"])["estado"] == "completada", "el personaje hablando se produce")
+ultima = req("GET", f"/api/planos/{destino['id']}/tomas")["tomas"][-1]
+ok(ultima["medio"]["clase"] == "video", "sale una toma de vídeo en el plano")
+
 # --- el diálogo cambia: voz desactualizada ------------------------------------------------
 def cambiar_texto(escenas):
     e = next(x for x in escenas if x.get("origen_id") == esc["id"])

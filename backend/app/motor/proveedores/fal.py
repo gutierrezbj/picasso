@@ -19,6 +19,7 @@ import os
 from decimal import Decimal
 from typing import Any
 
+import fal_client
 import httpx
 from PIL import Image
 
@@ -36,6 +37,10 @@ PUNTO_DE_LLAMADA: dict[str, dict[str, str]] = {
         "texto": "fal-ai/nano-banana-pro",
         "edicion": "fal-ai/nano-banana-pro/edit",
         "resolucion": "2K",
+    },
+    "fal-omnihuman-v15": {
+        "hablando": "fal-ai/bytedance/omnihuman/v1.5",
+        "resolucion": "720p",
     },
 }
 
@@ -114,6 +119,17 @@ class ProveedorFal:
             encargos.append((destino, cuerpo))
         return encargos
 
+    async def _hablando(self, op: EntradaOperacion) -> list[tuple[str, dict[str, Any]]]:
+        """OmniHuman 1.5 (§9.7): foto + audio subidos al almacén de fal."""
+        llamada = PUNTO_DE_LLAMADA.get(op.modelo) or {}
+        if "hablando" not in llamada:
+            raise ValueError(f"fal no sabe hacer hablar con el modelo «{op.modelo}».")
+        os.environ.setdefault("FAL_KEY", self._clave())
+        foto = await fal_client.upload_file_async(op.retrato.ruta)
+        audio = await fal_client.upload_file_async(op.audio_entrada.ruta)
+        cuerpo = {"image_url": foto, "audio_url": audio, "resolution": llamada["resolucion"]}
+        return [(llamada["hablando"], cuerpo)]
+
     async def enviar(self, op: EntradaOperacion, clave_idempotencia: str) -> str:
         previo = await db.envios_fal.find_one({"_id": clave_idempotencia})
         if previo:
@@ -122,7 +138,11 @@ class ProveedorFal:
             raise SinRespuesta(
                 "Este envío ya se intentó y fal no contestó. No se reenvía para no cobrar dos veces."
             )
-        encargos = self._encargos(op)
+        encargos = (
+            await self._hablando(op)
+            if op.accion == Accion.personaje_hablando
+            else self._encargos(op)
+        )
         await db.envios_fal.insert_one({"_id": clave_idempotencia, "id_remoto": None})
         respuestas: list[str] = []
         async with httpx.AsyncClient(timeout=_TIEMPO) as cliente:
@@ -180,8 +200,11 @@ class ProveedorFal:
                 if resultado.status_code >= 400:
                     errores.append(resultado.text[:300])
                     continue
-                for img in resultado.json().get("images") or []:
+                datos = resultado.json()
+                for img in datos.get("images") or []:
                     imagenes.append(f"{img['url']}#{indice}")
+                if (datos.get("video") or {}).get("url"):
+                    imagenes.append(f"{datos['video']['url']}#{indice}")
         if pendientes:
             hechas = len(urls_respuesta) - pendientes
             return EstadoRemoto(

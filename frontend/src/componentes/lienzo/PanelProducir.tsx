@@ -32,7 +32,12 @@ interface Props {
 }
 
 const ACCIONES_IMAGEN: Accion[] = ["generar_imagen", "imagen_con_referencias"];
-const ACCIONES_VIDEO: Accion[] = ["generar_video"];
+const ACCIONES_VIDEO: Accion[] = [
+  "generar_video",
+  "imagen_con_referencias",
+  "generar_imagen",
+  "personaje_hablando",
+];
 
 const SIMULACIONES: { valor: SimulacionPrueba; texto: string }[] = [
   { valor: "normal", texto: "Normal" },
@@ -62,6 +67,7 @@ export default function PanelProducir({
     plano.duracion_s === null ? "" : String(plano.duracion_s)
   );
   const [texto, setTexto] = useState("");
+  const [fotoId, setFotoId] = useState("");
   const [variantes, setVariantes] = useState("4");
   const [simular, setSimular] = useState<SimulacionPrueba>("normal");
   const [error, setError] = useState<string | null>(null);
@@ -92,6 +98,15 @@ export default function PanelProducir({
     ["autorizada", "enviada", "en_curso"].includes(op.estado)
   );
   const ocupado = trabajando || enMarcha.length > 0;
+
+  const hablando = accion === "personaje_hablando";
+  const { data: vistaTomas } = useQuery({
+    queryKey: ["tomas", plano.id],
+    queryFn: () => api.tomas(plano.id),
+    enabled: hablando,
+  });
+  const fotos = (vistaTomas?.tomas || []).filter((t) => t.medio?.clase === "imagen");
+  const foto = fotos.find((t) => t.id === fotoId) || fotos[fotos.length - 1] || null;
 
   const acciones: Accion[] = [
     ...(modalidad === "video" ? ACCIONES_VIDEO : ACCIONES_IMAGEN),
@@ -145,8 +160,24 @@ export default function PanelProducir({
     duracion_s: accion === "generar_video" ? duracionEfectiva : null,
     texto: accion === "generar_voz" ? texto : null,
     n_variantes: exploracion ? Number(variantes) || 4 : 1,
+    toma_origen_id: hablando ? foto?.id : undefined,
     simular_resultado: simular,
   });
+
+  const prepararHablando = async () => {
+    if (!modelo) return;
+    setTrabajando(true);
+    setError(null);
+    try {
+      const prep = await api.prepararOperacion(cuerpo(false));
+      setPreparada(prep);
+      setBorrador(prep.operacion.prompt_visible);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se ha podido preparar.");
+    } finally {
+      setTrabajando(false);
+    }
+  };
 
   const producir = async (exploracion: boolean, confirmado: boolean) => {
     if (!modelo) return;
@@ -415,6 +446,37 @@ export default function PanelProducir({
         )}
       </Campo>
 
+      {hablando && (
+        <Campo
+          etiqueta="Foto de partida"
+          ayuda="Una toma de imagen de este plano. La voz es la elegida del diálogo que suena aquí (pestaña Voces), y su duración marca el precio."
+        >
+          {fotos.length === 0 ? (
+            <p data-testid="sin-foto-partida" className="text-[13px] leading-[18px] text-aviso">
+              Este plano aún no tiene ninguna toma de imagen. Produce primero la foto con «Imagen con referencias».
+            </p>
+          ) : (
+            <div className="flex items-center gap-3">
+              {foto?.medio && (
+                <img
+                  src={api.urlMedio(foto.medio.id)}
+                  alt="Foto de partida"
+                  className="h-16 w-16 rounded-control border border-linea object-cover"
+                />
+              )}
+              <div className="flex-1">
+                <Selector
+                  data-testid="producir-foto-partida"
+                  valor={foto?.id || ""}
+                  opciones={fotos.map((t) => ({ valor: t.id, texto: `Toma ${t.numero}` }))}
+                  onChange={setFotoId}
+                />
+              </div>
+            </div>
+          )}
+        </Campo>
+      )}
+
       {accion === "generar_video" && (
         <Campo
           etiqueta="Duración (s)"
@@ -517,7 +579,9 @@ export default function PanelProducir({
         className="rounded-card border border-linea bg-superficie2 p-3 text-[13px] leading-[18px] text-tinta2"
       >
         <p className="text-[14px] leading-[20px] font-semibold text-tinta">
-          Coste de esta operación: {textoCoste(coste, moneda)}
+          {hablando
+            ? "Coste: se calcula con la duración de la voz al preparar."
+            : `Coste de esta operación: ${textoCoste(coste, moneda)}`}
         </p>
         {gasto && (
           <p className="mt-1">
@@ -538,6 +602,15 @@ export default function PanelProducir({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
+        {hablando ? (
+        <Boton
+          data-testid="btn-preparar-hablando"
+          disabled={!modelo?.elegible || ocupado || !foto}
+          onClick={prepararHablando}
+        >
+          <Play size={15} strokeWidth={1.9} /> Preparar y ver el precio
+        </Boton>
+        ) : (
         <Boton
           data-testid="btn-producir"
           disabled={!modelo?.elegible || ocupado || (accion === "generar_voz" && !texto.trim())}
@@ -556,6 +629,7 @@ export default function PanelProducir({
             </>
           )}
         </Boton>
+        )}
       </div>
       {ocupado && (
         <p data-testid="produciendo" className="-mt-2 text-[13px] leading-[18px] text-tinta2">

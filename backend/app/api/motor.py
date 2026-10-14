@@ -219,9 +219,22 @@ async def _construir_entradas(
     modelo = cat.modelo(modelo_id)
     if modelo is None:
         raise HTTPException(422, f"El modelo «{modelo_id}» no está en el catálogo.")
+    if accion == Accion.personaje_hablando:
+        return await _entradas_hablando(plano, modelo_id, toma_origen_id, simular)
     reparto = await _reparto_con_ficha(proy["id"])
     continuidad = await _continuidad(plano, reparto)
     es_video = accion in (Accion.generar_video,)
+    if plano.get("modalidad") == "video" and not es_video:
+        d = plano.get("direccion") or {}
+        plano = {
+            **plano,
+            "modalidad": "imagen",
+            "direccion": {
+                **d,
+                "encuadre": d.get("encuadre") or d.get("encuadre_inicio"),
+                "angulo": d.get("angulo") or d.get("angulo_inicio"),
+            },
+        }
 
     referencias: list[ReferenciaEntrada] = []
     descritas: list[dict[str, Any]] = []
@@ -327,6 +340,44 @@ ENCARGO_POR_CLASE: dict[str, str] = {
     "mundo": "Lámina del mundo: vistas del espacio, sin personajes.",
     "objeto": "Lámina de referencia del objeto: vistas sobre fondo limpio.",
 }
+
+
+async def _entradas_hablando(
+    plano: dict[str, Any], modelo_id: str, toma_origen_id: Optional[str], simular: SimulacionPrueba
+) -> tuple[EntradaOperacion, str]:
+    """Personaje que habla, ruta B (§9.7): foto de partida (una toma de imagen del
+    plano) + la voz elegida del diálogo que suena en este plano (§11.1)."""
+    toma = await db.tomas.find_one({"_id": toma_origen_id or ""})
+    foto = await _medio((toma or {}).get("medio_id"))
+    if not toma or toma.get("plano_id") != plano["id"] or not foto or foto["clase"] != "imagen":
+        raise HTTPException(
+            409, "Elige una foto de partida: una toma de imagen de este plano."
+        )
+    primero = (await _planos_de_escena(plano["escena_id"]) or [{}])[0] if plano.get("escena_id") else {}
+    filtro: dict[str, Any] = {"toma_elegida_id": {"$ne": None}, "plano_id": plano["id"]}
+    if primero.get("id") == plano["id"]:
+        filtro = {
+            "toma_elegida_id": {"$ne": None},
+            "$or": [{"plano_id": plano["id"]}, {"plano_id": None, "escena_id": plano["escena_id"]}],
+        }
+    voz = await db.voces.find_one(filtro)
+    toma_voz = await db.tomas.find_one({"_id": (voz or {}).get("toma_elegida_id") or ""})
+    audio = await _medio((toma_voz or {}).get("medio_id"))
+    if not audio:
+        raise HTTPException(
+            409,
+            "Este plano no tiene voz elegida: en la pestaña Voces, produce y elige la voz del diálogo que suena aquí.",
+        )
+    entradas = EntradaOperacion(
+        accion=Accion.personaje_hablando,
+        modelo=modelo_id,
+        retrato=MedioEntrada(medio_id=foto["id"], ruta=_ruta(foto)),
+        audio_entrada=MedioEntrada(medio_id=audio["id"], ruta=_ruta(audio)),
+        duracion_s=audio.get("duracion_s") or ficheros.duracion_de(_ruta(audio)),
+        etiqueta_destino=await etiqueta_plano(plano),
+        simular_resultado=simular,
+    )
+    return entradas, "Foto de partida + voz elegida del diálogo"
 
 
 async def _ficha_y_elemento(ficha_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
