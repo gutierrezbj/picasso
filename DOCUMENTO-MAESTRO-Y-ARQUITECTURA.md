@@ -931,7 +931,21 @@ Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y que
 | 18.26 | **Texto exacto en piezas gráficas.** Hoy es ley que nunca se pide texto al modelo y los rótulos van en DaVinci. Propuesta: en un encargo de imagen, y solo si el director lo activa por imagen, un campo *Texto exacto* (cada texto entre comillas) que la plantilla envía con la coletilla «y ningún otro texto», en lugar de «Sin texto ni rótulos». Los planos de vídeo mantienen la ley. La toma se revisa letra a letra antes de elegirla. | REF 02, reglas 4 y 8 | **APROBADA el 12-10-2026 (Juan: «en arte y diseño no se puede ser tan estricto»): F9** |
 | 18.27 | **Extraer rasgos de la foto.** En la ficha de personaje, con una referencia frontal subida, «Proponer rasgos desde la foto» (asistente real con visión). Devuelve edad aparente, estructura facial (mandíbula, mentón, pómulos), ojos, labios, pelo (color, textura y peinado), tono de piel, señas particulares (pecas, lunares, gafas) y complexión. Todo como propuesta de rasgos fijos que el director acepta, edita o descarta uno a uno antes de validar. Nunca inventa lo que no se ve. | EVA 01, reglas 3, 4 y 8 | **APROBADA el 13-10-2026: F9** |
 | 18.28 | **Explorar el personaje antes de validar.** En una ficha sin validar, «Explorar» genera de 2 a 4 retratos ancla desde la descripción (primer plano de frente, expresión neutra, fondo blanco, luz suave y pareja, sin vestuario), con precio delante. Con «Usar como referencia frontal» uno pasa a ser la referencia de la ficha. Luego se valida. Si es persona real, no aplica: la cara se conserva y no se genera. | EVA 01, reglas 1–2 | **APROBADA el 13-10-2026: F9** |
-| 18.29 | **Encargo rápido (atajo).** Para piezas de una toma, como la broma de Tania, se salta Idea, Elementos y Guion: foto (o elemento), texto, voz y modelo, el precio delante, y producir. El resultado queda guardado con su coste. Si la pieza crece, se convierte en proyecto completo sin perder nada. Los pasos completos se reservan para lo que se dirige: varias escenas, constancia de personajes y paquete. | Juan, 14-10-2026, tras el corto de Tania: «me parecen MUCHÍSIMOS pasos» para algo que Higgsfield hace en tres | Sin aprobar |
+| 18.29 | **El Taller: generar en una pantalla (rediseño del 14-10-2026; sustituye al «encargo rápido»).** Cada espacio tiene un **Taller** que es la entrada por defecto. A la izquierda:
+- modelo;
+- referencias, que se mencionan con `@` y se traen de las fichas o de la biblioteca (18.6);
+- un prompt grande, con **«Mejorar»** (el asistente lo reescribe con las reglas aprendidas en los cursos, como 18.10 y 18.15–18.22, y enseña qué cambió) y con el **control de ingredientes** (18.30);
+- formato, calidad y cuántas;
+- precio delante y **Generar**.
+
+A la derecha, la cuadrícula de resultados ordenada en **carpetas** (por día, por proyecto o como quieras).
+
+Al pulsar una imagen se abre su ficha: prompt, referencias, ajustes, coste y fecha, más las acciones siguientes:
+- crear variaciones, cambiar el ángulo, ampliar, mejorar resolución y editar;
+- llevarla a vídeo o hacerla hablar;
+- **«Usar como referencia de una ficha»** y **«Llevar a un plano»**.
+
+Todo pasa por el mismo motor (precio, autorización, nunca envíos duplicados, registro). Dirigir un proyecto completo (Idea → Elementos → Guion → Lienzo → Montaje) sigue existiendo para piezas con varias escenas, personajes que deben mantenerse iguales y paquete para DaVinci, y bebe de lo que sale del Taller. | Juan, 14-10-2026: tras los «20 pasos» del corto de Tania, hizo en OpenArt (Nano Banana Pro, la misma) una tarea que pensaba hacer en Picasso: «aquí un prompt, ajustamos y bum, una carpetita para archivar y listo; le das un clic a la imagen, cero drama». Se roba la idea, no la piel | Sin aprobar |
 | 18.30 | **Control de ingredientes.** Antes de gastar, Picasso revisa lo que le das y lo dice claro, igual que avisa del precio.
 - **Imagen de referencia o foto de partida:** resolución, tamaño de la cara en píxeles, compresión y desenfoque. También si es una captura con interfaz o marcos, si tiene manos u objetos delante de la cara, y si su forma no es la del proyecto.
 - **Audio de muestra y voz:** duración, ruido, reverberación, saturación y si viene de un micro de solapa o de una llamada.
