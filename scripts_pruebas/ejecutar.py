@@ -46,6 +46,7 @@ SCRIPTS = [
     "p12_montaje",
     "p13_paquete",
     "p14_imagen",
+    "p15_taller",
 ]
 
 

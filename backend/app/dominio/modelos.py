@@ -737,6 +737,7 @@ class Intento(BaseModel):
 class Toma(BaseModel):
     plano_id: Optional[str] = None
     ficha_version_id: Optional[str] = None
+    carpeta_id: Optional[str] = None  # tomas del Taller (§6.5)
     id: str = Field(default_factory=nuevo_id)
     medio_id: str
     operacion_id: Optional[str] = None
@@ -752,6 +753,36 @@ class Toma(BaseModel):
     texto_usado: Optional[str] = None  # texto con que se produjo la voz
     created_at: str = Field(default_factory=ahora)
     updated_at: str = Field(default_factory=ahora)
+
+
+class Carpeta(BaseModel):
+    """Carpeta del Taller (§6.5)."""
+
+    id: str = Field(default_factory=nuevo_id)
+    espacio_id: str
+    nombre: str
+    orden: int = 0
+    created_at: str = Field(default_factory=ahora)
+
+
+class CarpetaCrear(BaseModel):
+    nombre: str
+
+
+class ReferenciaTaller(BaseModel):
+    medio_id: str
+
+
+class PeticionTaller(BaseModel):
+    """Lo que el Taller pide generar o mejorar (§6.5)."""
+
+    carpeta_id: Optional[str] = None
+    modelo: Optional[str] = None
+    texto: str = ""
+    referencias: list[ReferenciaTaller] = Field(default_factory=list)
+    relacion: str = "9:16"
+    cuantas: int = Field(default=1, ge=1, le=4)
+    confirmado_por_encima_del_presupuesto: bool = False
 
 
 class VozDialogo(BaseModel):

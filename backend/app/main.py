@@ -24,6 +24,7 @@ from app.api import (
     pistas,
     proyectos,
     reparto,
+    taller,
     voces,
 )
 
@@ -56,6 +57,7 @@ app.include_router(voces.router)
 app.include_router(pistas.router)
 app.include_router(montaje.router)
 app.include_router(exportaciones.router)
+app.include_router(taller.router)
 
 
 @app.on_event("startup")

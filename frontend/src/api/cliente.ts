@@ -335,6 +335,17 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(datos),
     }),
+  taller: (espacioId: string) => peticion<any>(`/espacios/${espacioId}/taller`),
+  crearCarpeta: (espacioId: string, nombre: string) =>
+    peticion<any>(`/espacios/${espacioId}/carpetas`, { method: "POST", body: JSON.stringify({ nombre }) }),
+  tomasCarpeta: (carpetaId: string) => peticion<any>(`/carpetas/${carpetaId}/tomas`),
+  ingredientesTaller: (espacioId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/espacios/${espacioId}/taller/ingredientes`, { method: "POST", body: JSON.stringify(datos) }),
+  mejorarTaller: (espacioId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/espacios/${espacioId}/taller/mejorar`, { method: "POST", body: JSON.stringify(datos) }),
+  generarTaller: (espacioId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/espacios/${espacioId}/taller/generar`, { method: "POST", body: JSON.stringify(datos) }),
+  marcarVisto: (operacionId: string) => peticion<any>(`/operaciones/${operacionId}/visto`, { method: "POST" }),
   valorarToma: (tomaId: string, datos: Record<string, unknown>) =>
     peticion<Toma>(`/tomas/${tomaId}`, { method: "PATCH", body: JSON.stringify(datos) }),
   ajustarToma: (tomaId: string, datos: Record<string, unknown>) =>

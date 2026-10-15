@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, BookOpen, IdCard, Trash2 } from "lucide-react";
+import { Sparkles, Plus, BookOpen, IdCard, Trash2 } from "lucide-react";
 import Cabecera from "../componentes/Cabecera";
 import Tarjeta from "../componentes/Tarjeta";
 import Boton from "../componentes/Boton";
@@ -281,6 +281,11 @@ export default function Espacio() {
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Link to={`/e/${espacio.id}/taller`} data-testid="acceso-taller">
+              <Boton>
+                <Sparkles size={18} strokeWidth={1.9} /> Taller
+              </Boton>
+            </Link>
             <Link to={`/e/${espacio.id}/biblioteca`} data-testid="acceso-biblioteca">
               <Boton variante="secundario">
                 <BookOpen size={18} strokeWidth={1.9} /> Biblioteca

@@ -406,6 +406,20 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
                 tomas.append(sin_id(doc))
             if op.get("correccion_id") and tomas and not op["es_exploracion"]:
                 await _enlazar_correccion(plano, op["correccion_id"], op_id, tomas[0]["id"])
+    elif op["destino"]["tipo"] == "taller":
+        # Taller (§6.5): una toma por imagen, en su carpeta.
+        numero = await db.tomas.count_documents({"carpeta_id": op["destino"]["id"]})
+        for orden, (_, medio) in enumerate(medios):
+            toma = Toma(
+                carpeta_id=op["destino"]["id"],
+                medio_id=medio["id"],
+                operacion_id=op_id,
+                numero=numero + orden + 1,
+            )
+            doc = toma.model_dump(mode="json")
+            doc["_id"] = doc["id"]
+            await db.tomas.insert_one(doc)
+            tomas.append(sin_id(doc))
     elif op["destino"]["tipo"] == "dialogo":
         # Voz de un diálogo (§11.1): tomas propias, que no compiten con las del plano.
         numero = await db.tomas.count_documents({"dialogo_id": op["destino"]["id"]})

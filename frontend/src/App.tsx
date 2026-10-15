@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Apertura from "./pantallas/Apertura";
 import Espacio from "./pantallas/Espacio";
+import Taller from "./pantallas/Taller";
 import Biblioteca from "./pantallas/Biblioteca";
 import Ajustes from "./pantallas/Ajustes";
 import PasoMinimo from "./pantallas/PasoMinimo";
@@ -18,6 +19,7 @@ export default function App() {
       <Route path="/" element={<Apertura />} />
       <Route path="/e/:espacioId" element={<Espacio />} />
       <Route path="/e/:espacioId/biblioteca" element={<Biblioteca />} />
+      <Route path="/e/:espacioId/taller" element={<Taller />} />
       <Route path="/ajustes" element={<Ajustes />} />
       <Route path="/registro" element={<Registro />} />
       <Route path="/p/:proyectoId/idea" element={<Desarrollo />} />
