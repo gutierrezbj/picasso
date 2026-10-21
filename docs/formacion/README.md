@@ -16,6 +16,7 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [ref-02-beailabs-carteles.md](ref-02-beailabs-carteles.md) | beailabs · guía de estilos y generación de carteles (referencia, no curso) | §18.21b (con la 18.21); 18.24 y 18.25 sin aprobar; 18.26 (aprobada, F9) |
 | [eva-01-avatar-consistente.md](eva-01-avatar-consistente.md) | Protocolo EVA · reto 21 días, «Crea tu Avatar IA» (tarea del día 2 y guía de prompts; solo método, el material es exclusivo) | 18.27 y 18.28 (aprobadas, F9); amplía 19.6 y 18.16b |
 | [idall-01-final-pass.md](idall-01-final-pass.md) | IDALL AI · The Final Pass, 10 lecciones (texto y transcripción de los 9 vídeos) | 18.31–18.40 sin aprobar |
+| [vdlt-01-avatares-lipsync.md](vdlt-01-avatares-lipsync.md) | Vive de lo Tuyo · módulo 05 Avatares & Lip-Sync (137 cápsulas, texto completo) | 18.41–18.47 sin aprobar; corrige la 19.6 y concreta la 18.36 |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
 
