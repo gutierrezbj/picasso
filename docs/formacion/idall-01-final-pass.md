@@ -1,6 +1,6 @@
 # IDALL 01 · The Final Pass
 
-Fuente: IDALL AI (Skool), curso «The Final Pass», 10 lecciones. Leído el 22-10-2026: el texto completo de las 10 lecciones y la transcripción de los dos primeros minutos del vídeo de la lección 10. Sin sesión de Loom, la transcripción se corta ahí; los demás vídeos están pendientes. Solo método. En la página, la lección 2 repite el texto de la 1, y la 3 lleva el de interpretación.
+Fuente: IDALL AI (Skool), curso «The Final Pass», 10 lecciones. Leído el 22-10-2026: el texto de las 10 lecciones y la transcripción completa de sus 9 vídeos de Loom (las lecciones 3 y 4 comparten vídeo). Solo método. En la página, la lección 2 repite el texto de la 1, y la 3 lleva el de interpretación.
 
 ## El método, en reglas
 
@@ -81,6 +81,38 @@ Fuente: IDALL AI (Skool), curso «The Final Pass», 10 lecciones. Leído el 22-1
    - **Reglas de continuidad contra fallos:** «sin reinicio visual», «sin movimientos repetidos», «el movimiento empieza una vez y sigue a través de los cortes de cámara».
    - No sale perfecto a la primera: se generan varias, se eligen los mejores trozos y se montan en el editor.
 
+## Lo que añaden los vídeos
+
+10. **Escena con diálogo, la fórmula completa (L10).** Prompt perfecto = **base × restricciones avanzadas**.
+    - **Base:** lugar, referencias, estilo, personajes y tiempos.
+    - **Restricciones avanzadas:**
+      - *Sin reinicio:* el movimiento empieza una vez y sigue a través de los cortes.
+      - *Eje de 180°:* A siempre a la izquierda de pantalla y B a la derecha, nunca se cruza el eje. Así no se intercambian ni se gira el decorado, y que B «invada» el lado de A ya cuenta el dominio.
+      - *Voz fijada:* nada de «voz grave», sino un registro de 85–105 Hz y 60–64 dB, para que la voz no cambie entre bloques.
+      - *Interpretación por músculos, no por emociones:* «ligera tensión de mandíbula, pequeños cambios de respiración, mirada controlada» en vez de «traicionado», que da una mueca de teatro.
+      - *Cámara motivada y limitada:* «arco sutil de unos 10°, nada vistoso», que se mueve porque se mueve el personaje, y acercamiento lento en la frase clave.
+      - *El silencio se pide en positivo:* «agua lejana, zumbido industrial suave», nunca «sin música», más una pausa de 1 s.
+    - Se trabaja en bloques de 15 s, al menos tres generaciones, y se montan los mejores cortes de 3 s.
+11. **La regla de los 8 canales (L2).** Una escena comunica por palabras, tono, pausa, expresión, gesto, mirada, ritmo y comportamiento en el espacio. El diálogo es corto e indirecto (subtexto: «ahora el precio son dos barriles» significa «aquí mando yo»). Cada escena tiene cuatro piezas: **objetivo, obstáculo, cambio emocional y cambio de conducta** (llega quieto y se va sin mirar atrás). Una escena que solo funciona por el diálogo todavía no es cine.
+12. **Moodboard antes de generar (L3–4).**
+    - Secciones: mundo, personajes, vestuario, luz, sensación de cámara, objetos, emoción y paleta. De 3 a 5 referencias por sección.
+    - Se busca por emoción («desierto postapocalíptico realista», no «postapocalipsis guapo»).
+    - Si falta una referencia, se genera una provisional.
+    - Paleta de 3 a 5 colores sacada de la imagen que mejor dice «esta es mi película».
+    - Un moodboard maestro y otros por escena: el personaje se mantiene y el mundo evoluciona.
+13. **Storyboard (vídeo de L5).**
+    - Primero la lógica de planos y después las imágenes.
+    - Encuadrar un 20 % más abierto, con el horizonte algo bajo y en capas (frente, sujeto, fondo).
+    - Revelar poco a poco: sombra, reacción, revelación parcial, revelación completa.
+    - Cada corte, motivado. Primeros planos solo si cambia la emoción.
+    - «Arregla la secuencia, no la imagen.»
+14. **Contar con imágenes (vídeo de L6, escenas de 5 s en Kling).** Contar es cambiar la emoción. Se progresa por planteamiento, conflicto, escalada, emoción y desenlace. Una acción fuerte por escena. Prompt de intención, no de estética («quién, qué hace, qué cambió, cómo se mueve la cámara»). Se prueba sin sonido.
+15. **Emociones en capas (vídeo de L9).**
+    - Nada de «rey malvado»: «amenaza contenida, confianza depredadora, quietud intimidante, diversión maliciosa sutil». Se dirige la contradicción y la psicología, no el aspecto.
+    - Movimiento con psicología: paso con peso, reacción retardada, respiración contenida.
+    - Vocabulario de cámara: acercamiento lento, encuadre por el entorno, cámara en mano contenida, poca profundidad de campo, compresión de óptica, paralaje atmosférico, primer término que tapa.
+    - En Seedance, contención: el poder vive en la quietud.
+
 ## Qué provoca en Picasso
 
 **Validación.** Es el mismo esqueleto de Picasso, casi paso por paso:
@@ -111,3 +143,7 @@ Picasso es compatible y está hecho para esto. Este curso pone el criterio que l
 | 8 | 18.16 y 18.19 (fuente de luz y vocabulario) | Amplía 18.19 con Rembrandt, recorte, clave alta y baja, relleno negativo y volumétrica |
 | 9 | Una referencia por rol | **18.36** Referencia de emociones (rol nuevo «emociones», una hoja de expresiones) distinta de la de identidad, más reglas de continuidad por defecto en el vídeo de varios planos |
 | 9 | Ruta B (foto + audio) | **18.37** Probar Seedance (vídeo con diálogo desde referencias) en la prueba de control de la 19.28 |
+| 10 | Diálogo en el guion, voz en la ficha | **18.38** Escena con diálogo como bloque: quién está a la izquierda o a la derecha (eje), voz fijada en la ficha (registro y volumen), cámara motivada con grados, silencio en positivo, bloques de 15 s |
+| 11 | Escena con qué ocurre, qué se ve e intención | **18.39** Escena con objetivo, obstáculo, cambio emocional y cambio de conducta; el asistente señala los diálogos sin subtexto |
+| 12 | Paso «Mundo y escenarios» | **18.40** Moodboard del proyecto: secciones con 3–5 referencias, paleta de 3–5 colores sacada de una imagen; maestro y por escena; alimenta los prompts |
+| 2, 15 | — | Ajuste a la 18.32: la interpretación se escribe en músculos y en emociones en capas, nunca con una sola palabra emocional |
