@@ -1022,3 +1022,19 @@ Lo que Juan encuentra usando Picasso de verdad. Se arreglan en bloque o con la f
 | 19.28 | Veredicto del personaje hablando (14-10-2026) | Kling AI Avatar v2 Pro con prompt (1,59 $): Juan: «muy pobres resultados… boca chiclosa, dientes gigantes, desfase de labios: es de generaciones atrás; si esto es lo que podemos sacar, yo no saco nada». | **Siguiente paso, antes de gastar más:** separar las tres causas. (1) Entradas: la cara venía de una captura de vídeo de baja resolución y la voz de un clon de 26 s de una clase. (2) Método: animar una foto fija con audio encima frente a modelos que generan vídeo y habla a la vez. (3) Modelo. Prueba de control: Juan elige un resultado de Higgsfield que le parezca bueno, con su modelo y sus ajustes, y se reproduce tal cual en Picasso con una foto y una voz de calidad. El resultado decide. |
 | 19.29 | Taller (15-10-2026) | Primera reacción de Juan al Taller construido: «no lo entiendo». | **Pendiente:** recorrerlo juntos, apuntar dónde se pierde y corregir antes de seguir con lo marcado como «próximamente». |
 
+
+## 20. Plan de calentamiento: ejercicios de todas las capacidades (aprobado el 23-10-2026)
+
+*Juan: «vamos a poner FINO a Picasso, que ya es hora». En vez de repetir a Tania, una batería de ejercicios, uno por tipo de pieza. Cada ejercicio decide qué se construye justo antes (solo lo que pide), lo opera Juan y se cierra con su veredicto y sus fricciones en el §19. El método sale de la formación: AVB, beailabs, EVA, IDALL, VDLT y Lyra.*
+
+**Tope de gasto de toda la batería: 20 $.** Siempre en borrador o a 480p primero, y la calidad final solo para la toma buena. El reparto orientativo y el gasto real de cada ejercicio quedan en el registro.
+
+| # | Ejercicio | Qué pone a prueba | Se construye antes | Tope |
+|---|---|---|---|---|
+| E1 | **Foto de marca para JRGB** | Taller, Mejorar, referencias, negativos, texto en imagen | Taller guiado según la maqueta 5, cuando Juan la apruebe | 1 $ |
+| E2 | **Avatar de JRGB, de cero** (inventado; será un activo de trabajo) | Ficha con defecto y detalle que se reconoce, explorar la cara, hoja principal de una sola cara, refuerzos y ficha de voz con su voz | 18.41 (hoja) · 18.44 (ficha de voz) · 18.28 (explorar) | 3 $ |
+| E3 | **UGC: el avatar habla a cámara, 8–10 s** | Ruta B con Seedance, su voz de ElevenLabs, los cinco candados y el clip de voz + 1 s | 18.42 (hojas por plano) · 18.43 (ruta B) | 3 $ |
+| E4 | **Escena con diálogo: dos personajes, 10–15 s** | Eje de 180° y miradas, interpretación por músculos, cámara motivada, sonido en capas | 18.38 · 18.46 · 18.32 · 18.50 | 5 $ |
+| E5 | **Microcorto: 3–4 planos con historia** | Logline y conflicto, planos por emoción, storyboard, montaje y paquete para DaVinci | 18.31 · 18.33 · 18.34 (lo mínimo) | 8 $ |
+
+Orden: E1 → E5. Un ejercicio no empieza hasta que el anterior se cierra con el veredicto de Juan.
