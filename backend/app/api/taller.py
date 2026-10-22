@@ -205,7 +205,7 @@ def _niveles_prompt(texto: str) -> dict[str, Any]:
         faltan.insert(0, "sujeto")
     nivel = "verde" if not faltan else ("ambar" if len(faltan) <= 2 else "rojo")
     motivo = "completo" if not faltan else "falta: " + ", ".join(faltan) + ". «Mejorar» lo completa"
-    return {"nombre": "Prompt", "nivel": nivel, "motivo": motivo}
+    return {"nombre": "Prompt", "nivel": nivel, "motivo": motivo, "faltan": faltan}
 
 
 def _nivel_foto(r: dict[str, Any]) -> dict[str, Any]:
