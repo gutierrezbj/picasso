@@ -14,6 +14,7 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [avb-06-imagen-basicos.md](avb-06-imagen-basicos.md) | AI Video Bootcamp · Fase 3 AI Images: AI Image Overview (transcripción y guía) | §18.22 y 18.23 (aprobadas, F9); valida el formato por proyecto |
 | [ref-01-eternicodia.md](ref-01-eternicodia.md) | EterniCodia · galería completa de prompts (referencia, no curso) | §18.19 y 18.20 (aprobadas, F9); 18.19b y 18.21 sin aprobar |
 | [ref-02-beailabs-carteles.md](ref-02-beailabs-carteles.md) | beailabs · guía de estilos y generación de carteles (referencia, no curso) | §18.21b (con la 18.21); 18.24 y 18.25 sin aprobar; 18.26 (aprobada, F9) |
+| [ref-03-lyra.md](ref-03-lyra.md) | Lyra (Corvere Solutions) · plugin de prompts de imagen y vídeo para Protocolo EVA (referencia, no curso) | 18.48–18.51 sin aprobar; esqueleto para «Mejorar» |
 | [eva-01-avatar-consistente.md](eva-01-avatar-consistente.md) | Protocolo EVA · reto 21 días, «Crea tu Avatar IA» (tarea del día 2 y guía de prompts; solo método, el material es exclusivo) | 18.27 y 18.28 (aprobadas, F9); amplía 19.6 y 18.16b |
 | [idall-01-final-pass.md](idall-01-final-pass.md) | IDALL AI · The Final Pass, 10 lecciones (texto y transcripción de los 9 vídeos) | 18.31–18.40 sin aprobar |
 | [vdlt-01-avatares-lipsync.md](vdlt-01-avatares-lipsync.md) | Vive de lo Tuyo · módulo 05 Avatares & Lip-Sync (137 cápsulas, texto completo) | 18.41–18.47 sin aprobar; corrige la 19.6 y concreta la 18.36 |
