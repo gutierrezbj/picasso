@@ -47,7 +47,9 @@ Documento compañero: `NUEVA-APLICACION-INTENCION-FUNCIONAMIENTO-Y-DISENO.md` (e
 
 **La v1 se da por buena cuando, operada por Juan:**
 - **Foto:** de la idea a una imagen que se queda en menos de 5 minutos y menos de 0,50 $, contando los intentos.
-- **Clip de 15 s:** de la idea a un final publicable en menos de 15 minutos y menos de 3 $, contando borradores y final.
+- **Clip de 15 s:** de la idea a un final publicable en menos de 15 minutos, con menos de 2 $ por borrador a 480p y menos de 5 $ con el final a 720p (ajustado el 24-10-2026 con precios verificados; antes, 3 $).
+
+**Proveedor de vídeo de la v1 (decidido el 24-10-2026):** Seedance 2.5 con **BytePlus ModelArk** (oficial de ByteDance) como principal, KIE como segundo y fal como tercero. Por segundo, sin vídeo de entrada: 0,103 $ a 480p y 0,231 $ a 720p en BytePlus; 0,14 y 0,315 $ en KIE; 0,22 y 0,47 $ en fal. Un borrador de 15 s cuesta ≈1,55 $ (en Higgsfield, 45 créditos ≈ 2,20 $ en plan Plus) y el final a 720p ≈3,47 $ (en Higgsfield, ≈5,15 $). Objetivo de Juan: **quitar Higgsfield de en medio**. Fuentes: BytePlus «Model pricing» (actualizada el 23-10-2026), kie.ai/pricing, fal, y el blog de Higgsfield del 20-10-2026.
 
 Son metas, no precios. Si el precio real del proveedor no cabe, Picasso lo dice antes de gastar.
 
