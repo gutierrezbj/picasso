@@ -23,6 +23,38 @@ Documento compañero: `NUEVA-APLICACION-INTENCION-FUNCIONAMIENTO-Y-DISENO.md` (e
 
 ## 1. Propósito en una página
 
+### 1.0 Definición vigente (Juan, 24-10-2026; manda sobre el resto de esta sección)
+
+**Qué es.** Picasso es el **generador de contenido audiovisual de JRGB**. De una idea saca una pieza publicable en una conversación, y de varias piezas coherentes saca una película. Es un «SuperComputer con memoria de director»: conversas, Picasso pregunta lo que falta y escribe el prompt, tú apruebas viendo el precio, y lo que se decide queda guardado (personaje, estética, luz, guion) para todo lo que viene después.
+
+**Qué genera**, de menos a más: foto, clip de escena, personaje que habla, UGC, anuncio, corto y película.
+
+**Para quién.** Para Juan y JRGB primero. Los clientes vienen después: cuentas, espacios de cliente y precios de venta quedan fuera de la v1, sin cerrar la puerta.
+
+**Por qué no basta Higgsfield:**
+- recuerda el personaje, la estética y la luz entre piezas;
+- da el precio real antes de cada gasto;
+- no ata a un proveedor;
+- entrega el paquete ordenado para DaVinci;
+- todo queda en casa.
+
+**Cómo entra el usuario.** Por el **Director**: una caja de conversación con tarjeta de preguntas (una a una, «Otra cosa», «Omitir» y lo que dedujo dicho en una línea), prompt por tramos con restricciones contadas, iterar gratis, tarjeta de aprobación con la referencia, los ajustes del envío real y «Aprobar · X $» (sin «permitir siempre»), borrador y final. Fichas, guion, lienzo, motor y paquete trabajan **por detrás**; el recorrido de §4 queda para repasar, no como camino obligado (18.52).
+
+**Versiones:**
+- **v1:** foto y clip de escena, con el mismo flujo de conversación.
+- **v2:** personaje que habla y UGC (voz y ruta B).
+- **v3:** anuncio, corto y película (memoria entre escenas).
+
+**La v1 se da por buena cuando, operada por Juan:**
+- **Foto:** de la idea a una imagen que se queda en menos de 5 minutos y menos de 0,50 $, contando los intentos.
+- **Clip de 15 s:** de la idea a un final publicable en menos de 15 minutos y menos de 3 $, contando borradores y final.
+
+Son metas, no precios. Si el precio real del proveedor no cabe, Picasso lo dice antes de gastar.
+
+**Qué no es.** No es un editor (eso es DaVinci), no es un mercado de plantillas y no genera nada sin el sí de Juan.
+
+*Lo que sigue de esta sección es la definición original del 24-09-2026. Donde choca con la 1.0 (por ejemplo, «no es un generador de un clic» o «el problema no es la generación»), manda la 1.0.*
+
 Un estudio propio de desarrollo creativo y producción audiovisual. El usuario trae una idea, la desarrolla, prepara los elementos, escribe y aprueba el guion, dirige visualmente cada plano en un lienzo amplio, produce con proveedores de IA eligiendo modelo y viendo el coste antes, revisa y elige entre versiones, compone la pieza y se lleva el material para acabarlo en DaVinci Resolve o CapCut.
 
 **El problema que resuelve es la coherencia y la dirección, no la generación.** Generar lo hace cualquier API. Lo que falta en el mercado es el recorrido: saber en todo momento para quién se trabaja, qué se ha decidido, con qué material y qué viene después, sin reconstruir el contexto al cambiar de pantalla.
@@ -980,7 +1012,7 @@ Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y que
 | 18.49 | **Analizar una referencia.** Sobre una imagen (de la biblioteca, del moodboard o de otra toma), el asistente con visión devuelve una base estructurada: composición, luz (dirección, proporción de relleno, temperatura), paleta en hex aproximado, óptica y profundidad deducidas, estilo, y un apartado «no visible o ambiguo» para no inventar. Se aplica con un clic a la dirección del plano o al moodboard (18.40). | REF 03 (Lyra), analizador | Sin aprobar |
 | 18.50 | **Sonido en cuatro capas en el vídeo.** El prompt de vídeo describe por separado el diálogo (o la voz de referencia, 18.43), los efectos con su segundo, el ambiente (siempre en positivo) y la música, o su ausencia explícita. Sale de «Sonido previsto» de la escena y de la dirección del plano. | REF 03 (Lyra), audio por capas; 18.38 | Sin aprobar |
 | 18.51 | **Negativos por tipo de pieza y texto en imagen por modelo.** Biblioteca curada por nosotros (personas, producto, comida, arquitectura, texto en imagen, vídeo con diálogo…), sin palabras vacías. El catálogo dice si cada modelo los recibe como parámetro o como «Evita…» dentro del texto. La 18.26 (texto exacto) usa la sintaxis del modelo: texto literal entre comillas, tipografía, tamaño, color y posición. | REF 03 (Lyra); 18.10; 18.26 | Sin aprobar |
-| 18.52 | **Director de escena: entrevista, prompt verificado y tarjeta real.** Un motor de entrevista (cinco preguntas cerradas, una a una, con «Otra cosa» y «Omitir») en dos momentos: **alcance** en la Idea y **escena** en el plano de vídeo. Las respuestas van a la dirección del plano. Prompt en siete bloques con CONSTRAINTS escritas por reglas, revisión con severidad, reescritura gratis, tarjeta pintada desde la operación real, borrador obligatorio y final con la misma entrada. Reglas duras R1–R5: aprobación por operación, lo mostrado sale del job, aviso de cara, añadidos listados, decisiones tuyas y de Picasso separadas. Diseño completo: `docs/sdd/SDD-director-de-escena.md` | Higgsfield L02 (SuperComputer), 24-10-2026, `docs/insumos/insumo-picasso-generador-prompts.md`. Juan: «si no estás claro DESDE el principio, la cagada la arrastras hasta el final» | D1–D7 decididos por Juan el 24-10-2026 (empezar por el alcance en la Idea; sin «permitir siempre»; semilla por reglas y lista; proveedor de vídeo en DE-3; cinco preguntas; borrador obligatorio; prompt en inglés). Pendiente: aprobar el SDD y la maqueta de DE-1 |
+| 18.52 | **Director de escena: entrevista, prompt verificado y tarjeta real.** Un motor de entrevista (cinco preguntas cerradas, una a una, con «Otra cosa» y «Omitir») en dos momentos: **alcance** en la Idea y **escena** en el plano de vídeo. Las respuestas van a la dirección del plano. Prompt en siete bloques con CONSTRAINTS escritas por reglas, revisión con severidad, reescritura gratis, tarjeta pintada desde la operación real, borrador obligatorio y final con la misma entrada. Reglas duras R1–R5: aprobación por operación, lo mostrado sale del job, aviso de cara, añadidos listados, decisiones tuyas y de Picasso separadas. Diseño completo: `docs/sdd/SDD-director-de-escena.md` | Higgsfield L02 (SuperComputer), 24-10-2026, `docs/insumos/insumo-picasso-generador-prompts.md`. Juan: «si no estás claro DESDE el principio, la cagada la arrastras hasta el final» | D1–D7 decididos por Juan el 24-10-2026 (empezar por el alcance en la Idea; sin «permitir siempre»; semilla por reglas y lista; proveedor de vídeo en DE-3; cinco preguntas; borrador obligatorio; prompt en inglés). SDD aprobado el 24-10-2026. **Reorientado ese mismo día (§1.0):** el Director es la puerta de entrada de todo Picasso (maquetas 9 y 9b, que sustituyen a la 6–8); la v1 es foto y clip de escena. Pendiente: verificar el proveedor de vídeo antes de construir |
 
 
 ---
