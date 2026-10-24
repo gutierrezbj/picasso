@@ -1,6 +1,6 @@
 # SDD · Director de escena (entrevista, prompt verificado y tarjeta real)
 
-Estado: **borrador para aprobar**. Sin código hasta que Juan apruebe. Entrada: `docs/insumos/insumo-picasso-generador-prompts.md` (Higgsfield L02, SuperComputer, 24-10-2026). Encaja con el maestro: §6.1 Idea, §8 Dirección de un plano, §9.4 ciclo de una operación, §10 Asistente, 18.15, 18.30, 18.38, 18.43, 18.48. Se roba el método, no la piel (feedback «Roba como un maestro»).
+Estado: **borrador para aprobar; D1–D7 decididos el 24-10-2026**. Sin código hasta que Juan apruebe. Entrada: `docs/insumos/insumo-picasso-generador-prompts.md` (Higgsfield L02, SuperComputer, 24-10-2026). Encaja con el maestro: §6.1 Idea, §8 Dirección de un plano, §9.4 ciclo de una operación, §10 Asistente, 18.15, 18.30, 18.38, 18.43, 18.48. Se roba el método, no la piel (feedback «Roba como un maestro»).
 
 Los puntos **[DECIDIR]** se cierran con Juan uno a uno. Cada uno lleva la recomendación entre paréntesis.
 
@@ -50,7 +50,7 @@ Flujo B, completo, de los pasos 3 a 12 del insumo:
 10. Guardado.
 
 **Requisitos duros (insumo §7), como reglas R1–R5:**
-- **R1. Aprobación explícita por job.** Cada operación de pago se autoriza en su tarjeta, con la cifra. No existe «permitir siempre» [DECIDIR D2].
+- **R1. Aprobación explícita por job.** Cada operación de pago se autoriza en su tarjeta, con la cifra. No existe «permitir siempre» (D2).
 - **R2. Lo que se muestra sale del job.** La tarjeta se pinta desde la `EntradaOperacion` y el modelo del catálogo, nunca desde el texto del asistente. Si el prompt declara algo distinto (formato, duración, resolución, número de cortes), la tarjeta lo marca y no deja autorizar hasta resolverlo.
 - **R3. Cara del protagonista.** Si el plano tiene un protagonista con foto o hoja, y el prompt no lo muestra de frente o de tres cuartos en ningún tramo, sale un aviso importante que hay que confirmar o corregir.
 - **R4. Elementos añadidos por el sistema.** Todo objeto, personaje, luz o suceso del prompt que no sale de la idea, de las respuestas ni de las fichas se lista como «añadido por Picasso». Cada uno se acepta o se quita.
@@ -59,7 +59,7 @@ Flujo B, completo, de los pasos 3 a 12 del insumo:
 **No entra:**
 - montaje y acabado (Motion Pro y DaVinci);
 - chat libre que escriba en el proyecto (se mantiene §10: tareas cerradas);
-- integración con Higgsfield o Flow [DECIDIR D4];
+- integración con Higgsfield o Flow (D4: el proveedor de vídeo se decide en DE-3);
 - imagen fija (ya la cubren el Taller, 18.15 y 18.30; el momento A sí sirve para imagen);
 - generar sin plano o sin Taller detrás.
 
@@ -117,7 +117,7 @@ API nueva, con prefijo `/api`:
 - **ADR-2. Lo contado lo escribe el código.** CONSTRAINTS y los parámetros de la tarjeta nunca los redacta el modelo de texto. El insumo lo señala como la clave de la plantilla. Si lo escribe el LLM, vuelve el «three cuts» frente a 2 cortes.
 - **ADR-3. Amplía la §10 sin romperla.** El asistente puede **proponer** dirección de plano y prompt, siempre como propuesta aceptable. Sigue sin lanzar operaciones. Cambia la línea «no define planos, encuadres…» del maestro, que queda «no los fija sin aceptar».
 - **ADR-4. Un solo motor de entrevista para alcance y escena.** Solo cambia el fichero de preguntas. Evita dos asistentes que digan cosas distintas.
-- **ADR-5. Borrador obligatorio en vídeo.** El borrador cuesta una fracción del final. Con Tania se gastaron 2,14 $ en una prueba a resolución final [DECIDIR D6].
+- **ADR-5. Borrador obligatorio en vídeo.** El borrador cuesta una fracción del final. Con Tania se gastaron 2,14 $ en una prueba a resolución final (D6: sin saltarlo).
 - **ADR-6. Proveedor de texto: el que ya está configurado.** El Mejorar del Taller usa OpenAI `gpt-6.1-sol` (verificado el 15-10-2026). No se añade un tercero.
 
 ## SDD-05 · Backlog (historias con criterios de aceptación)
@@ -173,14 +173,16 @@ Las del maestro §0. Además:
 
 ---
 
-## Puntos [DECIDIR]
+## Puntos [DECIDIR], resueltos por Juan el 24-10-2026
 
-| # | Pregunta | Recomendación |
+| # | Pregunta | Decisión |
 |---|---|---|
-| D1 | ¿Por dónde se empieza: alcance en la Idea (DE-1) o escena en el plano (DE-2)? | DE-1 primero: es lo que pide Juan, es barato y evita el error de raíz |
-| D2 | ¿«Permitir siempre» existe? | No existe. Cada operación de pago, su tarjeta |
-| D3 | ¿Picasso valida la semilla solo? | Sí, por reglas y sin IA (18.30): resolución, tamaño, captura con interfaz, forma, kit de ángulos en archivos separados. Lo que exige ver la cara (boca cerrada, reflejos de gafas) va como lista de comprobación que Juan marca |
-| D4 | ¿Qué proveedor de vídeo? | fal con Seedance (18.37 aprobada). Antes de construir, verificar si fal ya sirve Seedance 2.5 y a qué precio. Higgsfield no, mientras no tenga una API documentada que podamos verificar |
-| D5 | ¿Las cinco preguntas de escena? | 1 formato y duración · 2 interpretación (cómo está el personaje) · 3 cámara y cara (cuándo se le ve de frente) · 4 sonido · 5 final (qué pasa en el último segundo y dónde queda la cámara) |
-| D6 | ¿El borrador es obligatorio en la primera toma de vídeo? | Sí, sin saltárselo en la v1 |
-| D7 | ¿Idioma del prompt? | Prompt al modelo en inglés (es lo que funcionó en Seedance), con el resumen y la revisión en español al lado |
+| D1 | ¿Por dónde se empieza? | **Alcance en la Idea (DE-1) primero** |
+| D2 | ¿«Permitir siempre» existe? | **No existe.** Cada operación de pago, su tarjeta |
+| D3 | ¿Picasso valida la semilla solo? | **Por reglas y sin IA** (resolución, tamaño, captura, forma, kit de ángulos en archivos separados), **más una lista que marca Juan** (boca cerrada, reflejos de gafas, parecido) |
+| D4 | ¿Qué proveedor de vídeo? | **Se decide en DE-3.** DE-1 y DE-2 no generan vídeo |
+| D5 | ¿Las cinco preguntas de escena? | **1 formato y duración · 2 interpretación · 3 cámara y cara · 4 sonido · 5 final** |
+| D6 | ¿Borrador obligatorio? | **Siempre, sin saltarlo.** El final sale solo de un borrador aprobado |
+| D7 | ¿Idioma del prompt? | **Inglés al modelo**, con resumen y revisión en español al lado |
+
+Siguiente: maqueta de DE-1 (la entrevista de alcance en la Idea) para que Juan la apruebe antes de tocar código.
