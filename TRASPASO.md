@@ -1,6 +1,12 @@
 # TRASPASO.md
 
-Cómo levantar y operar Picasso fuera de Emergent. Al día a 05-10-2026: F1–F7 construidas, F7 a falta del visto bueno de Juan en DaVinci y F9 diseñada (maestro §9.7).
+Cómo levantar y operar Picasso fuera de Emergent. Al día a 25-10-2026:
+- F1–F7 construidas; a la F7 le falta el visto bueno de Juan en DaVinci.
+- F9 en marcha: fal (Nano Banana Pro, OmniHuman, Kling Avatar), ElevenLabs y OpenAI para «Mejorar».
+- El Taller guiado está construido (§6.5).
+- Desde el 24-10-2026, Picasso se define como el generador de contenido de JRGB, y el Director es su puerta de entrada (maestro §1.0, 18.52 y 18.53, SDD en `docs/sdd/SDD-director-de-escena.md`).
+- La v1 es foto y clip de escena, con Seedance 2.5 vía BytePlus ModelArk.
+- Siguiente paso: el proveedor BytePlus y la caja del Director para el clip.
 
 ## Arranque en local
 
