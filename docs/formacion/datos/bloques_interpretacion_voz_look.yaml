@@ -1,0 +1,92 @@
+# Bloques de interpretación, voz y look. Propuestas 18.56, 18.57 y 18.58, SIN APROBAR.
+# Redacción propia a partir de REF 04, sin nombres de directores, películas ni marcas.
+
+# 18.56 · La emoción se escribe como una secuencia física, nunca con la palabra.
+# El texto en inglés es una secuencia corta: inicio → gesto → cómo se mantiene o se resuelve.
+emociones_video:
+  - {id: sonrisa_falsa, nombre: "Sonrisa falsa", en: "mouth stretches into a smile while the eyes stay flat; blinking speeds up, a hard swallow, gaze drops before the smile returns"}
+  - {id: orgullo, nombre: "Orgullo", en: "chin lifts, chest expands, a slow closed-lip smile, shoulders back, one satisfied slow blink, arms fold"}
+  - {id: alivio, nombre: "Alivio", en: "a big visible exhale empties the chest, eyes close, raised brows settle, shoulders drop, hand to forehead, a small shaky smile only after the breath"}
+  - {id: agotamiento, nombre: "Agotamiento", en: "eyelids drag down, a blink held too long, head drops and slowly lifts, slack jaw, long sigh, eyes reopen only halfway"}
+  - {id: verguenza, nombre: "Vergüenza", en: "colour rises in the cheeks, eyes slide down and away, tight awkward half-smile, head tilts away, hand near the mouth"}
+  - {id: culpa, nombre: "Culpa", en: "mouth opens but no words come, eyes slide down, hard swallow, hand to the back of the neck, gaze stays on the floor"}
+  - {id: tristeza, nombre: "Tristeza contenida", en: "inner brow corners rise and pinch, mouth corners pull down, chin trembles once, gaze sinks with the head"}
+  - {id: ansiedad, nombre: "Ansiedad", en: "brows stay knitted, eyes dart side to side, lower lip caught in the teeth, shallow fast breathing, hands clasped, weight shifting"}
+  - {id: frustracion, nombre: "Frustración", en: "eyes squeeze shut, jaw shifts side to side, sharp exhale through the nose, one head shake, head tips back on a long defeated sigh"}
+  - {id: determinacion, nombre: "Determinación", en: "eyes lift and lock forward, deep breath, jaw tightens at the hinge, eyes narrow, shoulders back, one short nod"}
+  - {id: asombro, nombre: "Asombro", en: "eyes widen gradually without brow tension, mouth slowly opens, head tilts up, body leans in; the open look never fades"}
+  - {id: comprension, nombre: "Se da cuenta", en: "blank thinking face breaks: eyes widen, brows rise, lips part on a silent breath, then a slow knowing nod"}
+  - {id: confusion, nombre: "Confusión", en: "asymmetric brows, one up one down, eyes scanning, sharp head tilt, mouth slightly open; puzzlement grows rather than resolves"}
+  - {id: aburrimiento, nombre: "Aburrimiento", en: "heavy lids, unfocused drifting gaze, a slow blink that lasts too long, relaxed jaw, long sigh, body settles still"}
+  - {id: chuleria, nombre: "Chulería", en: "lids lower, one mouth corner twitches into a slow smirk, brows lift once, chin rises slightly, unbroken eye contact"}
+  - {id: complicidad, nombre: "Complicidad", en: "chin lowers, gaze returns with a slow deliberate blink, a warm playful half-smile grows on one side, eye contact held"}
+  - {id: sospecha, nombre: "Sospecha", en: "chin down while the eyes stay up, one brow higher, head turns slightly so the look lands sideways, mouth tightens at one corner, no blinking"}
+  - {id: hartazgo, nombre: "Hartazgo", en: "eyes roll in a slow full arc with the head, air pushed out through the nose, eyes return half-lidded, flat stare, then look away"}
+  - {id: dolor, nombre: "Dolor", en: "eyes clamp shut, teeth bared in a tense grimace, head jerks aside, one shoulder rises to the ear, face eases only slightly"}
+  - {id: llanto, nombre: "Llanto", en: "eyes and nose redden, tears spill over the lower lid, breath catches in visible spasms, mouth squares, chin puckers and trembles, shoulders start to shake"}
+  - {id: asco, nombre: "Asco", en: "nose wrinkles hard pulling the upper lip up, eyes narrow almost shut, chin retracts, head pulls back and away"}
+  - {id: furia, nombre: "Furia", en: "brows drop and pull in, upper lip retracts over the teeth, nostrils flare, neck tendons tighten, head pushes forward, heavy breaths through the nose"}
+  - {id: terror, nombre: "Terror", en: "brows rise and pinch, eyes wide and unblinking, mouth stretches, chin pulls back, chest rising and falling fast and shallow"}
+  - {id: shock, nombre: "Shock", en: "eyes snap open showing white above the iris, brows shoot up, jaw drops, head jerks back, face freezes before a single blink"}
+  - {id: risa, nombre: "Risa", en: "eyes crinkle into slits, mouth opens wide showing teeth, head drops forward then tips back, shoulders shake with each breath, settles into a lasting smile"}
+
+# Emociones para imagen: misma idea. El set se fija para aislar la expresión.
+# El set es una variable de la ficha. No va fijo en la plantilla, para no chocar con el realismo de móvil.
+emociones_imagen:
+  regla: "La emoción se describe con músculos y manos (por ejemplo, «solo sonríe la mitad inferior de la cara», «nudillos pálidos»), nunca con su nombre. Se fijan cámara, luz y fondo; la expresión es la única variable."
+  clausula_hoja_en: "Image 1 defines {personaje}: face, hair, distinctive marks and wardrobe. If it is a character sheet with several angles or expressions, treat them all as one person. Do not use its background, layout or any expression shown in it. Only one person in the result."
+
+# 18.57 · Voz. La ficha de voz (18.44) parte de una de estas bases y se ajusta.
+voces_base:
+  - {id: hombre_50, nombre: "Hombre de unos 50", en: "deep warm male voice, early fifties, low and resonant with slight grit, calm, unhurried, assured"}
+  - {id: hombre_35, nombre: "Hombre de unos 35", en: "male voice around 35, mid pitch, fuller and more settled than a twenty-something, calm, friendly but firm"}
+  - {id: hombre_25_30, nombre: "Hombre de 25 a 30", en: "bright energetic male voice, 25 to 30, mid-high pitch, clear and relaxed, casual conversational pace"}
+  - {id: hombre_25, nombre: "Hombre de unos 25", en: "youthful male voice around 25, bright and fairly high, light, relaxed pace"}
+  - {id: mujer_50, nombre: "Mujer de unos 50", en: "warm mature female voice around 50, rich mid-low pitch, slightly smoky, measured and reassuring"}
+  - {id: mujer_35, nombre: "Mujer de unos 35", en: "female voice around 35, mid pitch, settled, calm and confident, warm but firm"}
+  - {id: mujer_25_30, nombre: "Mujer de 25 a 30", en: "light lively female voice, 25 to 30, bright and clear, warm and friendly, natural pace"}
+  - {id: mujer_25, nombre: "Mujer de unos 25", en: "youthful female voice around 25, bright and fairly high, cheerful, relaxed pace"}
+
+estilos_locucion:   # {acento} se rellena desde la ficha
+  - {id: conversacional, nombre: "Conversacional", en: "subtle {acento}, natural medium pace, friendly relaxed tone, brief pauses before key words, sentences trail off softly"}
+  - {id: casual, nombre: "Casual", en: "light {acento}, relaxed pace like talking to a close friend, occasional restarts and natural fillers"}
+  - {id: historia, nombre: "Contando una historia", en: "light {acento}, casual narrative rhythm, like telling a friend what happened; sentences sometimes restart mid-thought"}
+  - {id: storytelling, nombre: "Storytelling", en: "light {acento}, expressive cadence, slower in description, faster in exciting moments"}
+  - {id: energico, nombre: "Enérgico", en: "subtle {acento}, fast lively pace, enthusiasm builds on the point being made"}
+  - {id: redes_rapido, nombre: "Rápido de redes", en: "subtle {acento}, modern fast rhythm, short sentences, strong emphasis on key words"}
+  - {id: profesional, nombre: "Profesional", en: "subtle {acento}, clean controlled diction, medium pace, short pauses between sentences"}
+  - {id: autoridad, nombre: "Autoridad", en: "light {acento}, controlled confident cadence, slow enough to hold attention, firm emphasis on decisive words"}
+  - {id: seguro, nombre: "Seguro", en: "light {acento}, steady deliberate delivery, quiet authority, never rushed"}
+  - {id: persuasivo, nombre: "Persuasivo", en: "light {acento}, confident persuasive pace, small pauses before key statements"}
+  - {id: calido, nombre: "Cálido", en: "light {acento}, soft pace, welcoming tone, small reassuring pauses"}
+  - {id: reflexivo, nombre: "Reflexivo", en: "subtle {acento}, slower pace, gentle pauses between ideas, choosing words carefully"}
+  - {id: emocional, nombre: "Emocional", en: "subtle {acento}, slower introspective pace, voice softens on emotional lines, like thinking aloud"}
+  - {id: curioso, nombre: "Curioso", en: "subtle {acento}, thoughtful pace, slight pauses before ideas, inquisitive tone"}
+  - {id: dramatico, nombre: "Dramático", en: "light {acento}, deliberate cinematic pace, longer pauses for tension, weight on emotional words"}
+  - {id: ironico, nombre: "Irónico", en: "subtle {acento}, relaxed tempo with vocal smiles, emphasis shifts unpredictably for irony"}
+
+acentos:   # Por defecto: es_madrid (HOT 02, regla 7)
+  - {id: es_madrid, nombre: "España, Madrid neutro", en: "Spanish with a neutral peninsular accent (Madrid), informal and conversational, like a real casual chat in Spain"}
+  - {id: es_rioplatense, nombre: "Argentina, rioplatense", en: "Spanish with a Rioplatense accent (Buenos Aires), including the 'sh' sound for ll and y"}
+  - {id: es_bogota, nombre: "Colombia, Bogotá", en: "Spanish with a clear, neutral Bogotá accent"}
+  - {id: es_cdmx, nombre: "México, CDMX", en: "Spanish with a central Mexican accent (Mexico City)"}
+  - {id: es_latam_neutro, nombre: "Latinoamericano neutro", en: "Spanish with a neutral Latin American accent"}
+  - {id: es_latam_seseo, nombre: "Latino sin rasgos de España", en: "Speak only neutral Latin American Spanish with strict seseo: c before e/i and z always sound like s, never the Castilian z; no Spain or regional accent"}
+
+# 18.58 · Looks de rodaje: cámara o formato, película o emulación, luz, temperatura y paleta. Sin nombres.
+looks:
+  - {id: drama_mediterraneo_60, nombre: "Drama mediterráneo años 60", en: "35mm spherical, three-strip style warm saturated colour, golden skin tones, natural Mediterranean side light, rich blacks, visible analog grain"}
+  - {id: drama_80, nombre: "Drama años 80", en: "anamorphic 35mm, warm pushed exposure, slightly blown highlights, teal shadows and amber highlights, soft halation around practicals, visible grain"}
+  - {id: verano_80, nombre: "Comedia de verano años 80", en: "anamorphic 2.39:1, shallow depth, 35mm grain, subtle halation, 3600K golden afternoon key, 5200K cool fill, soft pink neon spill, cherry red, butter cream, denim blue and chrome palette"}
+  - {id: accion_asiatica_90, nombre: "Acción asiática años 80-90", en: "35mm film with physical defects, slight chromatic aberration, soft focus, light flicker, strong highlight bloom, warm high-saturation palette, retro grain, classic soft stage lighting"}
+  - {id: drama_90, nombre: "Drama años 90", en: "35mm, slightly desaturated palette, cool blue-green shadows, warm skin highlights, soft diffused natural light, shallow depth, subtle lens breathing, visible grain"}
+  - {id: indie_actual, nombre: "Indie contemporáneo", en: "large-format digital cinema camera, 35mm prime, modern film-stock emulation, shallow depth, soft diffused natural light, muted desaturated palette, warm skin against a cool environment, subtle grain"}
+  - {id: gran_formato_frio, nombre: "Gran formato frío", en: "large-format digital, 35mm-equivalent at f/4, ultra-wide aspect, low saturation, deep blue-black tones, cold desolate atmosphere, moderate digital grain, every surface sharp"}
+  - {id: western, nombre: "Western de sol duro", en: "2.39:1 anamorphic, harsh overhead noon sun as the only source, no fill, bleach-bypass grade, pushed contrast, burnt amber and ochre highlights, crushed blacks, heavy grain"}
+  - {id: horror_psicologico, nombre: "Horror psicológico", en: "35mm tungsten stock, extreme low-key chiaroscuro, a single flickering practical, 80% of frame in darkness, cold near-monochrome palette, dense grain, edge chromatic aberration"}
+  - {id: ciencia_ficcion_volumetrica, nombre: "Ciencia ficción volumétrica", en: "large-format digital, anamorphic horizontal flares, cold blue-grey volumetric top light, distant amber industrial practicals, ground-level haze, strong teal-orange grade, deep blue-black shadows"}
+
+# 18.16c · Realismo de móvil (preajuste de las pistas de realismo; HOT 02, regla 4, y REF 04, regla 12)
+realismo_movil:
+  en: "Raw phone photo look: deep depth of field with the whole frame sharp, no bokeh; muted desaturated grade, no HDR; directional window light with real shadow; unretouched skin with varied pores, a few moles and freckles, fine facial hair, slight redness around the nose, under-eye texture, flyaway hairs; real worn materials (micro-scratches, fabric pilling, fingerprints)."
+  evitar_en: "beauty filter, waxy or plastic skin, CGI look, oversaturation"

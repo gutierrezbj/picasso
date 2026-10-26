@@ -18,6 +18,9 @@ Así el aprendizaje queda en la máquina: alimenta las opciones de dirección, l
 | [eva-01-avatar-consistente.md](eva-01-avatar-consistente.md) | Protocolo EVA · reto 21 días, «Crea tu Avatar IA» (tarea del día 2 y guía de prompts; solo método, el material es exclusivo) | 18.27 y 18.28 (aprobadas, F9); amplía 19.6 y 18.16b |
 | [idall-01-final-pass.md](idall-01-final-pass.md) | IDALL AI · The Final Pass, 10 lecciones (texto y transcripción de los 9 vídeos) | 18.31–18.40 sin aprobar |
 | [vdlt-01-avatares-lipsync.md](vdlt-01-avatares-lipsync.md) | Vive de lo Tuyo · módulo 05 Avatares & Lip-Sync (137 cápsulas, texto completo) | 18.41–18.47 sin aprobar; corrige la 19.6 y concreta la 18.36 |
+| [hot-01-editor-studio.md](hot-01-editor-studio.md) | Hotmart · Editor Studio / Director de Edición (11 clases y la skill `director-edicion`, solo método) | 18.65 sin aprobar; concreta la 18.14 y amplía la 18.49 |
+| [hot-02-prompteando-videos.md](hot-02-prompteando-videos.md) | Hotmart · Vídeos con IA: Prompteando Videos (33 clases, 3 guías de cámara, ángulos y luz, 3 skills) | 18.16c, 18.54, 18.57, 18.60, 18.61 y 18.63 sin aprobar |
+| [ref-04-biblioteca-prompts.md](ref-04-biblioteca-prompts.md) | Biblioteca de prompts de Prompteando Videos (470 prompts; referencia, no curso). Semillas propias en [datos/](datos/) | 18.54–18.64 sin aprobar; la 18.55 (cámara 3D) en [insumo](../insumos/insumo-camara-3d.md) |
 
 Pendientes de ficha: los cursos de Higgsfield Academy (Blockbuster 4K, Corto animado, Santiago, Anuncio E2E) según se vayan siguiendo, y los módulos del bootcamp sobre lenguaje cinematográfico, guiones de anuncio y UGC.
 

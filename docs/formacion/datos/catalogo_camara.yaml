@@ -1,0 +1,412 @@
+# Catálogo de movimientos de cámara (propuesta 18.54). SIN APROBAR.
+# Redacción propia. De la biblioteca de REF 04 y de la guía F1–F30 de HOT 02 se toman
+# solo el nombre de la técnica, los valores numéricos y el fallo típico observado.
+# Estructura de cada movimiento:
+#   familia:          fijo | optico | rotacion | desplazamiento | vertical | arco | seguimiento | aereo | especial
+#   parametros:       valores por defecto, que el director puede cambiar
+#   plantilla_en:     texto del bloque CAMERA LAW (D7: prompt en inglés). {x} = parámetro o campo del plano
+#   negar:            lo que se niega siempre, para que el modelo no lo añada
+#   fallo:            lo que suele hacer mal el modelo; se convierte en aviso de la revisión (18.48)
+#   cuando:           para qué sirve
+#   fiabilidad:       alta | media | baja (estimación de la fuente; hay que validarla con tomas propias)
+
+movimientos:
+  - id: fijo
+    nombre: Plano fijo
+    familia: fijo
+    plantilla_en: "Locked-off tripod shot, the camera does not move at all from first to last frame. All motion comes from {accion}."
+    negar: [drift, float, breathing, micro-shake, reframing]
+    fallo: "Los modelos añaden deriva por su cuenta. Hay que negar cada tipo de movimiento."
+    cuando: "La opción por defecto en diálogo, UGC y producto."
+    fiabilidad: media
+
+  - id: pan_derecha
+    nombre: Panorámica a la derecha
+    familia: rotacion
+    parametros: {grados: 90, altura_m: 1.6}
+    plantilla_en: "Tripod fixed at {altura_m} m; the head rotates {grados}° to the right at an even speed, from {composicion_inicio} to {composicion_final}, easing into a hold. Horizon stays level."
+    negar: [lateral travel, dolly, arc, zoom, tilt]
+    fallo: "Si desplaza la cámara en vez de girarla, aparece paralaje en el fondo."
+    cuando: "Descubrir el espacio. Si el plano anterior sale por la izquierda, enlaza bien."
+    fiabilidad: alta
+  - id: pan_izquierda
+    nombre: Panorámica a la izquierda
+    familia: rotacion
+    parametros: {grados: 90, altura_m: 1.6}
+    plantilla_en: "Tripod fixed at {altura_m} m; the head rotates {grados}° to the left at an even speed, new space entering only from the left edge, settling on {composicion_final}."
+    negar: [lateral travel, dolly, arc, zoom, tilt]
+    fallo: "Igual que la panorámica a la derecha."
+    cuando: "La dirección cuenta en el montaje: piensa por dónde entra el sujeto en el plano siguiente."
+    fiabilidad: alta
+  - id: tilt_arriba
+    nombre: Inclinación hacia arriba
+    familia: rotacion
+    parametros: {altura_m: 1.5}
+    plantilla_en: "Camera position locked at {altura_m} m; a single vertical tilt up at constant speed from {anclaje_bajo} past {detalle_medio} to {sujeto} in the upper third, decelerating to a hold."
+    negar: [crane, pedestal, dolly, zoom, horizontal drift]
+    fallo: "La confunde con una grúa y la cámara sube."
+    cuando: "Para transmitir que algo es enorme."
+    fiabilidad: alta
+  - id: tilt_abajo
+    nombre: Inclinación hacia abajo
+    familia: rotacion
+    parametros: {desde_grados: 35, hasta_grados: -10}
+    plantilla_en: "Locked tripod head; slow continuous tilt down from {desde_grados}° to {hasta_grados}°, from {anclaje_alto} to {encuadre_final}, decelerating to a hold."
+    negar: [pedestal, crane, dolly, truck, zoom]
+    fallo: "Si no se marca dónde termina, se pasa de largo."
+    cuando: "Bajar del cielo o el techo hasta un objeto."
+    fiabilidad: alta
+  - id: whip_pan
+    nombre: Panorámica de látigo
+    familia: rotacion
+    parametros: {duracion_s: 0.4, sobretiro_grados: 2, lado: right}
+    plantilla_en: "Hold {composicion_inicio} perfectly still, then a violent {lado} whip of about {duracion_s} s with full motion blur, landing on {composicion_final} with a {sobretiro_grados}° overshoot that settles; hold still to the end."
+    negar: [dolly, truck, crane, handheld wobble]
+    fallo: "Sin el rebote final parece un error de render."
+    cuando: "Corte disfrazado entre dos escenas."
+    fiabilidad: media
+
+  - id: zoom_lento_in
+    nombre: Zoom lento de acercamiento
+    familia: optico
+    parametros: {fov_desde: 84, fov_hasta: 29}
+    plantilla_en: "Locked tripod, zero rotation, zero travel: a smooth optical zoom in from {fov_desde}° to {fov_hasta}° field of view across the whole shot. No parallax: the background keeps its size relative to {sujeto}."
+    negar: [dolly, speed changes, steps, wobble]
+    fallo: "Lo convierte en dolly. Se nota porque el fondo cambia de tamaño respecto al sujeto."
+    cuando: "Cerrar el plano sin que la perspectiva cambie."
+    fiabilidad: media
+  - id: zoom_lento_out
+    nombre: Zoom lento de alejamiento
+    familia: optico
+    parametros: {fov_desde: 18, fov_hasta: 84}
+    plantilla_en: "Stationary camera, purely optical zoom out from {fov_desde}° to {fov_hasta}°, like a photographer turning the zoom ring. This is not a dolly out or a pullback. New space enters only at the frame edges."
+    negar: [backward travel, crane, jib, pedestal, drone retreat]
+    fallo: "Da un retroceso de cámara. Hay que negar cada forma de alejarse."
+    cuando: "Revelar el entorno sin mover la cámara."
+    fiabilidad: media
+  - id: zoom_rapido_in
+    nombre: Zoom rápido de acercamiento
+    familia: optico
+    parametros: {fov_desde: 84, fov_hasta: 18, golpe_s: 1.2}
+    plantilla_en: "Three beats: hold the wide {fov_desde}° frame still; one decisive zoom ramp to {fov_hasta}° in about {golpe_s} s; hold the tight frame still to the end. Camera position never changes."
+    negar: [dolly, wobble, steps]
+    fallo: "Si no se marcan los tres tiempos, reparte el zoom por todo el plano."
+    cuando: "Subrayar una reacción o un detalle."
+    fiabilidad: media
+  - id: zoom_rapido_out
+    nombre: Zoom rápido de alejamiento
+    familia: optico
+    parametros: {fov_desde: 18, fov_hasta: 84, golpe_s: 1.2}
+    plantilla_en: "Hold the tight {fov_desde}° frame, one fast zoom ramp out to {fov_hasta}° in about {golpe_s} s, then hold the wide frame still. Optical only."
+    negar: [dolly, overshoot, wobble]
+    fallo: "Sin algo que merezca la pena revelar, el efecto no funciona."
+    cuando: "Gag de revelación."
+    fiabilidad: media
+  - id: crash_zoom
+    nombre: Zoom de choque
+    familia: optico
+    parametros: {fov_desde: 18, fov_hasta: 84, golpe_s: 0.4}
+    plantilla_en: "Hold, then a violent {golpe_s} s optical zoom from {fov_desde}° to {fov_hasta}° with real motion blur and a hard mechanical stop, then hold perfectly still."
+    negar: [dolly, handheld, speed ramps]
+    fallo: "Sin el arrastre y el frenazo no parece una lente real."
+    cuando: "Remate cómico o de impacto."
+    fiabilidad: media
+  - id: rack_focus
+    nombre: Cambio de foco
+    familia: optico
+    plantilla_en: "Tripod locked, composition never changes. Start sharp on {plano_lejano}, then a slow continuous focus pull to {sujeto_cercano}. Exactly one plane is sharp at any time."
+    negar: [pan, tilt, push, drift, focus hunting]
+    fallo: "Hacen falta dos planos bien separados en profundidad y decir cuál empieza nítido."
+    cuando: "Llevar la atención sin cortar."
+    fiabilidad: media
+
+  - id: dolly_in
+    nombre: Travelling de acercamiento (dolly in)
+    familia: desplazamiento
+    parametros: {altura_m: 1.5}
+    plantilla_en: "Decisive dolly in on rails toward {sujeto} at constant speed, lens height locked at {altura_m} m, easing to a stop on {encuadre_final}. Field of view never changes; near objects sweep to the edges with strong parallax."
+    negar: [zoom, pan, tilt, crane, handheld drift]
+    fallo: "La cámara tiende a ganar altura. Hay que fijarla."
+    cuando: "Compromiso emocional: entrar en la escena."
+    fiabilidad: alta
+  - id: dolly_out
+    nombre: Travelling de retroceso (dolly out)
+    familia: desplazamiento
+    parametros: {altura_m: 1.6}
+    plantilla_en: "Dolly out on rails at constant speed, lens height locked at {altura_m} m, zero tilt; {borde_horizontal} stays at the same frame height from start to end while {sujeto} recedes in the centre."
+    negar: [crane, jib, pedestal, drone pullback, altitude gain, zoom]
+    fallo: "Lo convierte en dron. Ancla un borde horizontal del decorado a la misma altura al principio y al final."
+    cuando: "Dejar solo al sujeto, cerrar una escena."
+    fiabilidad: media
+  - id: push_in_flotante
+    nombre: Aproximación flotante (push in)
+    familia: desplazamiento
+    parametros: {desde_m: 7, hasta_m: 2, altura_m: 1.5}
+    plantilla_en: "Slow stealthy gimbal glide forward from {desde_m} m to {hasta_m} m at {altura_m} m height, barely perceptible organic sway, decelerating almost to a stop on {encuadre_final}."
+    negar: [rails feel, speed changes, zoom, pan, tilt]
+    fallo: "Si va demasiado rápido, se nota."
+    cuando: "El mejor movimiento para diálogo y tensión: no se nota, se siente."
+    fiabilidad: alta
+  - id: slider
+    nombre: Slider corto
+    familia: desplazamiento
+    parametros: {recorrido_cm: 40, lado: left}
+    plantilla_en: "Short slider move of about {recorrido_cm} cm to the {lado}, lens axis locked forward, soft ease in and out. Depth layers separate cleanly: {primer_termino}, {sujeto}, {fondo}. Ends on a resolved frame."
+    negar: [pan, zoom, full truck, handheld drift]
+    fallo: "Con un recorrido largo se convierte en travelling."
+    cuando: "El más fiable para producto y retrato. Poco recorrido y mucho efecto."
+    fiabilidad: alta
+  - id: truck_izquierda
+    nombre: Travelling lateral a la izquierda
+    familia: desplazamiento
+    plantilla_en: "Pure lateral travel to the left at constant speed, lens axis locked straight ahead, strong natural parallax: {primer_termino} passing fast, far layer drifting slow, {sujeto} crossing toward the right edge."
+    negar: [compensating pan, arc, dolly, zoom]
+    fallo: "Lo compensa con una panorámica y se pierde el cruce."
+    cuando: "Paralaje. Nombra qué hay en primer término."
+    fiabilidad: alta
+  - id: truck_derecha
+    nombre: Travelling lateral a la derecha
+    familia: desplazamiento
+    plantilla_en: "Pure lateral travel to the right at constant speed, lens axis locked straight ahead, near objects passing fast while {sujeto} crosses toward the left edge."
+    negar: [compensating pan, arc, dolly, zoom]
+    fallo: "Igual que el travelling lateral a la izquierda."
+    cuando: "Que el sujeto cruce el cuadro y salga."
+    fiabilidad: alta
+  - id: push_past
+    nombre: Pasada de largo
+    familia: desplazamiento
+    parametros: {desplazamiento_m: 0.6}
+    plantilla_en: "Continuous forward move on a lane {desplazamiento_m} m to the right of {sujeto}; the subject grows, slides past the shoulder and exits frame left while the camera keeps going toward {revelacion}, racking focus at the crossing. It passes beside, never through, and never pauses."
+    negar: [compensating pan, zoom, tilt]
+    fallo: "Se para en el sujeto o lo atraviesa."
+    cuando: "Revelar lo que hay detrás del personaje."
+    fiabilidad: media
+
+  - id: grua_arriba
+    nombre: Grúa ascendente
+    familia: vertical
+    parametros: {desde_m: 1.2, hasta_m: 9}
+    plantilla_en: "Smooth jib rise from {desde_m} m to {hasta_m} m with a gentle continuous tilt down keeping {sujeto} anchored in the lower third while the world opens around them."
+    negar: [lateral orbit, truck, zoom, speed ramps]
+    fallo: "Añade órbita."
+    cuando: "Plano de cierre: el sujeto se queda pequeño."
+    fiabilidad: alta
+  - id: grua_abajo
+    nombre: Grúa descendente
+    familia: vertical
+    plantilla_en: "Hold high, then descend vertically at a smooth constant speed while the tilt eases from steep downward to eye level, keeping {sujeto} centred and growing, settling on {encuadre_final}."
+    negar: [self-levelling if the world itself moves]
+    fallo: "Si no hay pausa arriba, el contexto no se lee."
+    cuando: "Apertura de secuencia: primero el contexto y después el personaje."
+    fiabilidad: alta
+  - id: pedestal_arriba
+    nombre: Pedestal hacia arriba
+    familia: vertical
+    parametros: {desde_m: 0.8, hasta_m: 2.2}
+    plantilla_en: "The whole camera rises along a strict vertical line from {desde_m} m to {hasta_m} m lens height, lens perfectly level the whole time, like an elevator window sliding up {sujeto}."
+    negar: [tilt, rotation, crane arc, dolly, zoom]
+    fallo: "Si añade inclinación, deja de ser pedestal."
+    cuando: "Cambiar de altura sin cambiar el ángulo."
+    fiabilidad: media
+  - id: pedestal_abajo
+    nombre: Pedestal hacia abajo
+    familia: vertical
+    parametros: {desde_m: 2.2, hasta_m: 0.8}
+    plantilla_en: "The whole camera descends vertically from {desde_m} m to {hasta_m} m, lens level, horizon angle unchanged, settling on the lower viewpoint."
+    negar: [tilt, rotation, crane arc, dolly, zoom]
+    fallo: "Igual que el pedestal hacia arriba."
+    cuando: "Bajar de la vista general a la altura de un objeto sobre la mesa."
+    fiabilidad: media
+
+  - id: arco_derecha
+    nombre: Arco a la derecha
+    familia: arco
+    parametros: {grados: 60, radio_m: 2.5}
+    plantilla_en: "Continuous arc to the right of about {grados}° around {sujeto} at a locked {radio_m} m radius and constant height, panning to keep them centred. The subject stays planted facing a fixed world direction; only the camera travels."
+    negar: [radius drift, height change, zoom, turntable effect]
+    fallo: "Efecto plato giratorio: gira el sujeto y no la cámara. Es el fallo más frecuente."
+    cuando: "Dar volumen al sujeto sin cortar."
+    fiabilidad: media
+  - id: arco_izquierda
+    nombre: Arco a la izquierda
+    familia: arco
+    parametros: {grados: 60, radio_m: 2.5}
+    plantilla_en: "Continuous arc to the left of about {grados}° around {sujeto}, locked {radio_m} m radius, constant height, subject planted and centred; only the camera travels."
+    negar: [radius drift, height change, zoom, turntable effect]
+    fallo: "Igual que el arco a la derecha."
+    cuando: "Con el sujeto mirando fuera de cuadro, el arco revela lo que mira."
+    fiabilidad: media
+  - id: orbita_360
+    nombre: Órbita completa
+    familia: arco
+    parametros: {radio_m: 2.5}
+    plantilla_en: "One full 360° orbit in a single direction at constant angular speed, locked {radio_m} m radius and height, returning exactly to the opening frame; {sujeto} stays planted facing a fixed direction."
+    negar: [reversal, speed changes, radius drift, turntable effect]
+    fallo: "Invierte el sentido a mitad de camino y el giro no cierra."
+    cuando: "Plano de presentación o de producto."
+    fiabilidad: baja
+  - id: bullet_time
+    nombre: Tiempo congelado
+    familia: arco
+    plantilla_en: "Time inside the scene freezes: {sujeto} suspended mid-action and {particulas} hanging motionless in the air. Only the camera keeps moving at normal speed in a smooth arc, distance and height fixed, settling on a new angle."
+    negar: [particle drift, subject motion]
+    fallo: "Sin partículas concretas suspendidas no se lee como tiempo parado."
+    cuando: "El clímax de una acción."
+    fiabilidad: baja
+
+  - id: seguimiento
+    nombre: Plano de seguimiento
+    familia: seguimiento
+    parametros: {distancia_m: 0.8}
+    plantilla_en: "Follow shot locked {distancia_m} m behind {sujeto}'s shoulder, matching walking speed; nape and shoulder softly out of focus in the left third, focus held deep along the path, gentle bob from the stride."
+    negar: [floating gimbal, handheld chaos, overtaking, falling back]
+    fallo: "El bamboleo tiene que venir de la zancada, no de un operador nervioso."
+    cuando: "Ir hacia algo."
+    fiabilidad: alta
+  - id: retroceso_frontal
+    nombre: Travelling de retroceso frontal
+    familia: seguimiento
+    parametros: {fov: 47}
+    plantilla_en: "Reverse tracking: camera moves backward at exactly {sujeto}'s walking speed, subject size constant, eyeline just above the lens, fixed {fov}° field of view, focus locked on the face."
+    negar: [pan, tilt, zoom, speed changes]
+    fallo: "Si el sujeto cambia de tamaño, no sincroniza velocidades."
+    cuando: "Conversación caminando."
+    fiabilidad: alta
+  - id: acompanamiento_lateral
+    nombre: Travelling de acompañamiento
+    familia: seguimiento
+    plantilla_en: "Lateral tracking in strict 90° profile at the subject's exact speed. Three parallax layers: {primer_termino} sweeping past the lens, {sujeto} constant in the centre, {fondo} sliding slower behind."
+    negar: [zoom, pan drift, push-in]
+    fallo: "Sin las tres capas, el fondo se desliza plano."
+    cuando: "Caminar o correr con energía."
+    fiabilidad: alta
+  - id: ras_suelo
+    nombre: Travelling bajo a ras de suelo
+    familia: seguimiento
+    plantilla_en: "Extreme slow motion throughout. Camera at ground level below the knee, smooth lateral track beside {sujeto} in strict side view, never rising, never tilting up; ends mid-motion on a live frame."
+    negar: [speed ramps, rising, tilting up, push, orbit, zoom, fade]
+    fallo: "Lo primero que hace es levantar la cámara."
+    cuando: "Épica sin coste."
+    fiabilidad: media
+  - id: vehiculo
+    nombre: Seguimiento de vehículo
+    familia: seguimiento
+    plantilla_en: "Camera travels in tandem with {vehiculo} at precisely matched speed; the vehicle stays stable at constant size while road and landscape stream past through every parallax layer."
+    negar: [overtaking, lagging, zoom, pan drift]
+    fallo: "Si la cámara se adelanta o se queda atrás, se rompe la ilusión."
+    cuando: "Vehículos: furgoneta, tractor."
+    fiabilidad: media
+  - id: persecucion
+    nombre: Persecución
+    familia: seguimiento
+    plantilla_en: "Whip toward {sujeto} running, then follow handheld across {terreno}, jolting on every impact with imperfect reframes that always recover; the shake calms and settles on {encuadre_final}."
+    negar: []
+    fallo: "Si el temblor no se calma al final, el plano no cierra."
+    cuando: "Acción."
+    fiabilidad: media
+  - id: en_mano
+    nombre: Cámara al hombro
+    familia: seguimiento
+    plantilla_en: "Constant shoulder handheld: visible shake, operator breathing, rolling horizon, imperfect reframes that correct. Path: {tramo_1}, then {tramo_2}, then {tramo_3}."
+    negar: [stabilisation, gimbal float, rails feel]
+    fallo: "Si no se describe el recorrido por tramos, se queda temblando en el sitio."
+    cuando: "Documental, tensión."
+    fiabilidad: media
+  - id: snorricam
+    nombre: Cámara al pecho
+    familia: seguimiento
+    plantilla_en: "Rigid chest-mounted rig facing back at {sujeto}: face and torso locked in frame centre; the walk transfers to the environment as a gentle sway while {fondo} slides past the shoulders."
+    negar: [independent camera move, zoom]
+    fallo: "El bamboleo lo tiene que heredar el fondo, nunca la cara."
+    cuando: "Inquietud, desorientación."
+    fiabilidad: baja
+  - id: pov
+    nombre: Plano subjetivo
+    familia: seguimiento
+    parametros: {altura_m: 1.7}
+    plantilla_en: "The camera is the eyes of a person {altura_m} m tall walking from {inicio} to {final}: step bob, slight sway, small head rotations; hands enter frame only for {interaccion}, then leave."
+    negar: []
+    fallo: "Sin manos que entren en cuadro no se cree que haya un cuerpo."
+    cuando: "Meter al espectador en la escena."
+    fiabilidad: media
+
+  - id: dron_orbita
+    nombre: Órbita de dron
+    familia: aereo
+    parametros: {radio_m: 8, altitud_m: 4, grados: 200}
+    plantilla_en: "Drone circles {sujeto} at constant speed, {radio_m} m radius, {altitud_m} m altitude, moving screen-right (clockwise from above) over about {grados}°; horizon rotates behind."
+    negar: [altitude change, radius drift, zoom, speed ramps]
+    fallo: "La deriva del radio delata que el dron es generado."
+    cuando: "AgroM y DroneHub: parcela, máquina, equipo."
+    fiabilidad: media
+  - id: dron_aproximacion
+    nombre: Aproximación de dron
+    familia: aereo
+    plantilla_en: "Skim low and fast over {terreno} straight at {objetivo} with gentle banking, climb along {obstaculo}, pitch up hard and follow {sujeto} as it passes overhead; real flight inertia, no instant direction changes."
+    negar: [teleport-like turns]
+    fallo: "Sin inercia de vuelo, el cambio de dirección parece un teletransporte."
+    cuando: "Energía."
+    fiabilidad: baja
+  - id: alejamiento_aereo
+    nombre: Alejamiento aéreo
+    familia: aereo
+    parametros: {desde: "2.5 m / 3 m alt", hasta: "40 m / 25 m alt"}
+    plantilla_en: "Start {desde} in front of {sujeto}, then fly backward and upward in one accelerating move to {hasta}; the whole scene centres as it shrinks and the horizon climbs."
+    negar: [orbit, zoom, speed reversals]
+    fallo: "La aceleración progresiva es la mitad del efecto."
+    cuando: "Escala: cuando el protagonista es el entorno."
+    fiabilidad: media
+  - id: helicoptero
+    nombre: Plano de helicóptero
+    familia: aereo
+    plantilla_en: "Slow distant counter-clockwise orbit like a stabilised news gimbal with slight overshoots, then an in-shot snap zoom to {detalle} that overshoots, hunts focus and locks; telephoto compression through haze."
+    negar: [cut instead of zoom]
+    fallo: "Exigente. Mejor por partes."
+    cuando: "Estética de reportaje."
+    fiabilidad: baja
+
+  - id: dolly_zoom
+    nombre: Efecto vértigo
+    familia: especial
+    parametros: {desde_m: 6, hasta_m: 2.5, fov_desde: 18, fov_hasta: 84}
+    plantilla_en: "Dolly forward from {desde_m} m to {hasta_m} m while the field of view widens from {fov_desde}° to {fov_hasta}° in one synchronised ramp; {sujeto}'s head size stays exactly constant while the background stretches away."
+    negar: [pan, tilt, handheld drift]
+    fallo: "Pocos modelos lo consiguen. Fija el tamaño de la cabeza como condición y prueba varias semillas."
+    cuando: "Revelación interna."
+    fiabilidad: baja
+  - id: robot
+    nombre: Brazo robótico
+    familia: especial
+    parametros: {segundos_por_posicion: 1}
+    plantilla_en: "Fast, perfectly smooth motion-control path through numbered positions: 1) {pos_1}, 2) {pos_2}, 3) {pos_3}, 4) {pos_4}; about {segundos_por_posicion} s per glide with ease in/out and a brief clear hold at each."
+    negar: [shake, whip pans, speed ramps, motion blur]
+    fallo: "Sin pausas en cada posición es un barrido confuso."
+    cuando: "Producto."
+    fiabilidad: media
+  - id: timelapse_dos_tiempos
+    nombre: Dos velocidades de tiempo
+    familia: especial
+    plantilla_en: "One slow constant pullback. Two time speeds share the frame: the world runs in time-lapse through {fases_luz} with smooth in-frame light morphs, while {sujeto} moves in real time."
+    negar: [shake, orbit, speed changes, light cuts]
+    fallo: "Si no se separan las dos velocidades, lo acelera todo."
+    cuando: "El paso del tiempo: una jornada de trabajo en el campo."
+    fiabilidad: baja
+
+# Atajos de una línea para personaje que habla (formatos UGC y podcast). Todos terminan con
+# la cláusula anti-corte de la plantilla de vídeo.
+atajos:
+  - {id: quieta_gestos, nombre: "Cámara quieta y gestos", texto_en: "Static camera; realistic arm movements and subtle micro-movements."}
+  - {id: zoom_cara, nombre: "Zoom lento a la cara", texto_en: "Slow continuous zoom in to the face from the first frame, then holds the close-up."}
+  - {id: zoom_al_hablar, nombre: "Zoom rápido al hablar", texto_en: "Quick zoom in that lands on a close-up exactly as they start speaking, then holds."}
+  - {id: mano_sutil, nombre: "En mano sutil", texto_en: "Very light natural handheld movement."}
+  - {id: podcast_push, nombre: "Acercamiento sutil (podcast)", texto_en: "Barely perceptible push-in from medium shot to medium close-up over the clip."}
+  - {id: retroceso_revela, nombre: "Retroceso que revela", texto_en: "Slow pullback from a close-up revealing the surroundings as they begin to speak, then holds wider."}
+  - {id: orbita_lenta, nombre: "Órbita lenta", texto_en: "Slow half-circle arc around the subject, keeping them centred."}
+  - {id: caminar_hablar, nombre: "Seguimiento al caminar", texto_en: "Tracking alongside the subject as they walk and talk, smooth and steady."}
+  - {id: push_ojos, nombre: "Push-in a los ojos", texto_en: "Progressive push-in to an extreme close-up of the eyes timed to the key line, then holds."}
+  - {id: heroico, nombre: "Contrapicado heroico", texto_en: "Low-angle hero shot with a slow push-in, then holds."}
+  - {id: bokeh, nombre: "Bokeh y acercamiento", texto_en: "Shallow depth of field, creamy background, slow push-in, then holds."}
+  - {id: camara_lenta, nombre: "Cámara lenta", texto_en: "Smooth cinematic slow motion with subtle camera drift."}
+
+# Cláusula que la plantilla de vídeo añade siempre (evita cortes a mitad de frase).
+clausula_continuidad_en: "Single continuous take, no cuts or scene changes; the camera holds its framing after the move."
