@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mesa · estados</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1f4e5f}a:hover{color:#173c49}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #eaf1f1; color: #1b2426; font-family: Mulish, sans-serif; display: flex; flex-direction: column">
+<header style="height: 56px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 12px; background: #ffffff; border-bottom: 1px solid #d5e0e1">
+  <span style="font-size: 14px; color: #5b6668">Estudio / JRGB / <b style="color: #1b2426">Taller</b></span>
+  <span style="margin-left: auto; font-size: 13px; color: #5b6668">Gasto: 0,30 $ estimado · 0,15 $ reservado · 0,15 $ posible cargo sin confirmar</span>
+</header><div style="flex: 1; min-height: 0; display: flex; gap: 14px; padding: 14px"><section style="width: 340px; flex-shrink: 0; box-sizing: border-box; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(32,29,24,0.05); padding: 18px; display: flex; flex-direction: column; gap: 16px">
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 8px"><span style="width: 22px; height: 22px; border-radius: 11px; background: #1f4e5f; color: #ffffff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">1</span><b style="font-size: 15px">¿Con quién o con qué?</b><span style="margin-left: auto; font-size: 12px; color: #5b6668">1 / 6</span></div>
+    <div style="display: flex; gap: 8px">
+      <div style="display: flex; flex-direction: column; gap: 4px; width: 76px">
+        <div style="width: 76px; height: 76px; border-radius: 12px; background: #b9cdd3; position: relative"><span style="position: absolute; left: 4px; bottom: 4px; padding: 2px 5px; border-radius: 6px; background: #ffffff; font-size: 9px; font-weight: 800; color: #1f4e5f">IDENTIDAD</span></div>
+        <span style="font-size: 12px; font-weight: 600">@Juan</span>
+      </div>
+      <button style="width: 76px; height: 76px; border-radius: 12px; border: 1.5px dashed #9aa6a8; background: #f4f8f8; font-family: inherit; font-size: 12px; color: #5b6668">+ Añadir</button>
+    </div>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 8px"><span style="width: 22px; height: 22px; border-radius: 11px; background: #1f4e5f; color: #ffffff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">2</span><b style="font-size: 15px">Describe la imagen</b></div>
+    <textarea aria-label="Describe la imagen" style="height: 104px; resize: none; box-sizing: border-box; border: 1px solid #d5e0e1; border-radius: 12px; padding: 10px; font-family: inherit; font-size: 14px; line-height: 20px; color: #1b2426">Juan con camisa blanca en su taller, luz de ventana lateral, foto realista de 35 mm</textarea>
+    <button style="height: 40px; border-radius: 12px; border: 1.5px solid #1f4e5f; background: #ffffff; color: #1f4e5f; font-family: inherit; font-size: 13px; font-weight: 700">Mejorar mi descripción</button>
+  </div>
+  <div style="display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 8px"><span style="width: 22px; height: 22px; border-radius: 11px; background: #1f4e5f; color: #ffffff; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">3</span><b style="font-size: 15px">Forma y cantidad</b></div>
+    <div style="display: flex; gap: 6px">
+      <button style="height: 38px; flex: 1; border-radius: 10px; border: 2px solid #1f4e5f; background: #dceaee; font-family: inherit; font-size: 13px; font-weight: 600">9:16</button>
+      <button style="height: 38px; flex: 1; border-radius: 10px; border: 1px solid #d5e0e1; background: #ffffff; font-family: inherit; font-size: 13px">16:9</button>
+      <button style="height: 38px; flex: 1; border-radius: 10px; border: 1px solid #d5e0e1; background: #ffffff; font-family: inherit; font-size: 13px">1:1</button>
+      <div style="height: 38px; border: 1px solid #d5e0e1; border-radius: 10px; display: flex; align-items: center; padding: 0 8px; font-size: 13px"><b>1</b></div>
+    </div>
+  </div>
+  <div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+    <span style="font-size: 12px; color: #5b6668">Nano Banana Pro · tarifa verificada el 12-10-2026</span>
+    <button style="height: 50px; border: none; border-radius: 14px; background: #1f4e5f; color: #ffffff; font-family: inherit; font-size: 15px; font-weight: 700; ">Generar 1 imagen · 0,15 $</button>
+  </div>
+</section><section style="flex: 1; min-width: 0; background: #ffffff; border-radius: 20px; box-shadow: 0 4px 20px rgba(32,29,24,0.05); padding: 16px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center; gap: 10px"><div style="display: flex; align-items: center; gap: 6px"><button style="height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid #d5e0e1; background: #ffffff; font-family: inherit; font-size: 13px; color: #1b2426">General</button><button style="height: 34px; padding: 0 14px; border-radius: 10px; border: none; background: #1f4e5f; color: #ffffff; font-family: inherit; font-size: 13px; font-weight: 600">Marca JRGB</button><button style="height: 34px; padding: 0 14px; border-radius: 10px; border: 1px solid #d5e0e1; background: #ffffff; font-family: inherit; font-size: 13px; color: #1b2426">Pruebas sombrero</button><button style="height: 34px; padding: 0 12px; border-radius: 10px; border: 1px dashed #9aa6a8; background: #ffffff; font-family: inherit; font-size: 13px; color: #5b6668">+ Carpeta</button></div><span style="margin-left: auto; font-size: 12px; color: #5b6668">La Mesa · colocación automática en árbol</span></div>
+  <div style="position: relative; flex: 1; border-radius: 14px; background-color: #f7fafa; background-image: radial-gradient(#d9e3e4 1px, transparent 1px); background-size: 18px 18px"><div style="position: absolute; left: 30px; top: 30px; width: 140px; box-sizing: border-box; padding: 4px; border-radius: 16px; border: 1px solid #d5e0e1; background: #ffffff; ">
+  <div style="position: relative"><div style="position: relative; width: 130px; height: 230px; border-radius: 12px; background: #c9d8db; overflow: hidden"><div style="position: absolute; left: 41px; top: 56px; width: 48px; height: 58px; border-radius: 24px; background: #e4cdb7"></div><div style="position: absolute; left: 25px; top: 118px; width: 80px; height: 112px; border-radius: 30px 30px 8px 8px; background: #6f8794"></div></div><span style="position: absolute; top: 8px; right: 8px; padding: 2px 7px; border-radius: 8px; background: #ffffff; font-size: 12px; font-weight: 800; color: #1f4e5f">★</span></div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>V1</b><span style="color: #5b6668"></span></div>
+</div><svg aria-hidden="true" width="760" height="700" style="position: absolute; left: 0; top: 0; pointer-events: none">
+  <path d="M170 150 C 220.0 150, 220.0 150, 270 150" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+  <path d="M262 145 L 270 150 L 262 155" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+</svg>
+<span style="position: absolute; left: 162.0px; top: 136.0px; max-width: 116px; padding: 3px 8px; border-radius: 8px; background: #ffffff; border: 1px solid #d5e0e1; font-size: 11px; line-height: 14px; color: #1b2426">ponle un sombrero</span><div style="position: absolute; left: 270px; top: 30px; width: 140px; box-sizing: border-box; padding: 4px; border-radius: 16px; border: 1px solid #d5e0e1; background: #ffffff; ">
+  <div style="position: relative"><div style="position: relative; width: 130px; height: 230px; border-radius: 12px; background: #c9d8db; overflow: hidden"><div style="position: absolute; left: 41px; top: 56px; width: 48px; height: 58px; border-radius: 24px; background: #e4cdb7"></div><div style="position: absolute; left: 25px; top: 118px; width: 80px; height: 112px; border-radius: 30px 30px 8px 8px; background: #6f8794"></div><div style="position: absolute; left: 34px; top: 30px; width: 62px; height: 22px; border-radius: 30px 30px 4px 4px; background: #5a3d26"></div><div style="position: absolute; left: 22px; top: 50px; width: 86px; height: 8px; border-radius: 4px; background: #5a3d26"></div></div><span style="position: absolute; top: 8px; right: 8px; padding: 2px 7px; border-radius: 8px; background: #ffffff; font-size: 12px; font-weight: 800; color: #1f4e5f">★</span></div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>V2</b><span style="color: #5b6668"></span></div>
+</div><svg aria-hidden="true" width="760" height="700" style="position: absolute; left: 0; top: 0; pointer-events: none">
+  <path d="M410 150 C 460.0 150, 460.0 150, 510 150" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+  <path d="M502 145 L 510 150 L 502 155" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+</svg>
+<span style="position: absolute; left: 402.0px; top: 136.0px; max-width: 116px; padding: 3px 8px; border-radius: 8px; background: #ffffff; border: 1px solid #d5e0e1; font-size: 11px; line-height: 14px; color: #1b2426">gafas de sol</span><div style="position: absolute; left: 510px; top: 30px; width: 140px; box-sizing: border-box; padding: 4px; border-radius: 16px; border: 1px solid #d5e0e1; background: #ffffff; ">
+  <div style="position: relative"><div style="width: 130px; height: 230px; box-sizing: border-box; border-radius: 12px; background: #fbecea; border: 1.5px solid #a32d1e; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #a32d1e"><b>Falló</b><span style="line-height: 16px">El proveedor rechazó la imagen. No se ha cobrado.</span><button style="margin-top: auto; height: 30px; border-radius: 8px; border: 1px solid #a32d1e; background: #ffffff; font-family: inherit; font-size: 12px; color: #a32d1e">Reintentar…</button><button style="height: 28px; border: none; background: none; font-family: inherit; font-size: 12px; color: #5b6668; text-decoration: underline">Entendido</button></div></div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>V5</b><span style="color: #5b6668"></span></div>
+</div><svg aria-hidden="true" width="760" height="700" style="position: absolute; left: 0; top: 0; pointer-events: none">
+  <path d="M170 160 C 220.0 160, 220.0 440, 270 440" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+  <path d="M262 435 L 270 440 L 262 445" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+</svg>
+<span style="position: absolute; left: 162.0px; top: 286.0px; max-width: 116px; padding: 3px 8px; border-radius: 8px; background: #ffffff; border: 1px solid #d5e0e1; font-size: 11px; line-height: 14px; color: #1b2426">luz de atardecer</span><div style="position: absolute; left: 270px; top: 320px; width: 140px; box-sizing: border-box; padding: 4px; border-radius: 16px; border: 1px solid #d5e0e1; background: #ffffff; ">
+  <div style="position: relative"><div style="width: 130px; height: 230px; box-sizing: border-box; border-radius: 12px; background: #fdf6e8; border: 1.5px solid #c48a1a; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #8a5a0b"><b>Sin confirmar</b><span style="line-height: 16px">Se envió y no hubo respuesta. No se reenvía sola.</span><button style="margin-top: auto; height: 30px; border-radius: 8px; border: 1px solid #c48a1a; background: #ffffff; font-family: inherit; font-size: 12px; color: #8a5a0b">Comprobar</button><button style="height: 28px; border: none; background: none; font-family: inherit; font-size: 11px; color: #5b6668; text-decoration: underline">Marcar como fallida</button></div></div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>V6</b><span style="color: #5b6668"></span></div>
+</div><svg aria-hidden="true" width="760" height="700" style="position: absolute; left: 0; top: 0; pointer-events: none">
+  <path d="M410 440 C 460.0 440, 460.0 440, 510 440" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+  <path d="M502 435 L 510 440 L 502 445" fill="none" stroke="#1f4e5f" stroke-width="2"/>
+</svg>
+<span style="position: absolute; left: 402.0px; top: 426.0px; max-width: 116px; padding: 3px 8px; border-radius: 8px; background: #ffffff; border: 1px solid #d5e0e1; font-size: 11px; line-height: 14px; color: #1b2426">chaqueta negra</span><div style="position: absolute; left: 510px; top: 320px; width: 140px; box-sizing: border-box; padding: 4px; border-radius: 16px; border: 1px solid #d5e0e1; background: #ffffff; ">
+  <div style="position: relative"><div style="width: 130px; height: 230px; border-radius: 12px; background: #dceaee; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #1f4e5f; font-size: 13px; font-weight: 600">Generando…<span style="font-weight: 400">0:14</span></div></div>
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>V7</b><span style="color: #5b6668">reservado</span></div>
+</div><div style="position: absolute; left: 450px; top: 300px; width: 280px; box-sizing: border-box; background: #ffffff; border: 1px solid #d5e0e1; border-radius: 14px; box-shadow: 0 8px 30px rgba(32,29,24,0.12); padding: 14px; display: flex; flex-direction: column; gap: 8px">
+  <b style="font-size: 14px">Reintentar V5</b>
+  <span style="font-size: 12px; line-height: 17px; color: #5b6668">Es un envío nuevo: necesita tu autorización otra vez.</span>
+  <button style="height: 44px; border: none; border-radius: 12px; background: #1f4e5f; color: #ffffff; font-family: inherit; font-size: 14px; font-weight: 700; ">Reintentar · 0,15 $</button>
+  <button style="height: 40px; border-radius: 10px; border: 1px solid #d5e0e1; background: #ffffff; font-family: inherit; font-size: 13px; color: #1b2426; ">Cancelar</button>
+</div></div>
+</section><aside style="width: 300px; flex-shrink: 0; box-sizing: border-box; background: #ffffff; border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; line-height: 19px">
+  <b style="font-size: 16px">Estados de una tarjeta</b>
+  <span><b style="color: #1f4e5f">Generando</b>: con su tiempo. El precio está reservado.</span>
+  <span><b style="color: #a32d1e">Falló</b>: mensaje del proveedor. «Reintentar…» vuelve a pedir autorización con el precio.</span>
+  <span><b style="color: #8a5a0b">Sin confirmar</b>: se envió y no hubo respuesta. «Comprobar» pregunta al proveedor y nunca reenvía. «Marcar como fallida» avisa de un posible cargo.</span>
+  <span><b>Al recargar o reconectar</b>: el estado viene del servidor. Una petición cortada se repite con el mismo identificador, así que no se duplica.</span>
+</aside></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
