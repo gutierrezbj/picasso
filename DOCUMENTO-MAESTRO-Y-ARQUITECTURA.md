@@ -23,6 +23,14 @@ Documento compañero: `NUEVA-APLICACION-INTENCION-FUNCIONAMIENTO-Y-DISENO.md` (e
 
 ## 1. Propósito en una página
 
+### 1.00 Reorientación por módulos (13-11-2026; manda sobre §1.0 donde choque)
+
+Acuerdos de Juan del 13-11-2026, consolidados en PIC-01 (`docs/sdd/PIC-01-imagen-y-edicion.md`):
+1. **Se construye por módulos**, uno cada vez, y cada uno se valida antes de empezar el siguiente. El destino final son cortos y episodios de una serie. **Módulo 1: imagen y edición desde resultados.** Se reutiliza lo que ya funciona.
+2. **El Director pasa a ser una ayuda opcional a demanda**, no la puerta de entrada. Su nueva interfaz (maquetas 9 y 9b, 18.52) se aplaza. Esto sustituye a «Cómo entra el usuario» del §1.0.
+3. **Lo aprobado se conserva.** Lo que queda fuera del módulo en curso está **aplazado, no desaprobado**: 18.52, 18.53, el clip de la v1 con Seedance 2.5 en BytePlus y sus metas, §20 E2–E5, cámara 3D, vídeo, voz, UGC y guion. Una propuesta no está aprobada por estar escrita aquí.
+4. **El estado de cada cosa se lleva en una sola tabla (§21)**, que separa aprobación, implementación, pruebas técnicas y validación de Juan.
+
 ### 1.0 Definición vigente (Juan, 24-10-2026; manda sobre el resto de esta sección)
 
 **Qué es.** Picasso es el **generador de contenido audiovisual de JRGB**. De una idea saca una pieza publicable en una conversación, y de varias piezas coherentes saca una película. Es un «SuperComputer con memoria de director»: conversas, Picasso pregunta lo que falta y escribe el prompt, tú apruebas viendo el precio, y lo que se decide queda guardado (personaje, estética, luz, guion) para todo lo que viene después.
@@ -38,7 +46,7 @@ Documento compañero: `NUEVA-APLICACION-INTENCION-FUNCIONAMIENTO-Y-DISENO.md` (e
 - entrega el paquete ordenado para DaVinci;
 - todo queda en casa.
 
-**Cómo entra el usuario.** Por el **Director**: una caja de conversación con tarjeta de preguntas (una a una, «Otra cosa», «Omitir» y lo que dedujo dicho en una línea), prompt por tramos con restricciones contadas, iterar gratis, tarjeta de aprobación con la referencia, los ajustes del envío real y «Aprobar · X $» (sin «permitir siempre»), borrador y final. Fichas, guion, lienzo, motor y paquete trabajan **por detrás**; el recorrido de §4 queda para repasar, no como camino obligado (18.52).
+**Cómo entra el usuario.** *(Aplazado el 13-11-2026, ver §1.00: el Director pasa a ser ayuda opcional.)* Por el **Director**: una caja de conversación con tarjeta de preguntas (una a una, «Otra cosa», «Omitir» y lo que dedujo dicho en una línea), prompt por tramos con restricciones contadas, iterar gratis, tarjeta de aprobación con la referencia, los ajustes del envío real y «Aprobar · X $» (sin «permitir siempre»), borrador y final. Fichas, guion, lienzo, motor y paquete trabajan **por detrás**; el recorrido de §4 queda para repasar, no como camino obligado (18.52).
 
 **Versiones:**
 - **v1:** foto y clip de escena, con el mismo flujo de conversación.
@@ -1014,8 +1022,8 @@ Salen de `docs/formacion/`. Ninguna se construye hasta que Juan la apruebe y que
 | 18.49 | **Analizar una referencia.** Sobre una imagen (de la biblioteca, del moodboard o de otra toma), el asistente con visión devuelve una base estructurada: composición, luz (dirección, proporción de relleno, temperatura), paleta en hex aproximado, óptica y profundidad deducidas, estilo, y un apartado «no visible o ambiguo» para no inventar. Se aplica con un clic a la dirección del plano o al moodboard (18.40). | REF 03 (Lyra), analizador | Sin aprobar |
 | 18.50 | **Sonido en cuatro capas en el vídeo.** El prompt de vídeo describe por separado el diálogo (o la voz de referencia, 18.43), los efectos con su segundo, el ambiente (siempre en positivo) y la música, o su ausencia explícita. Sale de «Sonido previsto» de la escena y de la dirección del plano. | REF 03 (Lyra), audio por capas; 18.38 | Sin aprobar |
 | 18.51 | **Negativos por tipo de pieza y texto en imagen por modelo.** Biblioteca curada por nosotros (personas, producto, comida, arquitectura, texto en imagen, vídeo con diálogo…), sin palabras vacías. El catálogo dice si cada modelo los recibe como parámetro o como «Evita…» dentro del texto. La 18.26 (texto exacto) usa la sintaxis del modelo: texto literal entre comillas, tipografía, tamaño, color y posición. | REF 03 (Lyra); 18.10; 18.26 | Sin aprobar |
-| 18.52 | **Director de escena: entrevista, prompt verificado y tarjeta real.** Un motor de entrevista (cinco preguntas cerradas, una a una, con «Otra cosa» y «Omitir») en dos momentos: **alcance** en la Idea y **escena** en el plano de vídeo. Las respuestas van a la dirección del plano. Prompt en siete bloques con CONSTRAINTS escritas por reglas, revisión con severidad, reescritura gratis, tarjeta pintada desde la operación real, borrador obligatorio y final con la misma entrada. Reglas duras R1–R5: aprobación por operación, lo mostrado sale del job, aviso de cara, añadidos listados, decisiones tuyas y de Picasso separadas. Diseño completo: `docs/sdd/SDD-director-de-escena.md` | Higgsfield L02 (SuperComputer), 24-10-2026, `docs/insumos/insumo-picasso-generador-prompts.md`. Juan: «si no estás claro DESDE el principio, la cagada la arrastras hasta el final» | D1–D7 decididos por Juan el 24-10-2026 (empezar por el alcance en la Idea; sin «permitir siempre»; semilla por reglas y lista; proveedor de vídeo en DE-3; cinco preguntas; borrador obligatorio; prompt en inglés). SDD aprobado el 24-10-2026. **Reorientado ese mismo día (§1.0):** el Director es la puerta de entrada de todo Picasso (maquetas 9 y 9b, que sustituyen a la 6–8); la v1 es foto y clip de escena. Pendiente: verificar el proveedor de vídeo antes de construir |
-| 18.53 | **Modo «personaje» del Director (la biblia del personaje).** Entrevista de personaje con el método del Arquitecto de Personaje: - dos o tres preguntas por turno, con opciones si dudas; - orden al revés: para qué, para quién, quién es y la cara al final; - lo que no contestas sale como «propuesta». Resultado: la ficha del elemento personaje en diez partes y un **bloqueo de identidad** de 60 a 100 palabras: forma de la cara en palabras clave, vello facial, prenda de la foto, una o dos imperfecciones con su LADO, accesorio fijo como «SIEMPRE lleva», «piel limpia, sin tatuajes» si no hay marcas y nota de piel real. Picasso lo mete solo en cada prompt de foto y clip. Menú de físico por categorías para ofrecer opciones. Ajustes propios: - con persona real (18.20), la cara sale de la foto y no del texto; - la ficha y el bloqueo se leen en español y Picasso los traduce al prompt en inglés (D7 de la 18.52) | VDLT, skill «Arquitecto de Personaje» (M5 Avatares), revisada el 24-10-2026; se toma el método, no el texto | **APROBADA el 24-10-2026: dentro de la v1 (§1.0); se usa en la E2** |
+| 18.52 | **Director de escena: entrevista, prompt verificado y tarjeta real.** Un motor de entrevista (cinco preguntas cerradas, una a una, con «Otra cosa» y «Omitir») en dos momentos: **alcance** en la Idea y **escena** en el plano de vídeo. Las respuestas van a la dirección del plano. Prompt en siete bloques con CONSTRAINTS escritas por reglas, revisión con severidad, reescritura gratis, tarjeta pintada desde la operación real, borrador obligatorio y final con la misma entrada. Reglas duras R1–R5: aprobación por operación, lo mostrado sale del job, aviso de cara, añadidos listados, decisiones tuyas y de Picasso separadas. Diseño completo: `docs/sdd/SDD-director-de-escena.md` | Higgsfield L02 (SuperComputer), 24-10-2026, `docs/insumos/insumo-picasso-generador-prompts.md`. Juan: «si no estás claro DESDE el principio, la cagada la arrastras hasta el final» | D1–D7 decididos por Juan el 24-10-2026 (empezar por el alcance en la Idea; sin «permitir siempre»; semilla por reglas y lista; proveedor de vídeo en DE-3; cinco preguntas; borrador obligatorio; prompt en inglés). SDD aprobado el 24-10-2026. **Reorientado ese mismo día (§1.0):** el Director es la puerta de entrada de todo Picasso (maquetas 9 y 9b, que sustituyen a la 6–8); la v1 es foto y clip de escena. Pendiente: verificar el proveedor de vídeo antes de construir. **13-11-2026: aplazada (§1.00); el Director pasa a ser ayuda opcional a demanda** |
+| 18.53 | **Modo «personaje» del Director (la biblia del personaje).** Entrevista de personaje con el método del Arquitecto de Personaje: - dos o tres preguntas por turno, con opciones si dudas; - orden al revés: para qué, para quién, quién es y la cara al final; - lo que no contestas sale como «propuesta». Resultado: la ficha del elemento personaje en diez partes y un **bloqueo de identidad** de 60 a 100 palabras: forma de la cara en palabras clave, vello facial, prenda de la foto, una o dos imperfecciones con su LADO, accesorio fijo como «SIEMPRE lleva», «piel limpia, sin tatuajes» si no hay marcas y nota de piel real. Picasso lo mete solo en cada prompt de foto y clip. Menú de físico por categorías para ofrecer opciones. Ajustes propios: - con persona real (18.20), la cara sale de la foto y no del texto; - la ficha y el bloqueo se leen en español y Picasso los traduce al prompt en inglés (D7 de la 18.52) | VDLT, skill «Arquitecto de Personaje» (M5 Avatares), revisada el 24-10-2026; se toma el método, no el texto | **APROBADA el 24-10-2026: dentro de la v1 (§1.0); se usa en la E2. 13-11-2026: aprobada y aplazada (§1.00)** |
 
 
 ---
@@ -1072,3 +1080,38 @@ Lo que Juan encuentra usando Picasso de verdad. Se arreglan en bloque o con la f
 | E5 | **Microcorto: 3–4 planos con historia** | Logline y conflicto, planos por emoción, storyboard, montaje y paquete para DaVinci | 18.31 · 18.33 · 18.34 (lo mínimo) | 8 $ |
 
 Orden: E1 → E5. Un ejercicio no empieza hasta que el anterior se cierra con el veredicto de Juan.
+
+## 21. Estado único (desde el 13-11-2026)
+
+Es la única tabla de estado. Las demás secciones describen diseño e historia; si chocan con esta tabla, manda esta. Columnas:
+- **Aprobación:** propuesta, aprobada (con la fecha del mensaje de Juan) o aplazada.
+- **Implementación:** no, parcial o sí.
+- **Pruebas técnicas:** automáticas, en simulado.
+- **Validación de Juan:** operada en la interfaz.
+
+Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-2026).
+
+| Pieza | Aprobación | Implementación | Pruebas técnicas | Validación de Juan | Módulo |
+|---|---|---|---|---|---|
+| F1–F6: espacios, recorrido, Idea, elementos, guion, lienzo, dirección, motor y Registro | Aprobada (24-09-2026) | Sí | p1–p9, p11, p14 | Sí, recorridas en Emergent | Base |
+| F7: voces, montaje y paquete para DaVinci | Aprobada | Sí | p10, p12, p13 | Pendiente (el play en DaVinci) | Aplazado |
+| F9: fal (Nano Banana Pro, OmniHuman, Kling Avatar), ElevenLabs, OpenAI (Mejorar) | Aprobada (04-10-2026) | Parcial | p8, p10, p15, pytest | Parcial: imagen sí; personaje hablando, «pobre» | 1 (Nano Banana Pro) |
+| 18.29: el Taller (versión guiada) | Aprobada (15-10 y 22-10-2026) | Sí | p15 | Pendiente (19.29) | **1** |
+| 18.22: qué conservar de cada referencia | Aprobada (08-10-2026) | Sí | pytest (`test_fal_y_referencias`) | Pendiente | **1** |
+| 18.20: cláusula de persona real | Aprobada (07-10-2026) | Sí | pytest (`test_fal_y_referencias`), p15 | Pendiente | **1** |
+| 18.8: «qué evitar» | Aprobada (07-10-2026) | Sí | p14 | Sí | Base |
+| §7.6: Ajustar una toma (editar imagen) | Aprobada (24-09-2026) | Parcial: solo en el lienzo de un plano | p8 | Pendiente | **1** (PIC-01 lo generaliza) |
+| 18.30: control de ingredientes | Decidida (14-10-2026) | Parcial: Taller, reglas simples | p15 | Pendiente | 1 (lo que ya hay) |
+| PIC-01: la Mesa (edición desde resultados, versiones, comparar) | Propuesta (13-11-2026) | No | — | — | **1** |
+| R1 y R2: proteger los medios enlazados; origen del coste (ORD-24) | Propuesta (13-11-2026) | No | — | — | **1** |
+| 18.3, 18.3b, 18.10, 18.10b, 18.13, 18.15, 18.16, 18.16b, 18.17, 18.18, 18.19, 18.19b, 18.26, 18.27, 18.28 | Aprobadas (07 al 13-10-2026), aplazadas | No | — | — | Posteriores |
+| 18.23: varias tomas del mismo prompt | Aprobada (08-10-2026) | Parcial: Explorar y Taller | p8, p15 | Pendiente | 1 (Taller) |
+| 18.36, 18.37, 18.38 | Aprobadas (22-10-2026), aplazadas | No | — | — | Vídeo |
+| 18.52: el Director | Decidido (24-10-2026), aplazado (13-11-2026) | No | — | — | Posterior |
+| 18.53: modo personaje | Aprobada (24-10-2026), aplazada | No | — | — | Posterior |
+| §1.0: clip v1 con Seedance 2.5 en BytePlus | Decidida (24-10-2026), aplazada | No (solo la clave en `.env`) | — | — | Vídeo |
+| §20: calentamiento E1–E5 | Aprobado (23-10-2026); E2–E5 aplazados | No | — | — | E1 encaja en el 1 |
+| 18.21, 18.21b | Aplazadas por Juan (07-10-2026) | No | — | — | Posterior |
+| 18.24, 18.25, 18.31–18.35, 18.39–18.51 | Propuestas | No | — | — | — |
+| 18.54–18.65 (rama `formacion/hotmart-prompteando-videos`) | Propuestas, sin fusionar | No | — | — | — |
+| 19.19–19.25 y 19.29 | Detectadas al operar | No | — | — | Las que toquen al Taller, en el 1 |

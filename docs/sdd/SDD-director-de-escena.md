@@ -1,6 +1,6 @@
 # SDD · Director de escena (entrevista, prompt verificado y tarjeta real)
 
-Estado: **borrador para aprobar; D1–D7 decididos el 24-10-2026**. Sin código hasta que Juan apruebe. Entrada: `docs/insumos/insumo-picasso-generador-prompts.md` (Higgsfield L02, SuperComputer, 24-10-2026). Encaja con el maestro: §6.1 Idea, §8 Dirección de un plano, §9.4 ciclo de una operación, §10 Asistente, 18.15, 18.30, 18.38, 18.43, 18.48. Se roba el método, no la piel (feedback «Roba como un maestro»).
+Estado: **borrador; D1–D7 decididos el 24-10-2026; aplazado el 13-11-2026 (maestro §1.00): el Director pasa a ser ayuda opcional a demanda**. Sin código hasta que Juan apruebe. Entrada: `docs/insumos/insumo-picasso-generador-prompts.md` (Higgsfield L02, SuperComputer, 24-10-2026). Encaja con el maestro: §6.1 Idea, §8 Dirección de un plano, §9.4 ciclo de una operación, §10 Asistente, 18.15, 18.30, 18.38, 18.43, 18.48. Se roba el método, no la piel (feedback «Roba como un maestro»).
 
 Los puntos **[DECIDIR]** se cierran con Juan uno a uno. Cada uno lleva la recomendación entre paréntesis.
 
