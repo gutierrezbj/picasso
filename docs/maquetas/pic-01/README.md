@@ -1,4 +1,4 @@
-# Maqueta PIC-01 · La Mesa (revisión 2, 13-11-2026)
+# Maquetas PIC-01 · La Mesa
 
 La versión navegable está en https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG, fila «PIC-01 · La Mesa», tableros 10–15. Aquí se guardan sus fuentes (`.dc.html`) como referencia; fuera del lienzo de maquetas no se renderizan.
 
@@ -10,3 +10,11 @@ La versión navegable está en https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG
 | 13 · Favoritas y ramas | ★ en V1 y V2, rama V3 desde V1 (descartada, atenuada) y V4 desde V2 |
 | 14 · Estados | Generando, Falló (con «Reintentar…» que vuelve a pedir el precio), Sin confirmar (con «Comprobar» y «Marcar como fallida») y gasto desglosado |
 | 15 · Volver a abrir | Estudio → JRGB → Taller → última carpeta, o `?carpeta=`; qué se recupera de la base de datos |
+
+## Revisión 3 (14-11-2026): `Studio16.dc.html`, navegable
+
+Tablero «16 · Studio (navegable) · rev. 3», con el botón Play. Paleta grafito, blanco cálido y ámbar. La Mesa ocupa toda la pantalla y la creación va en la barra inferior: alcance siempre visible (Nueva imagen o Editar Vn), referencias, texto, «Dirección ▾» con controles según el alcance, y el botón con el precio. El lateral sirve para inspeccionar (★, Descartar, lo enviado frente a lo del linaje, «Cómo se hizo», nota y Comparar). El **Director de Studio** se abre a demanda, con los modos Fotografía, Publicidad y Cine; es un ejemplo ilustrativo y no está implementado. «Preparar» rellena la dirección o el texto sin generar ni gastar.
+
+Una franja de prototipo permite simular un fallo, un «sin confirmar» y cerrar y volver a abrir la carpeta. Nada se genera de verdad.
+
+La lógica del componente se probó fuera del lienzo con Node: crear, editar, comparar, rama con error, preparar del Director y reabrir. La imagen renderizada no la he revisado.

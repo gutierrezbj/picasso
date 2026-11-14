@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Picasso Studio · Mesa</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#8a5a0b}a:hover{color:#6b4508}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #f3efe7; color: #2b2d31; font-family: Mulish, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+  <header style="height: 56px; flex-shrink: 0; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 14px; background: #2b2d31; color: #faf7f2">
+    <b style="font-size: 15px; letter-spacing: 0.2px">Picasso Studio</b>
+    <span style="font-size: 13px; color: #c9c4ba">JRGB / Taller</span>
+    <div style="display: flex; gap: 4px; margin-left: 8px">
+      <span style="padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #c9c4ba">General</span>
+      <span style="padding: 6px 12px; border-radius: 8px; background: #faf7f2; color: #2b2d31; font-size: 13px; font-weight: 700">Marca JRGB</span>
+      <span style="padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #c9c4ba">+ Carpeta</span>
+    </div>
+    <span style="margin-left: auto; font-size: 12px; color: #c9c4ba">Gasto: <b style="color: #faf7f2">{{gastoEst}} $</b> estimado · <b style="color: #faf7f2">{{gastoRes}} $</b> reservado{{gastoPosible}}</span>
+    <button onClick="{{toggleDirector}}" style="{{directorBtnStyle}}">Director de Studio</button>
+  </header>
+
+  <div style="height: 34px; flex-shrink: 0; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 10px; background: #e9e3d8; font-size: 12px; color: #5d5a54">
+    <b>Prototipo</b>
+    <span>Nada se genera de verdad. Simular:</span>
+    <button onClick="{{armarError}}" style="{{simErrStyle}}">la próxima falla</button>
+    <button onClick="{{armarIncierta}}" style="{{simIncStyle}}">la próxima queda sin confirmar</button>
+    <button onClick="{{cerrarYVolver}}" style="height: 24px; padding: 0 10px; border-radius: 6px; border: 1px solid #b9b2a5; background: #faf7f2; font-family: inherit; font-size: 12px; color: #2b2d31">cerrar y volver a abrir</button>
+    <button onClick="{{reiniciar}}" style="margin-left: auto; height: 24px; padding: 0 10px; border-radius: 6px; border: 1px solid #b9b2a5; background: #faf7f2; font-family: inherit; font-size: 12px; color: #2b2d31">empezar de cero</button>
+  </div>
+
+  <div style="flex: 1; min-height: 0; display: flex">
+
+    <main style="flex: 1; min-width: 0; position: relative; background-color: #f3efe7; background-image: radial-gradient(#dcd5c8 1px, transparent 1px); background-size: 20px 20px; overflow: hidden">
+      <sc-if value="{{vacia}}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 0; right: 0; top: 160px; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #5d5a54">
+          <b style="font-size: 20px; color: #2b2d31">La carpeta está vacía</b>
+          <span style="font-size: 14px">Escribe abajo qué imagen quieres, añade referencias y pulsa Generar.</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{banner}}" hint-placeholder-val="{{ false }}">
+        <div style="position: absolute; left: 20px; right: 20px; top: 14px; z-index: 3; box-sizing: border-box; padding: 10px 14px; border-radius: 12px; background: #fffdf9; border: 1px solid #e6c27a; font-size: 13px; color: #2b2d31; display: flex; gap: 10px; align-items: center">
+          <b>Carpeta reabierta</b><span>{{bannerTexto}}</span>
+          <button onClick="{{cerrarBanner}}" style="margin-left: auto; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid #d9d2c5; background: #faf7f2; font-family: inherit; font-size: 12px">Entendido</button>
+        </div>
+      </sc-if>
+      <sc-for list="{{flechas}}" as="f" hint-placeholder-count="2">
+        <svg aria-hidden="true" width="1400" height="760" style="position: absolute; left: 0; top: 0; pointer-events: none">
+          <path d="{{f.d}}" fill="none" stroke="#8a8478" stroke-width="2"></path>
+          <path d="{{f.punta}}" fill="none" stroke="#8a8478" stroke-width="2"></path>
+        </svg>
+        <span style="{{f.etiquetaStyle}}">{{f.texto}}</span>
+      </sc-for>
+      <sc-for list="{{tarjetas}}" as="t" hint-placeholder-count="2">
+        <div style="{{t.boxStyle}}">
+          <sc-if value="{{t.ok}}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{t.pick}}" aria-label="{{t.aria}}" style="{{t.imgStyle}}">
+              <div style="position: absolute; left: 40px; top: 58px; width: 50px; height: 60px; border-radius: 25px; background: #e2c9ae"></div>
+              <div style="position: absolute; left: 24px; top: 122px; width: 82px; height: 110px; border-radius: 30px 30px 8px 8px; background: #4f5258"></div>
+              <sc-if value="{{t.sombrero}}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; left: 34px; top: 32px; width: 62px; height: 24px; border-radius: 30px 30px 4px 4px; background: #6b4a2b"></div>
+                <div style="position: absolute; left: 20px; top: 52px; width: 90px; height: 8px; border-radius: 4px; background: #6b4a2b"></div>
+              </sc-if>
+              <sc-if value="{{t.fav}}" hint-placeholder-val="{{ false }}">
+                <span style="position: absolute; top: 8px; right: 8px; padding: 2px 7px; border-radius: 8px; background: #fffdf9; font-size: 12px; font-weight: 800; color: #b07a12">★</span>
+              </sc-if>
+            </button>
+          </sc-if>
+          <sc-if value="{{t.gen}}" hint-placeholder-val="{{ false }}">
+            <div style="width: 130px; height: 232px; border-radius: 12px; background: #efe5cf; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #8a5a0b; font-size: 13px; font-weight: 700">Generando…<span style="font-weight: 400; font-size: 12px">0,15 $ reservado</span></div>
+          </sc-if>
+          <sc-if value="{{t.err}}" hint-placeholder-val="{{ false }}">
+            <div style="width: 130px; height: 232px; box-sizing: border-box; border-radius: 12px; background: #fbecea; border: 1.5px solid #a32d1e; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #a32d1e">
+              <b>Falló</b><span style="line-height: 16px">El proveedor devolvió un error. No hay cargo.</span>
+              <button onClick="{{t.reintentar}}" style="margin-top: auto; height: 30px; border-radius: 8px; border: 1px solid #a32d1e; background: #fffdf9; font-family: inherit; font-size: 12px; color: #a32d1e">Reintentar…</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{t.inc}}" hint-placeholder-val="{{ false }}">
+            <div style="width: 130px; height: 232px; box-sizing: border-box; border-radius: 12px; background: #fdf3df; border: 1.5px solid #c48a1a; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #8a5a0b">
+              <b>Sin confirmar</b><span style="line-height: 16px">Se envió y no hubo respuesta. No se reenvía sola.</span>
+              <button onClick="{{t.comprobar}}" style="margin-top: auto; height: 30px; border-radius: 8px; border: 1px solid #c48a1a; background: #fffdf9; font-family: inherit; font-size: 12px; color: #8a5a0b">Comprobar</button>
+              <button onClick="{{t.marcarFallida}}" style="height: 26px; border: none; background: none; font-family: inherit; font-size: 11px; color: #5d5a54; text-decoration: underline">Marcar como fallida</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{t.fallidaManual}}" hint-placeholder-val="{{ false }}">
+            <div style="width: 130px; height: 232px; box-sizing: border-box; border-radius: 12px; background: #f1ece3; border: 1.5px dashed #8a8478; padding: 10px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #5d5a54">
+              <b>Marcada fallida</b><span style="line-height: 16px">Posible cargo sin confirmar: 0,15 $. Revísalo en el Registro.</span>
+              <button onClick="{{t.reintentar}}" style="margin-top: auto; height: 30px; border-radius: 8px; border: 1px solid #8a8478; background: #fffdf9; font-family: inherit; font-size: 12px; color: #2b2d31">Reintentar…</button>
+            </div>
+          </sc-if>
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 4px 2px; font-size: 12px"><b>{{t.id}}</b><span style="color: #5d5a54">{{t.pie}}</span></div>
+        </div>
+      </sc-for>
+    </main>
+
+    <sc-if value="{{inspector}}" hint-placeholder-val="{{ false }}">
+      <aside style="width: 330px; flex-shrink: 0; box-sizing: border-box; background: #fffdf9; border-left: 1px solid #e3ddd2; padding: 16px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto">
+        <div style="display: flex; align-items: center"><b style="font-size: 16px">{{selId}}</b><span style="margin-left: 8px; font-size: 12px; color: #5d5a54">{{selLinaje}}</span><button aria-label="Cerrar" onClick="{{deseleccionar}}" style="margin-left: auto; width: 30px; height: 30px; border-radius: 8px; border: none; background: #f1ece3">✕</button></div>
+        <div style="{{selImgStyle}}"></div>
+        <div style="display: flex; gap: 8px">
+          <button onClick="{{toggleFav}}" style="flex: 1; height: 38px; border-radius: 10px; border: 1px solid #d9d2c5; background: #fffdf9; font-family: inherit; font-size: 13px; color: #2b2d31">{{favTexto}}</button>
+          <button onClick="{{toggleDesc}}" style="flex: 1; height: 38px; border-radius: 10px; border: 1px solid #d9d2c5; background: #fffdf9; font-family: inherit; font-size: 13px; color: #2b2d31">{{descTexto}}</button>
+        </div>
+        <sc-if value="{{selTieneOrigen}}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{abrirComparar}}" style="height: 38px; border-radius: 10px; border: 1.5px solid #2b2d31; background: #fffdf9; font-family: inherit; font-size: 13px; font-weight: 700; color: #2b2d31">Comparar con el origen ({{selOrigen}})</button>
+        </sc-if>
+        <div style="padding: 10px; border-radius: 10px; background: #f6f2ea; font-size: 12px; line-height: 17px">
+          <b>Enviado en esta operación:</b> {{selEnviadas}}<br>
+          <span style="color: #5d5a54"><b style="color: #2b2d31">Del linaje</b> (no enviado aquí): {{selLinajeRefs}}</span>
+        </div>
+        <details open>
+          <summary style="font-size: 13px; font-weight: 700; color: #8a5a0b">Cómo se hizo</summary>
+          <div style="margin-top: 6px; font-size: 12px; line-height: 17px; color: #5d5a54">{{selModelo}} · 0,15 $ estimado, sin importe del proveedor<br><b style="color: #2b2d31">Escribiste:</b> {{selEscrito}}<br><b style="color: #2b2d31">Se envió:</b> {{selEnviado}}</div>
+        </details>
+        <label style="font-size: 12px; color: #5d5a54">Nota
+          <textarea placeholder="Qué funcionó o qué falla" style="display: block; width: 100%; box-sizing: border-box; height: 52px; margin-top: 4px; resize: none; border: 1px solid #d9d2c5; border-radius: 10px; padding: 8px; font-family: inherit; font-size: 13px; background: #fffdf9"></textarea>
+        </label>
+        <span style="font-size: 12px; line-height: 17px; color: #5d5a54">Para cambiar esta versión, escribe abajo: el alcance ya dice «Editar {{selId}}».</span>
+      </aside>
+    </sc-if>
+
+    <sc-if value="{{director}}" hint-placeholder-val="{{ false }}">
+      <aside style="width: 350px; flex-shrink: 0; box-sizing: border-box; background: #2b2d31; color: #faf7f2; padding: 16px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto">
+        <div style="display: flex; align-items: center"><b style="font-size: 16px">Director de Studio</b><button aria-label="Cerrar el Director" onClick="{{toggleDirector}}" style="margin-left: auto; width: 30px; height: 30px; border-radius: 8px; border: none; background: #3a3d42; color: #faf7f2">✕</button></div>
+        <span style="font-size: 12px; color: #c9c4ba; line-height: 17px">Ejemplo ilustrativo; el asistente no está implementado. Orienta según el trabajo; sus sugerencias preparan cambios que tú revisas.</span>
+        <div style="display: flex; gap: 6px">
+          <sc-for list="{{modos}}" as="m" hint-placeholder-count="3">
+            <button onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+          </sc-for>
+        </div>
+        <span style="font-size: 13px; line-height: 19px">{{dirIntro}}</span>
+        <sc-for list="{{sugerencias}}" as="s" hint-placeholder-count="2">
+          <div style="padding: 12px; border-radius: 12px; background: #3a3d42; display: flex; flex-direction: column; gap: 8px">
+            <b style="font-size: 13px">{{s.titulo}}</b>
+            <span style="font-size: 12px; line-height: 17px; color: #d9d4ca">{{s.detalle}}</span>
+            <button onClick="{{s.preparar}}" style="{{s.btnStyle}}">{{s.btnTexto}}</button>
+          </div>
+        </sc-for>
+        <span style="margin-top: auto; font-size: 12px; line-height: 17px; color: #e6c27a">Preparar no genera ni gasta. Para generar, usa el botón de la barra con su precio.</span>
+      </aside>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{dirAbierta}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 20px; bottom: 132px; z-index: 4; width: 700px; box-sizing: border-box; background: #fffdf9; border: 1px solid #d9d2c5; border-radius: 16px; box-shadow: 0 10px 30px rgba(43,45,49,0.15); padding: 14px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: center"><b style="font-size: 14px">{{dirTitulo}}</b><sc-if value="{{preparadoDirector}}" hint-placeholder-val="{{ false }}"><span style="margin-left: 10px; padding: 2px 8px; border-radius: 8px; background: #f7e7c4; font-size: 11px; font-weight: 700; color: #8a5a0b">Preparado por el Director · revísalo</span></sc-if><button aria-label="Cerrar dirección" onClick="{{toggleDir}}" style="margin-left: auto; width: 28px; height: 28px; border-radius: 8px; border: none; background: #f1ece3">✕</button></div>
+      <sc-for list="{{grupos}}" as="g" hint-placeholder-count="4">
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
+          <span style="width: 110px; font-size: 12px; color: #5d5a54">{{g.nombre}}</span>
+          <sc-for list="{{g.opciones}}" as="o" hint-placeholder-count="3">
+            <button onClick="{{o.pick}}" style="{{o.style}}">{{o.label}}</button>
+          </sc-for>
+        </div>
+      </sc-for>
+      <span style="font-size: 12px; color: #5d5a54">{{dirNota}}</span>
+    </div>
+  </sc-if>
+
+  <footer style="flex-shrink: 0; box-sizing: border-box; padding: 12px 20px 14px; background: #fffdf9; border-top: 1px solid #e3ddd2; display: flex; flex-direction: column; gap: 8px; z-index: 2">
+    <div style="display: flex; align-items: center; gap: 8px">
+      <span style="{{alcanceStyle}}">{{alcanceTexto}}</span>
+      <sc-if value="{{editando}}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{deseleccionar}}" style="height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid #d9d2c5; background: #fffdf9; font-family: inherit; font-size: 12px; color: #2b2d31">Nueva imagen</button>
+      </sc-if>
+      <sc-if value="{{nueva}}" hint-placeholder-val="{{ true }}">
+        <span style="padding: 4px 10px; border-radius: 8px; background: #ece6da; font-size: 12px; font-weight: 700">@Juan · identidad</span>
+        <span style="padding: 4px 10px; border-radius: 8px; border: 1px dashed #b9b2a5; font-size: 12px; color: #5d5a54">+ referencia</span>
+      </sc-if>
+      <span style="margin-left: auto; font-size: 12px; color: #5d5a54">{{modeloTexto}}</span>
+    </div>
+    <div style="display: flex; align-items: stretch; gap: 10px">
+      <textarea aria-label="Qué quieres" value="{{texto}}" onChange="{{onTexto}}" placeholder="{{placeholder}}" style="flex: 1; height: 56px; resize: none; box-sizing: border-box; border: 1.5px solid #d9d2c5; border-radius: 12px; padding: 10px 12px; font-family: inherit; font-size: 15px; line-height: 20px; color: #2b2d31; background: #fffdf9"></textarea>
+      <button onClick="{{toggleDir}}" style="{{dirBtnStyle}}">Dirección ▾</button>
+      <button onClick="{{accion}}" style="{{accionStyle}}">{{accionTexto}}</button>
+    </div>
+    <span style="font-size: 12px; color: #5d5a54">{{ayudaBarra}}</span>
+  </footer>
+
+  <sc-if value="{{confirmando}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 6; background: rgba(43,45,49,0.45); display: flex; align-items: center; justify-content: center">
+      <div style="width: 360px; box-sizing: border-box; background: #fffdf9; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+        <b style="font-size: 16px">Reintentar {{confirmaId}}</b>
+        <span style="font-size: 13px; line-height: 19px; color: #5d5a54">Es un envío nuevo: necesita tu autorización otra vez.</span>
+        <button onClick="{{confirmarReintento}}" style="height: 44px; border: none; border-radius: 12px; background: #d99a1e; color: #2b2d31; font-family: inherit; font-size: 14px; font-weight: 800">Reintentar · 0,15 $</button>
+        <button onClick="{{cancelarReintento}}" style="height: 38px; border-radius: 10px; border: 1px solid #d9d2c5; background: #fffdf9; font-family: inherit; font-size: 13px">Cancelar</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{comparando}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 6; background: rgba(43,45,49,0.55); display: flex; align-items: center; justify-content: center">
+      <div style="width: 560px; box-sizing: border-box; background: #fffdf9; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center"><b style="font-size: 16px">Comparar {{cmpA}} y {{cmpB}}</b><button aria-label="Cerrar" onClick="{{cerrarComparar}}" style="margin-left: auto; width: 30px; height: 30px; border-radius: 8px; border: none; background: #f1ece3">✕</button></div>
+        <div style="display: flex; gap: 20px; justify-content: center">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="{{cmpAStyle}}"></div><span style="font-size: 12px; color: #5d5a54">{{cmpA}} · origen</span></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 6px"><div style="{{cmpBStyle}}"></div><span style="font-size: 12px; color: #5d5a54">{{cmpB}} · «{{cmpInstr}}»</span></div>
+        </div>
+        <span style="font-size: 12px; color: #5d5a54">El modelo puede alterar otros detalles: compara la cara, la ropa y el fondo antes de quedártela.</span>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = this.inicial();
+  }
+  inicial() {
+    return {
+      versiones: [], sel: null, texto: '', dirAbierta: false, director: false, modo: 'foto',
+      preparado: false, comparar: false, simular: null, confirma: null, banner: false, n: 0,
+      dir: { plano: 'Plano medio', angulo: 'A los ojos', luz: 'Ventana lateral', optica: '50 mm', formato: '9:16', zona: 'Cabeza' }
+    };
+  }
+  componentWillUnmount() { (this.timers || []).forEach(clearTimeout); }
+  later(fn, ms) { this.timers = this.timers || []; this.timers.push(setTimeout(fn, ms)); }
+  nueva(origen, instr) {
+    const s = this.state;
+    const id = 'V' + (s.n + 1);
+    const estado = s.simular === 'error' ? 'err' : s.simular === 'inc' ? 'inc' : 'ok';
+    const v = { id, origen, instr, estado: 'gen', destino: estado, fav: false, desc: false, sombrero: false, escrito: instr || s.texto };
+    if (origen) {
+      const o = s.versiones.find((x) => x.id === origen);
+      v.sombrero = (o && o.sombrero) || /sombrero/i.test(instr || '');
+    }
+    this.setState({ versiones: [...s.versiones, v], n: s.n + 1, texto: '', simular: null, preparado: false, dirAbierta: false });
+    this.later(() => {
+      this.setState((st) => ({ versiones: st.versiones.map((x) => (x.id === id ? { ...x, estado: x.destino } : x)), sel: x0(st, id) }));
+    }, 1400);
+    function x0(st, nid) { return estado === 'ok' ? nid : st.sel; }
+  }
+  layout(vs) {
+    const hijos = {};
+    vs.forEach((v) => { const k = v.origen || '_'; (hijos[k] = hijos[k] || []).push(v); });
+    const pos = {}; let fila = 0;
+    const visitar = (v, prof) => {
+      const hs = hijos[v.id] || [];
+      if (!hs.length) { pos[v.id] = { x: 30 + prof * 220, y: 20 + fila * 272 }; fila += 1; return; }
+      hs.forEach((h) => visitar(h, prof + 1));
+      const ys = hs.map((h) => pos[h.id].y);
+      pos[v.id] = { x: 30 + prof * 220, y: ys[0] };
+    };
+    (hijos['_'] || []).forEach((r) => visitar(r, 0));
+    return pos;
+  }
+  renderVals() {
+    const s = this.state;
+    const pos = this.layout(s.versiones);
+    const sel = s.versiones.find((v) => v.id === s.sel) || null;
+    const ok = (v) => v.estado === 'ok';
+    const tarjetas = s.versiones.map((v) => {
+      const p = pos[v.id] || { x: 30, y: 24 };
+      const elegido = s.sel === v.id;
+      return {
+        id: v.id, ok: ok(v), gen: v.estado === 'gen', err: v.estado === 'err', inc: v.estado === 'inc', fallidaManual: v.estado === 'fallida',
+        sombrero: v.sombrero, fav: v.fav, aria: 'Seleccionar ' + v.id,
+        pie: v.desc ? 'descartada' : v.estado === 'gen' ? 'reservado' : ok(v) ? '0,15 $ est.' : '',
+        boxStyle: 'position: absolute; left: ' + p.x + 'px; top: ' + p.y + 'px; width: 142px; box-sizing: border-box; padding: 5px; border-radius: 16px; background: #fffdf9; border: ' + (elegido ? '3px solid #d99a1e' : '1px solid #d9d2c5') + ';' + (v.desc ? ' opacity: 0.45;' : ''),
+        imgStyle: 'position: relative; display: block; width: 130px; height: 232px; padding: 0; border: none; border-radius: 12px; overflow: hidden; cursor: pointer; background: ' + (v.id === 'V1' ? '#c9c2b4' : '#bfc7c9') + ';',
+        pick: () => this.setState({ sel: v.id, dirAbierta: false, preparado: false }),
+        reintentar: () => this.setState({ confirma: v.id }),
+        comprobar: () => this.setState({ versiones: s.versiones.map((x) => (x.id === v.id ? { ...x, estado: 'ok' } : x)), sel: v.id }),
+        marcarFallida: () => this.setState({ versiones: s.versiones.map((x) => (x.id === v.id ? { ...x, estado: 'fallida' } : x)) })
+      };
+    });
+    const flechas = s.versiones.filter((v) => v.origen && pos[v.origen] && pos[v.id]).map((v) => {
+      const a = pos[v.origen], b = pos[v.id];
+      const x1 = a.x + 142, y1 = a.y + 120, x2 = b.x - 4, y2 = b.y + 120, mx = (x1 + x2) / 2;
+      return {
+        d: 'M' + x1 + ' ' + y1 + ' C ' + mx + ' ' + y1 + ', ' + mx + ' ' + y2 + ', ' + x2 + ' ' + y2,
+        punta: 'M' + (x2 - 8) + ' ' + (y2 - 5) + ' L ' + x2 + ' ' + y2 + ' L ' + (x2 - 8) + ' ' + (y2 + 5),
+        texto: v.instr,
+        etiquetaStyle: 'position: absolute; left: ' + (mx - 40) + 'px; top: ' + ((y1 + y2) / 2 - 30) + 'px; max-width: 96px; padding: 3px 7px; border-radius: 8px; background: #fffdf9; border: 1px solid #d9d2c5; font-size: 11px; line-height: 14px; color: #2b2d31'
+      };
+    });
+    const editando = !!sel && ok(sel);
+    const enMarcha = s.versiones.some((v) => v.estado === 'gen');
+    const estimado = s.versiones.filter((v) => v.estado === 'ok').length * 0.15;
+    const reservado = s.versiones.filter((v) => v.estado === 'gen').length * 0.15;
+    const posibles = s.versiones.filter((v) => v.estado === 'fallida').length * 0.15;
+    const raiz = (v) => { let x = v; while (x && x.origen) x = s.versiones.find((y) => y.id === x.origen); return x; };
+    const linajeIds = (v) => { const r = []; let x = v; while (x) { r.unshift(x.id); x = x.origen ? s.versiones.find((y) => y.id === x.origen) : null; } return r.join(' → '); };
+    const pill = (activo) => 'height: 28px; padding: 0 10px; border-radius: 8px; font-family: inherit; font-size: 12px; cursor: pointer; ' + (activo ? 'border: 1.5px solid #2b2d31; background: #2b2d31; color: #faf7f2; font-weight: 700' : 'border: 1px solid #d9d2c5; background: #fffdf9; color: #2b2d31');
+    const grupo = (nombre, clave, opciones) => ({ nombre, opciones: opciones.map((o) => ({ label: o, style: pill(s.dir[clave] === o), pick: () => this.setState({ dir: { ...s.dir, [clave]: o } }) })) });
+    const grupos = editando
+      ? [grupo('Zona del cambio', 'zona', ['Cabeza', 'Ropa', 'Fondo', 'Luz', 'Libre'])]
+      : [grupo('Encuadre', 'plano', ['Primer plano', 'Plano medio', 'Plano general']), grupo('Ángulo', 'angulo', ['A los ojos', 'Picado', 'Contrapicado']), grupo('Luz', 'luz', ['Ventana lateral', 'Contraluz', 'Neón nocturno']), grupo('Óptica', 'optica', ['35 mm', '50 mm', '85 mm']), grupo('Formato', 'formato', ['9:16', '4:5', '16:9', '1:1'])];
+    const textos = {
+      foto: { intro: editando ? 'Retrato editado: cambia una cosa cada vez y compara.' : 'Retrato de marca: luz con fuente clara, piel natural, fondo que no compita.', s: editando ? [['Accesorio sin tocar la cara', 'Escribe el accesorio y fija la zona en Cabeza.', { zona: 'Cabeza' }, 'ponle un sombrero de fieltro gris; la cara y la expresión no cambian']] : [['Luz de ventana lateral', 'Fuente a 45°, sombra suave en el lado contrario.', { luz: 'Ventana lateral', optica: '85 mm', plano: 'Primer plano' }, null], ['Fondo de taller desenfocado', 'Añade el lugar al texto sin cambiar a la persona.', null, 'Juan en su taller, fondo desenfocado de herramientas, foto realista']] },
+      pub: { intro: editando ? 'Pieza publicitaria: el cambio debe servir al mensaje.' : 'Publicidad: un mensaje, un producto o una persona, aire para el rótulo que irá en edición.', s: editando ? [['Accesorio de marca', 'Prepara el cambio para que el sombrero lleve el color de la marca.', { zona: 'Cabeza' }, 'ponle un sombrero ámbar a juego con la marca; lo demás igual']] : [['Encuadre con aire', 'Plano medio con espacio a la izquierda para el rótulo.', { plano: 'Plano medio', formato: '4:5' }, null]] },
+      cine: { intro: editando ? 'Fotograma de cine: que el cambio cuente algo del personaje.' : 'Cine: luz motivada, óptica con intención y un momento, no una pose.', s: editando ? [['Sombrero con historia', 'Un sombrero gastado que sugiera viaje.', { zona: 'Cabeza' }, 'ponle un sombrero de ala ancha gastado por el sol; mismo encuadre y luz']] : [['Contraluz motivado', 'Fuente visible detrás, 35 mm, a los ojos.', { luz: 'Contraluz', optica: '35 mm', angulo: 'A los ojos', formato: '16:9' }, null]] }
+    }[s.modo];
+    const sugerencias = textos.s.map(([titulo, detalle, dir, texto], i) => ({
+      titulo, detalle,
+      btnTexto: 'Preparar',
+      btnStyle: 'align-self: flex-start; height: 32px; padding: 0 12px; border-radius: 8px; border: 1.5px solid #e6c27a; background: transparent; color: #f7e7c4; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer',
+      preparar: () => this.setState({ dir: dir ? { ...s.dir, ...dir } : s.dir, texto: texto || s.texto, dirAbierta: true, preparado: true })
+    }));
+    const modo = (k, label) => ({ label, pick: () => this.setState({ modo: k }), style: 'flex: 1; height: 32px; border-radius: 8px; font-family: inherit; font-size: 12px; cursor: pointer; ' + (s.modo === k ? 'border: none; background: #d99a1e; color: #2b2d31; font-weight: 800' : 'border: 1px solid #55585e; background: transparent; color: #faf7f2') });
+    const puedeAccion = !!s.texto.trim() && !enMarcha;
+    const r = sel ? raiz(sel) : null;
+    const tinte = (v) => 'width: 160px; height: 284px; border-radius: 12px; background: ' + (v && v.id === 'V1' ? '#c9c2b4' : '#bfc7c9') + ';' + (v && v.sombrero ? ' box-shadow: inset 0 26px 0 #6b4a2b;' : '');
+    const cmpOrigen = sel && sel.origen ? s.versiones.find((v) => v.id === sel.origen) : null;
+    return {
+      vacia: s.versiones.length === 0, banner: s.banner,
+      bannerTexto: s.versiones.filter(ok).length + ' imágenes, ' + s.versiones.filter((v) => v.fav).length + ' favoritas, instrucciones y referencias, recuperadas de la base de datos. Lo que estaba en marcha sigue en marcha.',
+      cerrarBanner: () => this.setState({ banner: false }),
+      tarjetas, flechas,
+      gastoEst: estimado.toFixed(2).replace('.', ','), gastoRes: reservado.toFixed(2).replace('.', ','),
+      gastoPosible: posibles ? ' · ' + posibles.toFixed(2).replace('.', ',') + ' $ posible cargo sin confirmar' : '',
+      toggleDirector: () => this.setState({ director: !s.director }),
+      directorBtnStyle: 'height: 34px; padding: 0 14px; border-radius: 10px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; ' + (s.director ? 'border: none; background: #d99a1e; color: #2b2d31' : 'border: 1.5px solid #d99a1e; background: transparent; color: #f7e7c4'),
+      simErrStyle: pill(s.simular === 'error'), simIncStyle: pill(s.simular === 'inc'),
+      armarError: () => this.setState({ simular: s.simular === 'error' ? null : 'error' }),
+      armarIncierta: () => this.setState({ simular: s.simular === 'inc' ? null : 'inc' }),
+      cerrarYVolver: () => this.setState({ sel: null, dirAbierta: false, director: false, comparar: false, banner: true }),
+      reiniciar: () => { (this.timers || []).forEach(clearTimeout); this.setState(this.inicial()); },
+      inspector: !!sel && ok(sel), selId: sel ? sel.id : '', selLinaje: sel ? linajeIds(sel) : '',
+      selImgStyle: tinte(sel).replace('width: 160px; height: 284px', 'width: 100%; height: 190px'),
+      favTexto: sel && sel.fav ? '★ Favorita' : '☆ Me la quedo', descTexto: sel && sel.desc ? 'Recuperar' : 'Descartar',
+      toggleFav: () => this.setState({ versiones: s.versiones.map((v) => (v.id === s.sel ? { ...v, fav: !v.fav } : v)) }),
+      toggleDesc: () => this.setState({ versiones: s.versiones.map((v) => (v.id === s.sel ? { ...v, desc: !v.desc } : v)) }),
+      selTieneOrigen: !!(sel && sel.origen), selOrigen: sel ? sel.origen : '',
+      selEnviadas: sel ? (sel.origen ? 'imagen ' + sel.origen : '@Juan · identidad') : '',
+      selLinajeRefs: sel ? (sel.origen ? '@Juan · identidad (de ' + (r ? r.id : 'V1') + ')' : 'ninguna (es el origen)') : '',
+      selModelo: sel ? (sel.origen ? 'Nano Banana Pro /edit' : 'Nano Banana Pro') : '',
+      selEscrito: sel ? sel.escrito : '',
+      selEnviado: sel ? (sel.origen ? sel.escrito + '. Aplica exactamente el cambio pedido; en lo que no se pida cambiar, intenta mantener la imagen como está.' : sel.escrito + ' + líneas de referencia e identidad') : '',
+      abrirComparar: () => this.setState({ comparar: true }),
+      deseleccionar: () => this.setState({ sel: null, dirAbierta: false, preparado: false }),
+      director: s.director, modos: [modo('foto', 'Fotografía'), modo('pub', 'Publicidad'), modo('cine', 'Cine')], dirIntro: textos.intro, sugerencias,
+      dirAbierta: s.dirAbierta, preparadoDirector: s.preparado,
+      dirTitulo: editando ? 'Dirección de la edición de ' + sel.id : 'Dirección de la imagen nueva',
+      dirNota: editando ? 'Una imagen por cambio. El formato es el del origen. Lo que no pidas cambiar, Picasso pide conservarlo, sin garantía: compara antes de quedártela.' : 'Una imagen por petición. Estos controles se suman a tu texto.',
+      grupos, toggleDir: () => this.setState({ dirAbierta: !s.dirAbierta }),
+      editando, nueva: !editando,
+      alcanceTexto: editando ? 'Alcance: Editar ' + sel.id : 'Alcance: Nueva imagen',
+      alcanceStyle: 'padding: 5px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; ' + (editando ? 'background: #d99a1e; color: #2b2d31' : 'background: #2b2d31; color: #faf7f2'),
+      modeloTexto: (editando ? 'Nano Banana Pro /edit' : 'Nano Banana Pro') + ' · tarifa verificada el 12-10-2026',
+      texto: s.texto, onTexto: (e) => this.setState({ texto: e.target.value, preparado: false }),
+      placeholder: editando ? 'Qué cambiar de ' + sel.id + ' (por ejemplo: ponle un sombrero)' : 'Qué imagen quieres (por ejemplo: Juan en su taller, luz de ventana)',
+      dirBtnStyle: 'width: 120px; border-radius: 12px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; ' + (s.dirAbierta ? 'border: 1.5px solid #2b2d31; background: #2b2d31; color: #faf7f2' : 'border: 1.5px solid #2b2d31; background: #fffdf9; color: #2b2d31'),
+      accion: () => { if (!puedeAccion) return; this.nueva(editando ? sel.id : null, editando ? s.texto.trim() : null); },
+      accionTexto: enMarcha ? 'Generando…' : editando ? 'Aplicar cambio · 0,15 $' : 'Generar · 0,15 $',
+      accionStyle: 'width: 210px; border: none; border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 800; background: #d99a1e; color: #2b2d31; ' + (puedeAccion ? 'cursor: pointer' : 'opacity: 0.45; cursor: default'),
+      ayudaBarra: enMarcha ? 'El botón queda bloqueado mientras genera: un doble clic no crea otra imagen.' : editando ? 'El clic en el botón es la autorización. El modelo puede alterar otros detalles.' : 'El clic en el botón es la autorización. Nada se envía antes.',
+      confirmando: !!s.confirma, confirmaId: s.confirma || '',
+      confirmarReintento: () => { const id = s.confirma; this.setState({ confirma: null, versiones: s.versiones.map((v) => (v.id === id ? { ...v, estado: 'gen', destino: 'ok' } : v)) }); this.later(() => this.setState((st) => ({ versiones: st.versiones.map((v) => (v.id === id ? { ...v, estado: 'ok' } : v)) })), 1400); },
+      cancelarReintento: () => this.setState({ confirma: null }),
+      comparando: s.comparar && !!cmpOrigen, cmpA: cmpOrigen ? cmpOrigen.id : '', cmpB: sel ? sel.id : '', cmpInstr: sel ? sel.instr : '',
+      cmpAStyle: tinte(cmpOrigen), cmpBStyle: tinte(sel), cerrarComparar: () => this.setState({ comparar: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

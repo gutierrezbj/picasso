@@ -1,18 +1,21 @@
 # PIC-01 · Módulo 1: imagen y edición desde resultados
 
-**Estado:** especificación revisada (revisión 2), sin código.
-- Revisión 1: commit `ef5e1d3`.
-- Revisión 2: 13-11-2026, tras la revisión de Juan y del revisor.
-- Maqueta: https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG, fila «PIC-01 · La Mesa», tableros 10–15. Copia de las fuentes en `docs/maquetas/pic-01/`.
+**Estado:** especificación revisada (revisión 3), sin código.
+- Revisión 1: `ef5e1d3`. Revisión 2: `0a0fd09`. Revisión 3: 14-11-2026, con las decisiones de Juan sobre la interfaz.
+- Maqueta navegable: https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG, tablero **«16 · Studio (navegable)»**, con el botón Play. Fuentes en `docs/maquetas/pic-01/`. Los tableros 10–15 (revisión 2) quedan como historia.
 
 Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulos; el Director como ayuda opcional; aplazado no es desaprobado; tabla de estado única.
 
-**Propuesta recomendada que se mantiene:**
-- la Mesa vive dentro del Taller, una por carpeta;
-- varias favoritas;
-- colocación automática en árbol;
-- una imagen por edición;
-- la sustitución de la rejilla se decide con la maqueta.
+## Decisiones de Juan incorporadas en la revisión 3 (14-11-2026)
+1. **Paleta:** grafito, blanco cálido y ámbar.
+2. **La Mesa es la superficie principal.** La creación entra por una **barra inferior**, que sustituye a los tres pasos de la izquierda.
+3. **Dirección desplegable** junto a la entrada, con controles según el trabajo: para una imagen nueva, encuadre, ángulo, luz, óptica, formato y cantidad; para una edición, la zona del cambio, con el formato del origen y una sola imagen.
+4. **El alcance siempre visible** en la barra: «Nueva imagen» o «Editar V2». Seleccionar una versión cambia el alcance; «Nueva imagen» lo devuelve.
+5. **Lateral** para inspeccionar la versión: imagen, ★, Descartar, referencias enviadas y del linaje, «Cómo se hizo», nota y «Comparar con el origen».
+6. **El asistente se llama «Director de Studio».** Se abre a demanda desde la barra superior y orienta según el trabajo: fotografía, publicidad o cine.
+7. **Las sugerencias preparan cambios revisables** en la dirección o en el texto. Aplicar una sugerencia no genera ni gasta. Generar exige pulsar el botón con el coste visible.
+
+**Alcance de la revisión 3:** el Director de Studio aparece en la maqueta como **ejemplo ilustrativo**. No se implementa en PIC-03: tendrá su propia especificación, y sus sugerencias llegarán como propuestas aceptables una a una (§10 del maestro). El módulo no se amplía a vídeo ni a montaje.
 
 ## Cambios de la revisión 2
 1. La cláusula de conservación respeta lo que el usuario pide cambiar y no promete fidelidad perfecta (§3.3).
@@ -24,21 +27,24 @@ Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulo
 
 ---
 
-## 1. Recorrido (tableros 10–15 de la maqueta)
+## 1. Recorrido (tablero 16, navegable)
 
-1. **Entrar.** Estudio → espacio → **Taller**, que es el primer botón del espacio. Arriba están las pestañas de carpetas; se abre la **última carpeta usada**, o «General» (tablero 15).
-2. **Crear con referencias.** A la izquierda están los tres pasos que ya existen:
-   1. «¿Con quién o con qué?», con miniaturas de fichas validadas o de la biblioteca;
-   2. «Describe la imagen»;
-   3. «Forma y cantidad».
+1. **Entrar.** Estudio → espacio → **Taller**. Arriba están las pestañas de carpetas, y se abre la **última carpeta usada**.
+2. **Crear.** En la **barra inferior**:
+   - el alcance dice **«Nueva imagen»**;
+   - las referencias van en fichas (@Juan · identidad, «+ referencia»);
+   - el texto se escribe en el campo;
+   - **«Dirección ▾»** despliega los controles de imagen nueva;
+   - **«Generar · 0,15 $»** genera. Pulsarlo es la autorización.
 
-   Debajo, **«Generar 1 imagen · 0,15 $»**, con el precio de la tarifa verificada. Pulsarlo es la autorización (tablero 10).
-3. **La Mesa.** Ocupa el resto de la pantalla: un lienzo con la carpeta abierta. Cada imagen es una tarjeta (V1, V2…) y cada cambio, una flecha desde su origen con la instrucción escrita encima. Mientras genera, la tarjeta dice «Generando… 0:14» (tablero 10).
-4. **Seleccionar y cambiar.** Un clic en V1 abre a la derecha el **panel de imagen**: imagen, ★ «Me la quedo», Descartar, **«Cambiar algo»**, referencias, «Cómo se hizo» y nota. En «Cambiar algo» se escribe «ponle un sombrero» y se pulsa **«Aplicar cambio · 0,15 $»**. Sale V2, unida a V1. V1 no cambia (tablero 11).
-5. **Comparar.** «Comparar con el origen» abre V1 y V2 lado a lado. También se pueden marcar dos tarjetas cualesquiera (tablero 12).
-6. **Favoritas y ramas.** La ★ se pone en las imágenes que quieras. «Cambiar algo» funciona desde cualquier tarjeta: desde V1 sale una rama hermana (V3) y desde V2, V4 (tablero 13).
-7. **Estados.** Una tarjeta puede estar generando, en error con su mensaje e «Entendido», «sin confirmar» con «Comprobar», o con «Reintentar», que vuelve a enseñar el precio y pide autorizar otra vez (tablero 14).
-8. **Volver a abrir.** Se entra de nuevo en el Taller del espacio y se pulsa la pestaña de la carpeta; también se puede abrir directamente con `/e/{espacio}/taller?carpeta={id}`. La Mesa reconstruye el árbol desde la base de datos con las imágenes, las flechas, las instrucciones, las referencias, las ★ y las notas. Lo que estaba en marcha sigue en marcha o queda «sin confirmar» (tablero 15).
+   En la Mesa aparece la tarjeta «Generando…» y, al terminar, **V1**.
+3. **Seleccionar.** Un clic en V1 abre el **lateral** y cambia el alcance a **«Editar V1»**. Dirección muestra entonces los controles de edición.
+4. **Cambiar.** Se escribe «ponle un sombrero» y se pulsa **«Aplicar cambio · 0,15 $»**. Sale V2, unida a V1 con la instrucción. V1 no cambia.
+5. **Comparar.** Desde el lateral de V2, «Comparar con el origen».
+6. **Favoritas y ramas.** La ★ se pone en las que quieras. Al seleccionar V1 y cambiar, sale una rama hermana; al seleccionar V2 y cambiar, una hija. «Nueva imagen» en la barra vuelve a crear desde cero.
+7. **Director de Studio (opcional).** Se abre arriba a la derecha y se elige el trabajo: fotografía, publicidad o cine. Sus sugerencias tienen el botón **«Preparar»**, que rellena la dirección o el texto y lo marca como preparado por el Director, para revisarlo. No genera nada ni gasta: lo hace el botón de la barra, con su precio.
+8. **Estados.** Generando, falló (con «Reintentar…», que vuelve a enseñar el precio y pide autorizar) y sin confirmar («Comprobar» nunca reenvía; «Marcar como fallida» avisa de un posible cargo).
+9. **Volver a abrir.** Estudio → espacio → Taller → la pestaña de la carpeta, o la dirección `?carpeta=`. La Mesa reconstruye el árbol desde la base de datos.
 
 ## 2. Reutilización (sin motores ni recorridos nuevos)
 
@@ -49,7 +55,7 @@ Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulo
 | Ajustar (`POST /tomas/{id}/ajustar` → `editar_imagen`, `toma_origen_id`) | Solo sirve para tomas de un plano (`toma.plano_id`); autoriza aparte | El destino lo hereda de la toma de origen (plano o carpeta). En el Taller, preparar y autorizar en una sola llamada con `id_peticion`. Es el mismo endpoint, no uno nuevo |
 | fal Nano Banana Pro `/edit` | Envía la imagen de origen y la instrucción | Recibe la instrucción con la cláusula del §3.3 |
 | Procedencia (`Toma.operacion_id` → `Operacion.toma_origen_id`) | Existe | `GET /carpetas/{c}/tomas` la expone: `origen_toma_id`, `instruccion`, `accion` y lo enviado |
-| Galería y visor del Taller | Rejilla y visor en ventana | La Mesa sustituye a la rejilla (si la maqueta se aprueba) y el visor pasa a panel lateral. Los tres pasos no cambian |
+| Galería, visor y tres pasos del Taller | Rejilla, visor en ventana y columna izquierda | La Mesa es la superficie principal; la creación pasa a la barra inferior con alcance, referencias, texto, dirección desplegable y botón con el precio; el visor pasa a lateral. La lógica de los tres pasos (referencias, Mejorar, ingredientes, formato, cantidad) se conserva y se recoloca |
 | `ComparadorTomas` | Lienzo de plano | Se reutiliza tal cual |
 | ★, Descartar y nota (`PATCH /tomas/{id}`) | Existe | Ninguno |
 
@@ -145,6 +151,8 @@ Borrar un proyecto no borra tomas, operaciones ni medios; esto no cambia. Las re
 ### 7.2 Interfaz, automáticas con navegador, en simulado
 Se ejecutan en el espacio «Pruebas del constructor», con el modelo simulado.
 - Se pinta el árbol con sus flechas y sus instrucciones.
+- El alcance de la barra cambia al seleccionar una versión y vuelve a «Nueva imagen».
+- La dirección desplegable enseña los controles de imagen nueva o de edición según el alcance.
 - El doble clic en «Aplicar cambio» crea una sola tarjeta.
 - Una tarjeta de error muestra su mensaje y ofrece Reintentar, que pide autorizar.
 - El panel enseña las referencias enviadas y las del linaje por separado.
@@ -192,8 +200,11 @@ Pruebas operadas por Juan en la interfaz:
 | D3 | La cláusula de conservación del §3.3 | Recomendación revisada |
 | D4 | Varias favoritas | Propuesta recomendada que se mantiene |
 | D5 | Árbol automático | Propuesta recomendada que se mantiene |
-| D6 | La Mesa sustituye a la rejilla | Se valida con la maqueta |
+| D6 | La Mesa sustituye a la rejilla | Decidido por Juan (14-11-2026): la Mesa es la superficie principal |
 | D7 | Nano Banana Pro `/edit` en fal | Recomendación; tarifa verificada de nuevo el día de la prueba |
 | D8 | Una imagen por edición | Propuesta recomendada que se mantiene |
 | D9 | Una «incierta» marcada fallida queda como «posible cargo sin confirmar» | Recomendación nueva |
 | D10 | La URL de la carpeta (`?carpeta=`) para reabrir directamente | Recomendación nueva |
+| D11 | Paleta grafito, blanco cálido y ámbar; barra inferior; dirección desplegable; alcance visible; lateral | Decidido por Juan (14-11-2026) |
+| D12 | Director de Studio a demanda, por tipo de trabajo; las sugerencias preparan sin gastar | Decidido por Juan (14-11-2026); en la maqueta solo como ejemplo, sin implementar |
+| D13 | ¿Dónde vive «Mejorar mi descripción»? | Recomendación: dentro del Director de Studio, como una sugerencia más. Hasta que exista, se queda como botón en la barra con su coste de texto visible |
