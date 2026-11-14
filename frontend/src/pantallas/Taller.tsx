@@ -14,6 +14,7 @@ import { api, ErrorApi } from "../api/cliente";
 import { costeEstimado, textoGasto } from "../componentes/motor/comun";
 import { formatoMoneda } from "../lib/formato";
 import { colocar, type NodoArbol } from "../lib/mesa";
+import { trasError } from "../lib/peticiones";
 import type { ModeloCatalogo } from "../tipos";
 
 const COLOR_NIVEL: Record<string, string> = { verde: "#81B88B", ambar: "#F5A623", rojo: "#E57373" };
@@ -308,16 +309,22 @@ export default function Taller() {
       setDirAbierta(false);
       setZona(null);
     } catch (e) {
-      if (e instanceof ErrorApi) {
+      const status = e instanceof ErrorApi ? e.status : null;
+      const decision = trasError(status, e instanceof Error ? e.message : "");
+      if (decision === "incierta") {
+        setError(
+          status
+            ? `El servidor respondió con un error (${status}) y no confirma si la recibió. La petición queda pendiente: compruébala antes de repetirla.`
+            : "No hubo respuesta del servidor. La petición queda pendiente: compruébala antes de repetirla."
+        );
+      } else {
         guardarPendiente(null);
-        if (esPresupuesto(e))
+        if (decision === "presupuesto")
           setConfirmarPresupuesto({
-            mensaje: e.message,
+            mensaje: (e as Error).message,
             seguir: () => enviar({ ...p, cuerpo: { ...p.cuerpo, confirmado_por_encima_del_presupuesto: true } }),
           });
-        else setError(e.message);
-      } else {
-        setError("No hubo respuesta del servidor. La petición queda pendiente: compruébala antes de repetirla.");
+        else setError((e as Error).message);
       }
     } finally {
       setEnviando(false);

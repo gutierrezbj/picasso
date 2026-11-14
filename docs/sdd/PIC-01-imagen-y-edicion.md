@@ -387,3 +387,17 @@ Autorizado por Juan sobre `b4f4b67`. Rama `pic-03/mesa`, que integra PIC-02 (`50
 **Pruebas nuevas en `p17_mesa`:** respuesta perdida tras aceptar (reconciliación y repetición sin otra imagen); petición que nunca llegó (404 y reenvío con el mismo identificador, una sola operación); superar el presupuesto (409, operación sin autorizar visible en la Mesa, repetir sin confirmar sigue dando 409, dos repeticiones confirmadas a la vez autorizan una sola vez y se envía un solo intento); Ajustar por encima del presupuesto y autorización desde la Mesa con confirmación, sin doble autorización. Batería completa en verde.
 
 **En navegador** (imágenes `picasso-pruebas-*`, base aislada borrada al terminar): una petición aceptada cuya respuesta no llegó se reconcilia al recargar sin duplicar; con el backend parado, la petición queda pendiente, sobrevive a la recarga con el botón bloqueado y, al volver el servidor, «Comprobar» → «Enviar otra vez» (doble clic) crea una sola operación; por encima del presupuesto sale el diálogo, la tarjeta «Sin autorizar» y «Autorizar igualmente» envía una vez; «Mejorar» aparece desactivado con su motivo.
+
+### 13.2 Corrección de la revisión de `f7b9bd6` (14-11-2026)
+
+**Punto 2, errores 5xx.** `enviar()` ya no olvida la petición ante cualquier error del servidor. La decisión vive en `lib/peticiones.ts` (`trasError`):
+- **rechazada** (400, 404, 422, y 409 que no sea de presupuesto): el servidor contestó que no la acepta; se olvida.
+- **presupuesto** (409 de presupuesto): la operación existe sin autorizar; se pide confirmar y se repite con el mismo identificador.
+- **incierta** (500, 502, 503, 504, 408, 429 o sin respuesta): se conservan el identificador y el cuerpo, el botón principal sigue bloqueado y hay que reconciliar («Comprobar», también automático al abrir el Taller) antes de permitir una petición nueva.
+
+**Pruebas:** `frontend/pruebas/peticiones.test.ts` (3 casos de `trasError`) y, en navegador con base aislada borrada al terminar, interceptando la respuesta:
+- Generar aceptado por el servidor y respuesta 500 → queda pendiente; al recargar se recupera la misma operación. Una operación, un intento, 0,04 $.
+- Ajustar aceptado y respuesta 504 → igual: al recargar aparece V2 y no hay otra edición. 0,03 $.
+- Generar con 502 antes de llegar al servidor → queda pendiente; al recargar, 404 → «Enviar otra vez» con el mismo `id_peticion`, una sola operación. 0,04 $.
+- Total de la carpeta: 3 operaciones, 3 intentos, 0,11 $; nada reservado de más.
+
