@@ -226,10 +226,10 @@ Pruebas operadas por Juan en la interfaz:
 | D11 | Paleta oscura (tabla de la revisión 3), barra inferior, dirección desplegable, alcance visible y lateral | Decidido por Juan (14-11-2026). Sustituye al «modo claro por defecto» del §0.9 del maestro para Picasso Studio |
 | D12 | Director de Studio a demanda, por tipo de trabajo; las sugerencias preparan sin gastar | Decidido por Juan (14-11-2026); en la maqueta solo como ejemplo, sin implementar |
 | D13 | ¿Dónde vive «Mejorar mi descripción»? | Recomendación: dentro del Director de Studio, como una sugerencia más. Hasta que exista, se queda como botón en la barra con su coste de texto visible |
-| D14 | Un único lateral que alterna entre Imagen y Director de Studio, conservando la selección (tablero 17) | Pedido por Juan (14-11-2026); pendiente de su validación visual |
-| D15 | Colocación del árbol en la Mesa: función propia de árbol ordenado sobre React Flow, sin dagre ni d3-hierarchy (§12.1) | Recomendación |
-| D16 | Catálogo: añadir solo `max_salidas` para que «Cantidad» en Dirección no ofrezca más de lo que el modelo admite; resoluciones con precio y reglas cruzadas se aplazan al módulo de vídeo (§12.2) | Recomendación; el valor se verifica contra fal antes de escribirlo |
-| D17 | Comparar: `ComparadorTomas` tal cual; el deslizador antes/después queda como mejora posterior | Decidido por Juan (14-11-2026) |
+| D14 | Un único lateral que alterna entre Imagen y Director de Studio, conservando la selección (tablero 17) | Pedido por Juan (14-11-2026). El revisor confirma que encaja; falta la validación visual del recorrido |
+| D15 | Colocación del árbol en la Mesa: función propia sobre React Flow, sin dagre ni d3-hierarchy, con varias raíces y orden determinista (§12.1) | Recomendación, respaldada por el revisor (14-11-2026) |
+| D16 | Cantidad es un lote de peticiones de una imagen; su límite por modelo (`max_lote`) va en el catálogo y se valida en el servidor. Ninguna opción que cambie el precio se ofrece sin presupuestarla; la resolución queda fuera de PIC-03 (§12.2) | Recomendación revisada con el revisor (14-11-2026) |
+| D17 | Comparar: `ComparadorTomas` tal cual; el deslizador antes/después queda como mejora posterior | Decidido por Juan (14-11-2026); el revisor lo mantiene |
 
 ## 11. PIC-03 en el proceso SDD-01 a SDD-08
 
@@ -246,7 +246,7 @@ Mismo esquema que `SDD-director-de-escena.md`. Este documento hace de SDD de PIC
 | SDD-07 Plan de pruebas | §7 (motor, interfaz y validación de Juan) más las comprobaciones de §12 | Escrito |
 | SDD-08 Despliegue | Rama propia sin fusionar; imágenes Docker de pruebas `picasso-pruebas-*`; Juan fusiona | Escrito |
 
-**Puerta para empezar código:** Juan valida el tablero 17 y cierra D14–D16.
+**Puerta para empezar código:** Juan valida el tablero 17 (enlace compartido o grabación del recorrido) y cierra D14–D16.
 
 ## 12. Referencias externas evaluadas (14-11-2026)
 
@@ -273,17 +273,19 @@ Referencias para reutilizar piezas, no para cambiar el stack ni ampliar el alcan
 - **Hechos leídos:**
   - React Flow lo recomienda para árboles y tiene un ejemplo oficial.
   - Admite nodos de distinto tamaño y nodos con varios padres.
-  - Las alternativas que lista React Flow son d3-hierarchy (ISC), que exige una sola raíz y nodos iguales, y elkjs (EPL-2.0 o GPL-3.0), que **se descarta por la licencia**.
-- **Encaje en la Mesa:** el árbol de la Mesa es puro. Cada versión tiene un único origen, la raíz es la imagen nueva y las tarjetas miden lo mismo. La maqueta ya lo coloca con una función de unas quince líneas (hijos a la derecha, una fila por hoja), y eso cumple.
+  - Las alternativas que lista React Flow son d3-hierarchy (ISC), que exige una sola raíz y nodos iguales, y elkjs (EPL-2.0 o GPL-3.0). elkjs **queda fuera porque no hace falta**; su licencia, por sí sola, no demuestra incompatibilidad con Picasso.
+- **Encaje en la Mesa:** el árbol de la Mesa es puro. Cada versión tiene un único origen y las tarjetas miden lo mismo. Una carpeta puede tener **varias raíces** (varias imágenes nuevas): es un bosque, que el colocador apila raíz tras raíz. La maqueta ya lo coloca con una función de unas quince líneas (hijos a la derecha, una fila por hoja), y eso cumple.
 - **Recomendación (D15):**
   - No añadir dagre ni d3-hierarchy.
   - Llevar esa función a `lib/mesa.ts` con su prueba.
   - Dagre se reconsidera solo si llega una versión con dos orígenes (combinar V3 y V5) o tarjetas de alto variable.
-- **Cómo se comprueba:** una prueba unitaria del colocador con 1, 3 y 12 versiones, que verifique:
+- **Orden determinista:** antes de colocar, raíces y hermanos se ordenan por fecha de creación y, a igualdad, por id. El árbol no depende del orden en que el servidor devuelva las tomas.
+- **Cómo se comprueba:** una prueba unitaria del colocador con 1, 3 y 12 versiones y con **varias raíces en la misma carpeta**, que verifique:
   - que no hay solapes;
   - que cada hijo queda a la derecha de su origen;
   - que los hermanos quedan apilados;
-  - que la misma entrada da la misma salida.
+  - que las raíces no se mezclan entre sí;
+  - que **reordenar al azar la respuesta del servidor** da exactamente las mismas posiciones.
 - **Estado:** leído. La función está probada en la maqueta, no en el código.
 
 **Comparador.**
@@ -317,17 +319,20 @@ Repositorio Anil-matcha/Open-Generative-AI, licencia MIT. Leído en `packages/st
 - `duraciones_s` cubre las duraciones.
 - `coste` con `verificado_en` llega con PIC-02, en la rama `pic-02/medios-y-costes`; en `main` la fecha va todavía en `nota`.
 
-**Lo mínimo que falta para la Dirección de imagen (D16):**
-- Solo `max_salidas`, para que «Cantidad» no ofrezca más de lo que el modelo admite. El valor de Nano Banana Pro se verifica en fal antes de escribirlo; no lo invento.
-- Se aplaza al módulo de vídeo, donde sí hacen falta con Seedance 2.5:
-  - las resoluciones con su precio (en fal, el 4K cuesta el doble);
-  - el rango de duración;
-  - los vídeos y audios de referencia;
-  - las entradas obligatorias;
-  - las reglas cruzadas.
+**Cantidad y precio en PIC-03 (D16, revisada el 14-11-2026):**
+- Hay que distinguir dos cosas, que hoy el código ya separa (leído en `taller.py`, `modelos.py` y `proveedores/fal.py`):
+  - **Salidas por petición:** cuántas imágenes devuelve una llamada al proveedor. El driver de fal envía siempre `num_images: 1`. No se ofrece al usuario y no hace falta campo en el catálogo mientras sea fija.
+  - **Lote:** «Cantidad» en la barra crea una operación con `n_variantes` = N, que son N peticiones de una imagen. El presupuesto ya es N × tarifa (`catalogo.estimar`), y el botón lo enseña antes de autorizar.
+- **Límite del lote por modelo:** campo opcional `max_lote` en el catálogo (sin él, 4, el límite actual de `cuantas`). Se valida **en el servidor** al generar: si N supera el límite del modelo, la petición se rechaza con 422 y no se crea operación. La interfaz no ofrece más que ese límite y oculta «Cantidad» si es 1. La edición sigue siendo de una imagen (D8); el servidor ya lo exige.
+- **Opciones que cambian el precio:** ninguna se ofrece sin presupuestarla. En PIC-03:
+  - la cantidad cambia el precio y se presupuesta (N × tarifa);
+  - formato (relación de aspecto) y los controles de dirección no cambian la tarifa de Nano Banana Pro (0,15 $ por imagen, leída en fal el 13-10-2026; se vuelve a verificar el día de la prueba);
+  - la **resolución queda fuera del módulo**: el driver pide siempre 2K y el 4K, que cuesta el doble, no se ofrece. Si algún día se ofrece, entra con su precio por resolución en el catálogo y en el presupuesto.
+- Rango de duración, vídeos y audios de referencia, entradas obligatorias y reglas cruzadas se dejan para el módulo de vídeo, donde Seedance 2.5 los necesita.
 - **Cómo se comprueba:**
-  - con una prueba del catálogo (el campo se lee y es opcional);
-  - y en la interfaz: con un modelo de `max_salidas: 1`, «Cantidad» no aparece.
+  - pytest del catálogo: `max_lote` se lee y es opcional;
+  - pytest de la API: con `max_lote: 2`, pedir 3 da 422 y no crea operación ni reserva; pedir 2 presupuesta 2 × tarifa;
+  - interfaz: con `max_lote: 1`, «Cantidad» no aparece; el precio del botón cambia con la cantidad.
 
 ### 12.3 Para módulos posteriores (solo anotado; no entra en PIC-03)
 
@@ -337,7 +342,7 @@ Cada una pasará a la especificación de su módulo cuando se abra.
 |---|---|---|---|---|---|
 | assistant-ui (`@assistant-ui/react` 0.15.36) | Conversación del Director de Studio | Primitivas sin estilo (`Thread`, `Composer`, `Message`) con `LocalRuntime` contra nuestro backend; no hace falta el Vercel AI SDK | Nuestra piel; propuestas aceptables una a una; contexto del proyecto y aplicación revisable, que son nuestros | MIT; React 18 o 19; arrastra radix-ui, zustand, zod 4 y paquetes propios (unos 3 MB) | Una conversación simulada donde «Preparar» rellena la barra sin gastar; el bundle no crece más de lo aceptado |
 | wavesurfer.js 8.1 + `@wavesurfer/react` 1.0.14 | Ver y recortar voz y sonido | Onda, regiones y línea de tiempo | Regiones atadas al desfase del plano | BSD-3-Clause; sin dependencias; React 18 o 19 | Cargar una voz, marcar una región y que el desfase guardado coincida al fotograma |
-| react-three-fiber 9.8 (+ drei 10, three) | Cámara 3D para bloquear planos | Escena, cámara y controles | Exportar la posición de cámara a la dirección del plano | MIT; **pide React ≥19 y <19.4**: no se sube React a 19.4 sin una R3F que lo admita; drei arrastra muchas dependencias | Mover la cámara y que la dirección del plano reciba ángulo y óptica |
+| react-three-fiber 9.8 (+ drei 10, three) | Cámara 3D para bloquear planos | Escena, cámara y controles | Exportar la posición de cámara a la dirección del plano | MIT; la 9.8 consultada pide React ≥19 y <19.4. Es un dato de esa versión: se revisa cuando llegue el módulo 3D y no bloquea ahora actualizaciones de React. drei arrastra muchas dependencias | Mover la cámara y que la dirección del plano reciba ángulo y óptica |
 | OpenCut | Referencia de montaje | Solo ideas de la línea de tiempo | — | MIT; la versión usable (`opencut-classic`) está archivada y el repositorio nuevo se reescribe en Rust con TanStack Start | No se integra |
 
 Ninguna cambia la paleta ni añade funciones por aparecer en estos repositorios.

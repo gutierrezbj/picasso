@@ -27,3 +27,5 @@ Tablero «17 · Studio (navegable) · rev. 4 · lateral único», con el botón 
 - Se corrigen cuatro controles que tenían fondo blanco cálido con texto blanco (pestaña activa, botones de la franja de prototipo y «Entendido»): pasan a `#2B2B2B`, y la pestaña activa lleva un filete ámbar.
 
 Probado: la lógica con Node (13 comprobaciones de pestañas, selección, Preparar, cierre y reapertura) y el recorrido renderizado en el lienzo publicado (V1, pestaña Director, Preparar abre Dirección con «Preparado por el Director»).
+
+Grabación del recorrido (14-11-2026): `Studio17-recorrido.gif`, 26 fotogramas sobre el lienzo publicado. Genera V1, la selecciona (Imagen · V1, alcance «Editar V1»), pasa al Director (la selección se conserva), Preparar abre Dirección «Preparado por el Director», aplica el cambio (V2), con el Director abierto selecciona V1 (cambia el contexto sin cerrarse), vuelve a Imagen y cierra con ✕ conservando el alcance «Editar V1».
