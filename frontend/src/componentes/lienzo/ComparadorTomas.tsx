@@ -40,14 +40,14 @@ export default function ComparadorTomas({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-auto bg-fondo px-6 py-8"
+      className="fixed inset-0 z-50 overflow-auto bg-fondo px-3 py-4 sm:px-6 sm:py-8"
       data-testid="comparador-tomas"
     >
       <div className="mx-auto w-full max-w-[1600px]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[13px] leading-[18px] text-tinta2">Comparar tomas</p>
-            <h1 className="text-[26px] leading-[34px] font-semibold text-tinta">
+            <h1 className="text-[20px] leading-[28px] font-semibold text-tinta sm:text-[26px] sm:leading-[34px]">
               Toma {tomas[0]?.numero} y toma {tomas[1]?.numero}
             </h1>
             <p className="mt-1 text-[14px] leading-[20px] text-tinta2">
@@ -94,12 +94,12 @@ export default function ComparadorTomas({
           </div>
         </div>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-6">
           {tomas.map((toma, i) => (
             <div key={toma.id} data-testid={`comparador-columna-${toma.numero}`}>
               <div
-                className="flex items-center justify-center overflow-hidden rounded-card border border-linea bg-superficie2"
-                style={{ aspectRatio: relacion }}
+                className="mx-auto flex items-center justify-center overflow-hidden rounded-card border border-linea bg-superficie2"
+                style={{ aspectRatio: relacion, maxHeight: "calc(100dvh - 200px)", minHeight: 160 }}
               >
                 {toma.medio?.clase === "video" ? (
                   <video
