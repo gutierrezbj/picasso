@@ -1,8 +1,7 @@
 import React from "react";
 import { AlertTriangle, Search, RefreshCw } from "lucide-react";
 import Boton from "../Boton";
-import { formatoMoneda } from "../../lib/formato";
-import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, textoCoste } from "./comun";
+import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, textoCoste, textoImporte } from "./comun";
 import type { Operacion } from "../../tipos";
 
 interface Props {
@@ -12,6 +11,7 @@ interface Props {
   onComprobar?: (op: Operacion) => void | Promise<unknown>;
   onReintentar?: (op: Operacion) => void | Promise<unknown>;
   onMarcarFallida?: (op: Operacion) => void | Promise<unknown>;
+  onResolverCargo?: (op: Operacion, cobrado: boolean, importe?: number) => void | Promise<unknown>;
 }
 
 const fecha = (iso: string): string =>
@@ -24,6 +24,7 @@ export default function TablaOperaciones({
   onComprobar,
   onReintentar,
   onMarcarFallida,
+  onResolverCargo,
 }: Props) {
   if (operaciones.length === 0) {
     return (
@@ -43,7 +44,7 @@ export default function TablaOperaciones({
             <th className="py-2 pr-3 font-medium">Acción · modelo</th>
             <th className="py-2 pr-3 font-medium">Proveedor</th>
             <th className="py-2 pr-3 font-medium">Estimado</th>
-            <th className="py-2 pr-3 font-medium">Real</th>
+            <th className="py-2 pr-3 font-medium">Importe</th>
             <th className="py-2 pr-3 font-medium">Estado</th>
             <th className="py-2 pr-3 font-medium">Intentos</th>
             <th className="py-2 font-medium" />
@@ -91,7 +92,7 @@ export default function TablaOperaciones({
                 {textoCoste(op.coste_estimado, moneda)}
               </td>
               <td className="py-2 pr-3 tabular text-tinta">
-                {op.coste_real === null ? "—" : formatoMoneda(op.coste_real, moneda)}
+                {textoImporte(op.coste, moneda)}
               </td>
               <td className={`py-2 pr-3 ${colorEstado(op.estado)}`}>
                 {ETIQUETA_ESTADO[op.estado]}
@@ -125,6 +126,32 @@ export default function TablaOperaciones({
                     >
                       Marcar como fallida
                     </Boton>
+                  )}
+                  {op.posible_cargo && onResolverCargo && (
+                    <>
+                      <Boton
+                        pequeno
+                        variante="secundario"
+                        data-testid={`registro-sin-cargo-${op.id}`}
+                        onClick={() => onResolverCargo(op, false)}
+                      >
+                        No hubo cargo
+                      </Boton>
+                      <Boton
+                        pequeno
+                        variante="texto"
+                        data-testid={`registro-con-cargo-${op.id}`}
+                        onClick={() => {
+                          const texto = window.prompt("Importe cobrado según el proveedor (USD):", String(op.coste_estimado ?? ""));
+                          if (texto === null) return;
+                          const importe = Number(texto.replace(",", "."));
+                          if (!Number.isFinite(importe) || importe < 0) return;
+                          onResolverCargo(op, true, importe);
+                        }}
+                      >
+                        Hubo cargo…
+                      </Boton>
+                    </>
                   )}
                   {op.estado === "fallida" && onReintentar && (
                     <Boton

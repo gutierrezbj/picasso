@@ -7,13 +7,7 @@ import { Campo, Entrada, AreaTexto } from "../Campo";
 import DialogoConfirmar from "../DialogoConfirmar";
 import { api } from "../../api/cliente";
 import { formatoMoneda } from "../../lib/formato";
-import {
-  ETIQUETA_ACCION,
-  ETIQUETA_ESTADO,
-  colorEstado,
-  costeEstimado,
-  textoCoste,
-} from "../motor/comun";
+import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, costeEstimado, textoCoste, textoGasto, textoImporte } from "../motor/comun";
 import type {
   Accion,
   ModeloCatalogo,
@@ -602,9 +596,7 @@ export default function PanelProducir({
         </p>
         {gasto && (
           <p className="mt-1">
-            Gasto del proyecto: {formatoMoneda(gasto.total, moneda)} (
-            {formatoMoneda(gasto.real, moneda)} cobrado +{" "}
-            {formatoMoneda(gasto.reservado, moneda)} reservado)
+            Gasto del proyecto: {formatoMoneda(gasto.total, moneda)} ({textoGasto(gasto, moneda)})
           </p>
         )}
         <p className="mt-1">
@@ -692,9 +684,10 @@ export default function PanelProducir({
                 <p className="mt-1 text-tinta2">Ajuste: {op.entradas.instruccion}</p>
               )}
               <p className="mt-1 text-tinta2">
-                {op.coste_real !== null
-                  ? `Cobrado ${formatoMoneda(op.coste_real, moneda)}`
-                  : `Estimado ${textoCoste(op.coste_estimado, moneda)}`}
+                {`Estimado ${textoCoste(op.coste_estimado, moneda)}`}
+                {op.coste && op.coste.categoria !== "reservado" && op.coste.categoria !== "nada"
+                  ? ` · ${textoImporte(op.coste, moneda)}`
+                  : ""}
                 {op.numero_intentos ? ` · ${op.numero_intentos} intento(s)` : ""}
               </p>
               {op.error && (

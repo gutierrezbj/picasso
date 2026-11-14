@@ -1,6 +1,6 @@
 import React from "react";
 import { formatoMoneda } from "../../lib/formato";
-import type { ModeloCatalogo } from "../../tipos";
+import type { ModeloCatalogo, CosteOperacion } from "../../tipos";
 
 /** Coste estimado en la interfaz (§9.4.2). `null` = «coste sin verificar»:
  * nunca se muestra 0 por desconocido. */
@@ -22,6 +22,28 @@ const aCentimos = (n: number): number => Math.round(n * 100) / 100;
 
 export function textoCoste(coste: number | null, moneda: string): string {
   return coste === null ? "coste sin verificar" : formatoMoneda(coste, moneda);
+}
+
+export function textoGasto(
+  g: { informado: number; estimado: number; reservado: number; posible_cargo: number },
+  moneda: string
+): string {
+  const partes = [
+    `${formatoMoneda(g.informado, moneda)} informado`,
+    `${formatoMoneda(g.estimado, moneda)} estimado`,
+    `${formatoMoneda(g.reservado, moneda)} reservado`,
+  ];
+  if (g.posible_cargo > 0) partes.push(`${formatoMoneda(g.posible_cargo, moneda)} posible cargo sin confirmar`);
+  return partes.join(" · ");
+}
+
+export function textoImporte(c: CosteOperacion | undefined, moneda: string): string {
+  if (!c) return "—";
+  if (c.categoria === "informado" && c.informado !== null) return `${formatoMoneda(c.informado, moneda)} · ${c.etiqueta}`;
+  if (c.categoria === "historico_tarifa" && c.contado !== null) return `${formatoMoneda(c.contado, moneda)} · ${c.etiqueta}`;
+  if (c.categoria === "estimado") return "sin importe del proveedor";
+  if (c.categoria === "posible_cargo") return "posible cargo sin confirmar";
+  return "—";
 }
 
 export const ETIQUETA_ACCION: Record<string, string> = {

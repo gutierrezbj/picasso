@@ -110,7 +110,8 @@ req("DELETE", f"/api/operaciones/{sin_precio['operacion']['id']}")
 req("POST", f"/api/operaciones/{op1['id']}/autorizar", {})
 final = esperar(op1["id"], ("completada", "fallida", "incierta"))
 ok(final["estado"] == "completada", "primera toma producida")
-ok(final["coste_real"] == 0.04, f"coste real registrado: {final['coste_real']}")
+ok(final["coste_informado"] == 0.04 and final["coste_informado_fuente"] == "simulado",
+   f"importe informado por el simulado: {final['coste_informado']}")
 
 tomas = req("GET", f"/api/planos/{DESTINO}/tomas")
 ok(len(tomas["tomas"]) == 1 and tomas["toma_elegida_id"] is None, "la toma nace sin elegir")
@@ -136,7 +137,7 @@ ok(p["toma_elegida_id"] == segunda["id"] and p["estado_produccion"] == "resuelto
    "elegida la segunda toma")
 
 gasto = req("GET", f"/api/proyectos/{CORTO}/gasto")
-ok(gasto["gasto"]["real"] == 0.08, f"gasto real acumulado: {gasto['gasto']['real']}")
+ok(gasto["gasto"]["informado"] == 0.08, f"gasto informado acumulado: {gasto['gasto']['informado']}")
 
 # --- incierto recuperable sin reenvío (§9.4.7) ------------------------------
 
@@ -412,9 +413,9 @@ ok(
 ok(any(o["es_exploracion"] for o in registro), "el registro marca las exploraciones")
 suma = round(
     sum(
-        (o["coste_real"] if o["coste_real"] is not None else 0)
+        (o["coste"]["contado"] or 0)
         for o in registro
-        if o["estado"] == "completada"
+        if o["coste"]["categoria"] != "nada"
     ),
     2,
 )

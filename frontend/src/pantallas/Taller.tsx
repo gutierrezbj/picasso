@@ -6,7 +6,7 @@ import Cabecera from "../componentes/Cabecera";
 import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import { api } from "../api/cliente";
-import { costeEstimado } from "../componentes/motor/comun";
+import { costeEstimado, textoGasto, textoImporte } from "../componentes/motor/comun";
 import { formatoMoneda } from "../lib/formato";
 import type { ModeloCatalogo } from "../tipos";
 
@@ -436,7 +436,9 @@ export default function Taller() {
               </form>
             )}
             <span className="ml-auto text-[12px] text-tinta2">
-              Gasto del Taller: <b className="text-tinta">{formatoMoneda(data?.gasto?.total || 0, "USD")}</b>
+              <span title={data?.gasto ? textoGasto(data.gasto, "USD") : undefined}>
+                Gasto del Taller: <b className="text-tinta">{formatoMoneda(data?.gasto?.total || 0, "USD")}</b>
+              </span>
             </span>
           </div>
 
@@ -564,7 +566,10 @@ export default function Taller() {
                 <summary className="cursor-pointer text-acento">Cómo se hizo</summary>
                 <p className="mt-2 leading-[19px]">
                   {modeloDeToma(toma)?.nombre_visible || toma.modelo} · {toma.relacion} ·{" "}
-                  {toma.coste !== null && toma.coste !== undefined ? formatoMoneda(toma.coste, "USD") : ""} ·{" "}
+                  {toma.coste
+                    ? `${toma.coste.estimado !== null ? formatoMoneda(toma.coste.estimado, "USD") + " estimado" : "sin precio"} · ${textoImporte(toma.coste, "USD")}`
+                    : ""}{" "}
+                  ·{" "}
                   {new Date(toma.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}
                 </p>
                 <p className="mt-2 whitespace-pre-wrap leading-[19px]">{toma.prompt_enviado}</p>

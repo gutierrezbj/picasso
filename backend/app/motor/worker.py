@@ -338,7 +338,7 @@ def _indice_de_url(url: str) -> int:
         return 0
 
 
-async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> dict[str, Any]:
+async def completar(op_id: str, urls: list[str], coste_informado: Optional[Any]) -> dict[str, Any]:
     op = sin_id(await db.operaciones.find_one({"_id": op_id}))
     prov = proveedor(op["proveedor"])
     if prov is None:
@@ -353,11 +353,6 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
         extension = Path(base.split("?", 1)[0]).suffix or ".png"
         medio = await _crear_medio(op["espacio_id"], op_id, extension, datos, prov.id)
         medios.append((int(fragmento) if fragmento.isdigit() else _indice_de_url(base), medio))
-
-    if coste_real is None and prov.id != "simulado":
-        m = cat.modelo(entradas.modelo)
-        if m and m.coste.valor is not None and m.coste.unidad == "imagen":
-            coste_real = cat.a_centimos(m.coste.valor * len(medios))
 
     tomas: list[dict[str, Any]] = []
     if op["destino"]["tipo"] == "ficha":
@@ -439,7 +434,8 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
     fallidas = [
         i for i in range(entradas.n_variantes) if i not in [indice for indice, _ in medios]
     ]
-    real = float(coste_real) if coste_real is not None else None
+    informado = float(coste_informado) if coste_informado is not None else None
+    fuente = None if informado is None else ("simulado" if prov.id == "simulado" else "proveedor")
     if intento:
         await db.intentos.update_one(
             {"_id": intento["_id"]},
@@ -447,7 +443,7 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
                 "$set": {
                     "estado": "completada",
                     "fin": ahora(),
-                    "coste_real": real,
+                    "coste_informado": informado,
                     "medios_resultado": [m["id"] for _, m in medios],
                 }
             },
@@ -456,7 +452,8 @@ async def completar(op_id: str, urls: list[str], coste_real: Optional[Any]) -> d
         op_id,
         EstadoOperacion.completada.value,
         {
-            "coste_real": real,
+            "coste_informado": informado,
+            "coste_informado_fuente": fuente,
             "variantes_fallidas": fallidas,
             "error": (
                 f"{len(fallidas)} de {entradas.n_variantes} variantes han fallado: "

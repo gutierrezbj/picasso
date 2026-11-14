@@ -302,6 +302,8 @@ export const api = {
     peticion<VistaOperacion>(`/operaciones/${id}/comprobar`, { method: "POST" }),
   marcarFallida: (id: string) =>
     peticion<VistaOperacion>(`/operaciones/${id}/marcar-fallida`, { method: "POST" }),
+  resolverCargo: (id: string, datos: { cobrado: boolean; importe?: number }) =>
+    peticion<VistaOperacion>(`/operaciones/${id}/cargo`, { method: "POST", body: JSON.stringify(datos) }),
   reintentarOperacion: (id: string) =>
     peticion<VistaOperacion>(`/operaciones/${id}/reintentar`, { method: "POST" }),
   descartarOperacion: (id: string) => peticion(`/operaciones/${id}`, { method: "DELETE" }),

@@ -22,6 +22,7 @@ from app.almacen import almacen
 from app.api.montaje import linea_de_tiempo
 from app.db import db
 from app.exportar import fcpxml
+from app.motor import operaciones as ops
 from app.motor.ficheros import duracion_de
 
 Progreso = Callable[[int, str], Awaitable[None]]
@@ -366,7 +367,7 @@ async def generar(
             entrada_manifiesto.update({"archivo": f"video/{nombre_clip}.mp4", "toma": toma["numero"], "modelo": None})
             op = await db.operaciones.find_one({"_id": (await db.tomas.find_one({"_id": toma["id"]}) or {}).get("operacion_id")})
             if op:
-                entrada_manifiesto.update({"modelo": op.get("modelo"), "coste": op.get("coste_real") or op.get("coste_estimado")})
+                entrada_manifiesto.update({"modelo": op.get("modelo"), "coste": ops.coste_de(op)})
             elementos.append(fcpxml.ElementoSpine(nombre=nombre_clip, duracion_f=frames, ruta=f"video/{nombre_clip}.mp4"))
             clips_previo.append((destino, frames))
         else:
@@ -480,7 +481,7 @@ async def generar(
         await asyncio.to_thread(_previo, carpeta, clips_previo, audios_previo, fps, ancho, alto, reloj_f)
 
     manifiesto["avisos"] = avisos
-    manifiesto["coste_total"] = round(sum(p.get("coste") or 0 for p in manifiesto["planos"]), 2)
+    manifiesto["coste_total"] = round(sum((p.get("coste") or {}).get("contado") or 0 for p in manifiesto["planos"]), 2)
     (carpeta / "LEEME.md").write_text(_leeme(nombre, fps, ancho, alto, rutas, avisos), encoding="utf-8")
     (carpeta / "manifiesto.json").write_text(json.dumps(manifiesto, ensure_ascii=False, indent=2), encoding="utf-8")
 
