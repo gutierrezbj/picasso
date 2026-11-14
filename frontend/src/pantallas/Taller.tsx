@@ -436,8 +436,9 @@ export default function Taller() {
               </form>
             )}
             <span className="ml-auto text-[12px] text-tinta2">
-              <span title={data?.gasto ? textoGasto(data.gasto, "USD") : undefined}>
+              <span data-testid="taller-gasto">
                 Gasto del Taller: <b className="text-tinta">{formatoMoneda(data?.gasto?.total || 0, "USD")}</b>
+                {data?.gasto && <span className="ml-1">({textoGasto(data.gasto, "USD")})</span>}
               </span>
             </span>
           </div>

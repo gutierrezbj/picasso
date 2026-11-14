@@ -32,8 +32,7 @@ import type {
   VistaOperacion,
   VistaProduccion,
   VistaProyecto,
-  VistaTomas,
-} from "../tipos";
+  VistaTomas, IntentoOperacion } from "../tipos";
 
 const BASE = `${import.meta.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -302,8 +301,8 @@ export const api = {
     peticion<VistaOperacion>(`/operaciones/${id}/comprobar`, { method: "POST" }),
   marcarFallida: (id: string) =>
     peticion<VistaOperacion>(`/operaciones/${id}/marcar-fallida`, { method: "POST" }),
-  resolverCargo: (id: string, datos: { cobrado: boolean; importe?: number }) =>
-    peticion<VistaOperacion>(`/operaciones/${id}/cargo`, { method: "POST", body: JSON.stringify(datos) }),
+  resolverCargo: (intentoId: string, datos: { cobrado: boolean; importe?: number }) =>
+    peticion<IntentoOperacion>(`/intentos/${intentoId}/cargo`, { method: "POST", body: JSON.stringify(datos) }),
   reintentarOperacion: (id: string) =>
     peticion<VistaOperacion>(`/operaciones/${id}/reintentar`, { method: "POST" }),
   descartarOperacion: (id: string) => peticion(`/operaciones/${id}`, { method: "DELETE" }),

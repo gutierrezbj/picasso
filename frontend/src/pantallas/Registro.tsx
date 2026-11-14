@@ -194,8 +194,8 @@ export default function Registro() {
             onComprobar={(op) => accion(op, "comprobar")}
             onReintentar={(op) => accion(op, "reintentar")}
             onMarcarFallida={(op) => accion(op, "fallida")}
-            onResolverCargo={async (op, cobrado, importe) => {
-              await api.resolverCargo(op.id, { cobrado, importe });
+            onResolverCargo={async (intentoId, cobrado, importe) => {
+              await api.resolverCargo(intentoId, { cobrado, importe });
               await Promise.all([refetch(), refetchTotales()]);
             }}
           />

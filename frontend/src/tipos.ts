@@ -451,9 +451,20 @@ export interface CosteOperacion {
   informado: number | null;
   fuente: string | null;
   tarifa_verificada_en: string | null;
-  categoria: "informado" | "estimado" | "historico_tarifa" | "reservado" | "posible_cargo" | "nada";
+  categoria: "informado" | "estimado" | "historico_tarifa" | "reservado" | "nada";
   contado: number | null;
   etiqueta: string;
+  cargos: CargoIntento[];
+  posible_cargo: number;
+  informado_cargos: number;
+}
+
+export interface CargoIntento {
+  intento_id: string;
+  numero: number;
+  estado: "pendiente" | "sin_cargo" | "cobrado";
+  estimado: number | null;
+  importe: number | null;
 }
 
 export interface Presupuesto {
@@ -534,7 +545,6 @@ export interface Operacion {
   coste_real: number | null;
   coste_informado?: number | null;
   coste_informado_fuente?: string | null;
-  posible_cargo?: boolean;
   estado: EstadoOperacion;
   clave_idempotencia: string;
   correccion_id: string | null;

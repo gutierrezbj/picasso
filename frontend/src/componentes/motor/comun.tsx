@@ -42,7 +42,6 @@ export function textoImporte(c: CosteOperacion | undefined, moneda: string): str
   if (c.categoria === "informado" && c.informado !== null) return `${formatoMoneda(c.informado, moneda)} · ${c.etiqueta}`;
   if (c.categoria === "historico_tarifa" && c.contado !== null) return `${formatoMoneda(c.contado, moneda)} · ${c.etiqueta}`;
   if (c.categoria === "estimado") return "sin importe del proveedor";
-  if (c.categoria === "posible_cargo") return "posible cargo sin confirmar";
   return "—";
 }
 

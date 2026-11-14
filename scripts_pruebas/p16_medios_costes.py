@@ -102,45 +102,127 @@ async def costes():
     await db.operaciones.insert_many([
         op_doc("p16-historico", coste_real=0.15),
         op_doc("p16-simulado", proveedor="simulado", coste_real=0.04, coste_estimado=0.04),
-        op_doc("p16-reserva", estado="autorizada"),
-        op_doc("p16-incierta", estado="incierta"),
-        op_doc("p16-incierta-2", estado="incierta"),
     ])
     h = ops.coste_de(await db.operaciones.find_one({"_id": "p16-historico"}))
     ok(h["categoria"] == "historico_tarifa" and "histórico" in h["etiqueta"], f"lo antiguo por tarifa no se presenta como cobrado: {h['etiqueta']}")
     s = ops.coste_de(await db.operaciones.find_one({"_id": "p16-simulado"}))
     ok(s["categoria"] == "informado" and s["fuente"] == "simulado", "lo antiguo del simulado es informado por el simulado")
-
-    v = req("POST", "/api/operaciones/p16-incierta/marcar-fallida")
-    ok(v["operacion"]["estado"] == "fallida" and v["operacion"]["posible_cargo"] is True, "«incierta» marcada fallida queda como posible cargo")
-    req("POST", "/api/operaciones/p16-incierta-2/marcar-fallida")
-
-    g = (await ops.gasto(PROYECTO))
-    ok(g["estimado"] == 0.30, f"estimado = sin importe (0,15) + histórico por tarifa (0,15): {g['estimado']}")
-    ok(g["informado"] == 0.04, f"informado: {g['informado']}")
-    ok(g["reservado"] == 0.15, f"reservado: {g['reservado']}")
-    ok(g["posible_cargo"] == 0.30, f"posible cargo: {g['posible_cargo']}")
-    ok(g["total"] == 0.79 and "real" not in g, f"total {g['total']} y sin la clave engañosa «real»")
-
-    r = requests.post(f"{API}/api/operaciones/p16-reserva/cargo", json={"cobrado": False}, timeout=30)
-    ok(r.status_code == 409, "solo se resuelve un posible cargo que exista")
-    v = req("POST", "/api/operaciones/p16-incierta/cargo", {"cobrado": False})
-    ok(v["operacion"]["posible_cargo"] is False, "«No hubo cargo» quita el posible cargo")
-    v = req("POST", "/api/operaciones/p16-incierta-2/cargo", {"cobrado": True, "importe": 0.15})
-    ok(v["operacion"]["coste_informado"] == 0.15 and v["operacion"]["coste_informado_fuente"] == "manual", "«Hubo cargo» lo apunta como informado a mano")
-    g = await ops.gasto(PROYECTO)
-    ok(g["posible_cargo"] == 0 and g["informado"] == 0.19, f"el gasto se recoloca: {g}")
-
-    lista = req("GET", f"/api/operaciones?proyecto_id={PROYECTO}")
-    ok(all("coste" in o and "categoria" in o["coste"] for o in lista), "el Registro trae el coste desglosado de cada operación")
-    csv = requests.get(f"{API}/api/registro/exportar.csv?proyecto_id={PROYECTO}", timeout=30).text
-    ok("coste_informado_fuente" in csv.splitlines()[0] and "historico_tarifa" in csv, "el CSV separa estimado, informado y su fuente")
     await db.operaciones.delete_many({"proyecto_id": PROYECTO})
+
+
+async def intento(op_id, numero, estado):
+    iid = f"{op_id}-i{numero}"
+    await db.intentos.insert_one({
+        "_id": iid, "id": iid, "operacion_id": op_id, "numero": numero, "proveedor": "fal",
+        "estado": estado, "clave_idempotencia": f"{iid}-clave", "coste_estimado": 0.15,
+        "inicio": "2026-11-14T10:00:00", "medios_resultado": [],
+    })
+    await db.operaciones.update_one({"_id": op_id}, {"$set": {"intentos": numero, "estado": estado}})
+    return iid
+
+
+async def reintento_autorizado(op_id):
+    await ops.reintentar(op_id)
+    await ops.guardar_estado(op_id, "autorizada", {"autorizada_en": "ahora"})
+
+
+async def completar_con(op_id, importe):
+    original = worker.proveedor
+    worker.proveedor = lambda pid: FalSinImporte()
+    try:
+        await worker.completar(op_id, [], importe)
+    finally:
+        worker.proveedor = original
+
+
+async def coste(op_id):
+    op = await db.operaciones.find_one({"_id": op_id})
+    its = await db.intentos.find({"operacion_id": op_id}).to_list(50)
+    return ops.coste_de(op, its)
+
+
+async def reintentos():
+    # 1 · incierta → marcada fallida → reintento autorizado
+    await db.operaciones.insert_one(op_doc("p16-r1", estado="incierta"))
+    i1 = await intento("p16-r1", 1, "incierta")
+    v = req("POST", "/api/operaciones/p16-r1/marcar-fallida")
+    ok(v["operacion"]["estado"] == "fallida", "la incierta se marca fallida")
+    it1 = await db.intentos.find_one({"_id": i1})
+    ok(it1["posible_cargo"] is True and it1["estado"] == "fallida", "el posible cargo queda en el intento 1, no en la operación")
+    ok("posible_cargo" not in (await db.operaciones.find_one({"_id": "p16-r1"})), "la operación no guarda el cargo")
+    await reintento_autorizado("p16-r1")
+    c = await coste("p16-r1")
+    ok(c["categoria"] == "reservado" and c["contado"] == 0.15, "el reintento autorizado reserva de nuevo")
+    ok(c["posible_cargo"] == 0.15 and [x["estado"] for x in c["cargos"]] == ["pendiente"], "y el posible cargo del intento 1 sigue visible")
+    g = await ops.gasto(PROYECTO)
+    ok(g["reservado"] == 0.15 and g["posible_cargo"] == 0.15 and g["total"] == 0.30, f"gasto: reserva nueva + cargo anterior ({g})")
+
+    # 2 · el intento 2 se completa con importe informado
+    i2 = await intento("p16-r1", 2, "en_curso")
+    await completar_con("p16-r1", 0.12)
+    op = await db.operaciones.find_one({"_id": "p16-r1"})
+    it2 = await db.intentos.find_one({"_id": i2})
+    ok(op["estado"] == "completada" and op["coste_informado"] == 0.12 and it2["coste_informado"] == 0.12 and it2["coste_informado_fuente"] == "proveedor",
+       "el intento 2 completa con su importe informado")
+    c = await coste("p16-r1")
+    ok(c["categoria"] == "informado" and c["contado"] == 0.12 and c["posible_cargo"] == 0.15, "importe del intento 2 y cargo pendiente del 1, por separado")
+
+    #    y otra operación cuyo intento 2 se completa sin importe
+    await db.operaciones.insert_one(op_doc("p16-r2", estado="incierta"))
+    await intento("p16-r2", 1, "incierta")
+    req("POST", "/api/operaciones/p16-r2/marcar-fallida")
+    await reintento_autorizado("p16-r2")
+    await intento("p16-r2", 2, "en_curso")
+    await completar_con("p16-r2", None)
+    c = await coste("p16-r2")
+    ok(c["categoria"] == "estimado" and c["informado"] is None and c["posible_cargo"] == 0.15, "sin importe: estimado + cargo pendiente del intento 1")
+
+    # 3 · resolver el cargo anterior no altera el importe del segundo
+    r = req("POST", f"/api/intentos/{i1}/cargo", {"cobrado": True, "importe": 0.15})
+    ok(r["cargo_resuelto"] == "cobrado" and r["coste_informado"] == 0.15 and r["coste_informado_fuente"] == "manual", "el cargo del intento 1 se apunta a mano")
+    op = await db.operaciones.find_one({"_id": "p16-r1"})
+    it2 = await db.intentos.find_one({"_id": i2})
+    ok(op["coste_informado"] == 0.12 and it2["coste_informado"] == 0.12 and it2["coste_informado_fuente"] == "proveedor",
+       "el importe del intento 2 y de la operación no cambian")
+    c = await coste("p16-r1")
+    ok(c["contado"] == 0.12 and c["informado_cargos"] == 0.15 and c["posible_cargo"] == 0, "la operación suma 0,12 + 0,15 cobrados, sin pendientes")
+    rr = requests.post(f"{API}/api/intentos/{i1}/cargo", json={"cobrado": False}, timeout=30)
+    ok(rr.status_code == 409, "un cargo ya resuelto no se vuelve a resolver")
+    rr = requests.post(f"{API}/api/intentos/{i2}/cargo", json={"cobrado": False}, timeout=30)
+    ok(rr.status_code == 409, "un intento sin posible cargo no se resuelve")
+
+    # 4 · varios intentos inciertos seguidos
+    await db.operaciones.insert_one(op_doc("p16-r3", estado="incierta"))
+    ids = []
+    for n in (1, 2, 3):
+        ids.append(await intento("p16-r3", n, "incierta"))
+        req("POST", "/api/operaciones/p16-r3/marcar-fallida")
+        if n < 3:
+            await reintento_autorizado("p16-r3")
+    c = await coste("p16-r3")
+    ok([x["numero"] for x in c["cargos"]] == [1, 2, 3] and c["posible_cargo"] == 0.45, "tres intentos inciertos, tres posibles cargos independientes")
+    req("POST", f"/api/intentos/{ids[1]}/cargo", {"cobrado": False})
+    c = await coste("p16-r3")
+    ok([x["estado"] for x in c["cargos"]] == ["pendiente", "sin_cargo", "pendiente"] and c["posible_cargo"] == 0.30,
+       "resolver el intento 2 no toca el 1 ni el 3")
+
+    g = await ops.gasto(PROYECTO)
+    ok(g["informado"] == 0.27 and g["estimado"] == 0.15 and g["reservado"] == 0 and g["posible_cargo"] == 0.45 and g["total"] == 0.87,
+       f"gasto total por capas: {g}")
+    t = req("GET", f"/api/registro/totales?proyecto_id={PROYECTO}")
+    ok(t["capas"]["posible_cargo"] == 0.45 and abs(t["total"] - 0.87) < 0.005, "los totales del Registro cuadran")
+    lista = req("GET", f"/api/operaciones?proyecto_id={PROYECTO}")
+    ok(all("cargos" in o["coste"] for o in lista), "el Registro trae los cargos de cada intento")
+    csv = requests.get(f"{API}/api/registro/exportar.csv?proyecto_id={PROYECTO}", timeout=30).text
+    ok("posible_cargo_pendiente" in csv.splitlines()[0] and "informado_cargos" in csv.splitlines()[0], "el CSV separa los cargos por intento")
+    await db.operaciones.delete_many({"proyecto_id": PROYECTO})
+    await db.intentos.delete_many({"operacion_id": {"$in": ["p16-r1", "p16-r2", "p16-r3"]}})
 
 
 async def main():
     await proteccion()
     await costes()
+    await reintentos()
 
 
 asyncio.run(main())

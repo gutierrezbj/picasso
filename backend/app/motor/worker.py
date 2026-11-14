@@ -108,6 +108,7 @@ async def _enviar_y_seguir(op_id: str) -> None:
         numero=numero,
         proveedor=op["proveedor"],
         clave_idempotencia=op["clave_idempotencia"],
+        coste_estimado=op.get("coste_estimado"),
     )
     doc = intento.model_dump(mode="json")
     doc["_id"] = doc["id"]
@@ -444,6 +445,7 @@ async def completar(op_id: str, urls: list[str], coste_informado: Optional[Any])
                     "estado": "completada",
                     "fin": ahora(),
                     "coste_informado": informado,
+                    "coste_informado_fuente": fuente,
                     "medios_resultado": [m["id"] for _, m in medios],
                 }
             },

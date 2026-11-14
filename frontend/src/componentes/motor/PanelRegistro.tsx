@@ -78,8 +78,8 @@ export default function PanelRegistro({ proyectoId, onCerrar }: Props) {
             await api.reintentarOperacion(op.id);
             await Promise.all([refetch(), refetchTotales()]);
           }}
-          onResolverCargo={async (op, cobrado, importe) => {
-            await api.resolverCargo(op.id, { cobrado, importe });
+          onResolverCargo={async (intentoId, cobrado, importe) => {
+            await api.resolverCargo(intentoId, { cobrado, importe });
             await Promise.all([refetch(), refetchTotales()]);
           }}
           onMarcarFallida={async (op) => {

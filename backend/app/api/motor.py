@@ -788,11 +788,11 @@ class ResolverCargo(BaseModel):
     importe: Optional[float] = None
 
 
-@router.post("/operaciones/{operacion_id}/cargo")
-async def resolver_cargo(operacion_id: str, datos: ResolverCargo):
-    """PIC-02 §2: cierra un posible cargo sin confirmar."""
+@router.post("/intentos/{intento_id}/cargo")
+async def resolver_cargo(intento_id: str, datos: ResolverCargo):
+    """PIC-02 §2: cierra el posible cargo de un intento. No toca la operación."""
     try:
-        return await ops.resolver_cargo(operacion_id, datos.cobrado, datos.importe)
+        return await ops.resolver_cargo(intento_id, datos.cobrado, datos.importe)
     except LookupError as e:
         raise HTTPException(404, str(e)) from e
     except PermissionError as e:
@@ -1103,7 +1103,7 @@ async def _vista_operacion(doc: dict[str, Any]) -> dict[str, Any]:
         "proyecto_nombre": (proy or {}).get("nombre"),
         "espacio_nombre": (esp or {}).get("nombre"),
         "numero_intentos": len(intentos),
-        "coste": ops.coste_de(op),
+        "coste": ops.coste_de(op, intentos),
         "intentos_detalle": [sin_id(i) for i in intentos],
         "tomas": [await _vista_toma(t) for t in tomas],
     }
@@ -1150,11 +1150,6 @@ async def listar_operaciones(
     return [await _vista_operacion(d) for d in docs]
 
 
-def _coste_contado(op: dict[str, Any]) -> Optional[float]:
-    c = ops.coste_de(op)
-    return None if c["categoria"] == "nada" else c["contado"]
-
-
 @router.get("/registro/totales")
 async def totales_registro(
     espacio_id: Optional[str] = None,
@@ -1167,20 +1162,16 @@ async def totales_registro(
     docs = await db.operaciones.find(filtro).to_list(5000)
     por_proyecto: dict[str, float] = {}
     por_espacio: dict[str, float] = {}
-    sin_verificar = 0
-    total = 0.0
-    capas = {"informado": 0.0, "estimado": 0.0, "reservado": 0.0, "posible_cargo": 0.0}
+    por_op = await ops.intentos_por_operacion([d["_id"] for d in docs])
+    costes = []
     for d in docs:
-        c = ops.coste_de(d)
-        coste = None if c["categoria"] == "nada" else c["contado"]
-        if coste is None:
-            if c["categoria"] != "nada":
-                sin_verificar += 1
-            continue
-        total += coste
-        capas["estimado" if c["categoria"] == "historico_tarifa" else c["categoria"]] += coste
-        por_proyecto[d["proyecto_id"]] = round(por_proyecto.get(d["proyecto_id"], 0) + coste, 4)
-        por_espacio[d["espacio_id"]] = round(por_espacio.get(d["espacio_id"], 0) + coste, 4)
+        c = ops.coste_de(d, por_op.get(d["_id"], []))
+        costes.append(c)
+        suma = (c["contado"] if c["categoria"] != "nada" and c["contado"] is not None else 0) + c["informado_cargos"] + c["posible_cargo"]
+        if suma:
+            por_proyecto[d["proyecto_id"]] = round(por_proyecto.get(d["proyecto_id"], 0) + suma, 4)
+            por_espacio[d["espacio_id"]] = round(por_espacio.get(d["espacio_id"], 0) + suma, 4)
+    resumen = ops.sumar_capas(costes)
     nombres_p = {
         p["_id"]: p["nombre"]
         for p in await db.proyectos.find({"_id": {"$in": list(por_proyecto)}}).to_list(500)
@@ -1191,10 +1182,10 @@ async def totales_registro(
     }
     aj = await db.ajustes.find_one({"_id": "global"})
     return {
-        "total": round(total, 4),
-        "capas": {k: round(v, 4) for k, v in capas.items()},
+        "total": resumen["total"],
+        "capas": {k: resumen[k] for k in ("informado", "estimado", "reservado", "posible_cargo")},
         "operaciones": len(docs),
-        "sin_verificar": sin_verificar,
+        "sin_verificar": resumen["sin_verificar"],
         "moneda": (aj or {}).get("moneda") or "USD",
         "por_proyecto": [
             {"proyecto_id": k, "nombre": nombres_p.get(k, "—"), "total": v}
@@ -1223,7 +1214,8 @@ async def exportar_registro(
         [
             "fecha", "espacio", "proyecto", "destino", "accion", "modelo", "proveedor",
             "coste_estimado", "tarifa_verificada_en", "coste_informado",
-            "coste_informado_fuente", "categoria", "posible_cargo", "estado", "intentos",
+            "coste_informado_fuente", "categoria", "posible_cargo_pendiente", "informado_cargos",
+            "estado", "intentos",
         ]
     )
     for d in docs:
@@ -1238,7 +1230,8 @@ async def exportar_registro(
                 "" if v["coste"]["informado"] is None else v["coste"]["informado"],
                 v["coste"]["fuente"] or "",
                 v["coste"]["categoria"],
-                "sí" if v.get("posible_cargo") else "",
+                v["coste"]["posible_cargo"] or "",
+                v["coste"]["informado_cargos"] or "",
                 v["estado"], v["numero_intentos"],
             ]
         )

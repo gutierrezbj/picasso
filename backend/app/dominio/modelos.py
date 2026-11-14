@@ -708,7 +708,6 @@ class Operacion(BaseModel):
     coste_real: Optional[float] = None
     coste_informado: Optional[float] = None
     coste_informado_fuente: Optional[str] = None
-    posible_cargo: bool = False
     estado: EstadoOperacion = EstadoOperacion.preparada
     clave_idempotencia: str = ""
     correccion_id: Optional[str] = None
@@ -732,7 +731,12 @@ class Intento(BaseModel):
     estado: str = "enviada"  # enviada | en_curso | completada | incierta | fallida
     clave_idempotencia: str = ""
     coste_real: Optional[float] = None
+    coste_estimado: Optional[float] = None
     coste_informado: Optional[float] = None
+    coste_informado_fuente: Optional[str] = None
+    posible_cargo: bool = False
+    cargo_resuelto: Optional[str] = None  # sin_cargo | cobrado
+    cargo_resuelto_en: Optional[str] = None
     error: Optional[str] = None
     inicio: str = Field(default_factory=ahora)
     fin: Optional[str] = None

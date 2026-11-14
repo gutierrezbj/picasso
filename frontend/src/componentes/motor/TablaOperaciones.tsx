@@ -11,7 +11,7 @@ interface Props {
   onComprobar?: (op: Operacion) => void | Promise<unknown>;
   onReintentar?: (op: Operacion) => void | Promise<unknown>;
   onMarcarFallida?: (op: Operacion) => void | Promise<unknown>;
-  onResolverCargo?: (op: Operacion, cobrado: boolean, importe?: number) => void | Promise<unknown>;
+  onResolverCargo?: (intentoId: string, cobrado: boolean, importe?: number) => void | Promise<unknown>;
 }
 
 const fecha = (iso: string): string =>
@@ -93,6 +93,49 @@ export default function TablaOperaciones({
               </td>
               <td className="py-2 pr-3 tabular text-tinta">
                 {textoImporte(op.coste, moneda)}
+                {(op.coste?.cargos || []).map((cargo) => (
+                  <span
+                    key={cargo.intento_id}
+                    data-testid={`cargo-${cargo.intento_id}`}
+                    className={"mt-1 block text-[12px] leading-[16px] " + (cargo.estado === "pendiente" ? "text-aviso" : "text-tinta2")}
+                  >
+                    Intento {cargo.numero}:{" "}
+                    {cargo.estado === "pendiente"
+                      ? `posible cargo sin confirmar · ${textoCoste(cargo.estimado, moneda)}`
+                      : cargo.estado === "sin_cargo"
+                        ? "sin cargo"
+                        : `cobrado ${textoCoste(cargo.importe, moneda)}, apuntado a mano`}
+                    {cargo.estado === "pendiente" && onResolverCargo && (
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        <Boton
+                          pequeno
+                          variante="secundario"
+                          data-testid={`sin-cargo-${cargo.intento_id}`}
+                          onClick={() => onResolverCargo(cargo.intento_id, false)}
+                        >
+                          No hubo cargo
+                        </Boton>
+                        <Boton
+                          pequeno
+                          variante="texto"
+                          data-testid={`con-cargo-${cargo.intento_id}`}
+                          onClick={() => {
+                            const texto = window.prompt(
+                              `Importe cobrado por el intento ${cargo.numero}, según el proveedor (USD):`,
+                              String(cargo.estimado ?? "")
+                            );
+                            if (texto === null) return;
+                            const importe = Number(texto.replace(",", "."));
+                            if (!Number.isFinite(importe) || importe < 0) return;
+                            onResolverCargo(cargo.intento_id, true, importe);
+                          }}
+                        >
+                          Hubo cargo…
+                        </Boton>
+                      </span>
+                    )}
+                  </span>
+                ))}
               </td>
               <td className={`py-2 pr-3 ${colorEstado(op.estado)}`}>
                 {ETIQUETA_ESTADO[op.estado]}
@@ -126,32 +169,6 @@ export default function TablaOperaciones({
                     >
                       Marcar como fallida
                     </Boton>
-                  )}
-                  {op.posible_cargo && onResolverCargo && (
-                    <>
-                      <Boton
-                        pequeno
-                        variante="secundario"
-                        data-testid={`registro-sin-cargo-${op.id}`}
-                        onClick={() => onResolverCargo(op, false)}
-                      >
-                        No hubo cargo
-                      </Boton>
-                      <Boton
-                        pequeno
-                        variante="texto"
-                        data-testid={`registro-con-cargo-${op.id}`}
-                        onClick={() => {
-                          const texto = window.prompt("Importe cobrado según el proveedor (USD):", String(op.coste_estimado ?? ""));
-                          if (texto === null) return;
-                          const importe = Number(texto.replace(",", "."));
-                          if (!Number.isFinite(importe) || importe < 0) return;
-                          onResolverCargo(op, true, importe);
-                        }}
-                      >
-                        Hubo cargo…
-                      </Boton>
-                    </>
                   )}
                   {op.estado === "fallida" && onReintentar && (
                     <Boton
