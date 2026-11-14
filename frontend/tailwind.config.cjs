@@ -16,6 +16,8 @@ module.exports = {
         exito: "var(--color-exito)",
         aviso: "var(--color-aviso)",
         error: "var(--color-error)",
+        sobreAcento: "var(--color-sobre-acento)",
+        mesa: "var(--color-mesa)",
       },
       fontFamily: {
         ui: "var(--font-ui)",

@@ -16,6 +16,7 @@
   relaciones: ["9:16", "16:9", "1:1", "4:5"]
   coste: {unidad: imagen, valor: 0.04, moneda: USD, verificado: false}
   formato: {png_lado_largo: 1280}
+  max_lote: 3
 
 - id: sim-editar
   nombre_visible: "Simulado · editar imagen"

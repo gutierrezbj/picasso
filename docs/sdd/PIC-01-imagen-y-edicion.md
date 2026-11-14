@@ -353,3 +353,27 @@ Cada una pasará a la especificación de su módulo cuando se abra.
 
 Ninguna cambia la paleta ni añade funciones por aparecer en estos repositorios.
 
+## 13. PIC-03 construido (14-11-2026)
+
+Autorizado por Juan sobre `b4f4b67`. Rama `pic-03/mesa`, que integra PIC-02 (`5039153`). Sin fusionar ni desplegar; ninguna generación de pago.
+
+**Qué se construyó**
+- **Mesa** sobre React Flow (`componentes/mesa/`): versiones como tarjetas con la imagen real, flechas con la instrucción (recortada con «…»; al pulsarla se abre la versión y el texto completo se lee en el inspector, sin pasar el ratón) y tarjetas de «Generando…», «Falló», «Sin confirmar» y «Reintento sin autorizar» colgadas de su origen.
+- **Colocador propio** (`lib/mesa.ts`, D15): bosque con varias raíces, orden por fecha e id; sin dependencias nuevas.
+- **Barra inferior** con alcance siempre visible, referencias, texto, «Mejorar» con su coste, **Dirección** desplegable (encuadre, ángulo, luz, óptica, formato y cantidad hasta `limite_lote`; en edición, la zona) y el botón con el precio.
+- **Lateral único** con «Imagen · Vn» (inspector con la imagen real, cambio pedido, ★, Descartar, Comparar, enviadas y del linaje, «Cómo se hizo» con cargos por intento, nota) y «Director de Studio», que dice honestamente que aún no está disponible: no hay sugerencias simuladas.
+- **Ajustar desde el Taller** (`POST /tomas/{id}/ajustar` con una toma de carpeta): edita en la misma carpeta, envía solo la imagen de origen, añade zona y cláusula, y autoriza con el clic.
+- **`id_peticion`** en generar y ajustar, con índice único `(espacio_id, id_peticion)`: la repetición devuelve la operación ya creada (200). La interfaz repite una petición cortada por la red con el mismo identificador.
+- **`max_lote`** (D16) en el catálogo, validado en el servidor (422 sin operación ni reserva). `sim-imagen` lo fija en 3; el resto usa 4.
+- **ComparadorTomas** tal cual (D17). Paleta oscura como tokens dentro del Taller (`.tema-studio`); el resto de pantallas no cambia.
+
+**Pruebas (todas en verde, imagen `picasso-pruebas-backend`, base `picasso_pruebas`)**
+- pytest, p1–p16 y **p17_mesa** (nuevo): V1 con referencia y dirección; mismo `id_peticion` y dos POST simultáneos → una operación; dirección desconocida → 422; `max_lote` 4 → 422 sin reserva, 3 → 3 × tarifa; V1 → V2 → V4 y rama V3; solo se envía la imagen de origen; V1 intacta (mismo medio y misma huella); cláusula y zona en lo enviado; autorizar dos veces → 409; varias ★, descartar y nota persisten; fallo → reintento con clave nueva que espera autorización; «Quitar»; incierta → Comprobar sin reenviar; marcada fallida → posible cargo del intento 1 que el reintento no oculta.
+- `frontend/pruebas/mesa.test.ts` con `node --test` (7): 1, 3 y 12 versiones, tres raíces sin mezclarse, 25 barajados de la respuesta con posiciones idénticas, empate por id y origen fuera de la carpeta.
+
+**Recorrido en navegador** (imágenes `picasso-pruebas-*`, base aislada `picasso_verif`, borrada al terminar; grabación `docs/maquetas/pic-01/PIC-03-recorrido.gif`): referencia y dirección, doble clic en Generar (una operación), edición V2 con doble clic (una), rama V3, V4, ★, comparar con el origen, pestaña Director con la selección conservada, error y diálogo de reintento con precio, recargar la página (árbol, ★ y estados iguales), «Sin confirmar» → marcar fallida con posible cargo en el gasto, reintento autorizado y Comprobar.
+
+**Corregido al operar:** las tarjetas no respondían al clic (React Flow desactiva los nodos sin manejador); el diálogo no oscurecía el fondo en la paleta oscura; con referencias que el modelo no admite, el botón ahora se bloquea y lo dice antes de enviar; la carpeta se refresca cada 10 s aunque no haya nada en marcha.
+
+**Pendiente de la validación de Juan (§7.3):** el recorrido con Nano Banana Pro real (4 generaciones, tarifa verificada ese día) y su juicio sobre el sombrero, el resto de la imagen, el árbol y la rejilla.
+

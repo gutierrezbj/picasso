@@ -414,6 +414,7 @@ export interface CosteCatalogo {
   valor: string | null;
   moneda: string;
   verificado: boolean;
+  verificado_en?: string | null;
 }
 
 export interface ModeloCatalogo {
@@ -435,6 +436,8 @@ export interface ModeloCatalogo {
   elegible: boolean;
   motivo_no_elegible: string | null;
   precio_simulado: boolean;
+  max_lote?: number | null;
+  limite_lote?: number;
 }
 
 export interface GastoProyecto {

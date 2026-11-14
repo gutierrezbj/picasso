@@ -792,6 +792,9 @@ class PeticionTaller(BaseModel):
     relacion: str = "9:16"
     cuantas: int = Field(default=1, ge=1, le=4)
     confirmado_por_encima_del_presupuesto: bool = False
+    id_peticion: Optional[str] = Field(default=None, max_length=64)
+    direccion: dict[str, str] = Field(default_factory=dict)
+    simular_resultado: SimulacionPrueba = SimulacionPrueba.normal
 
 
 class VozDialogo(BaseModel):
@@ -862,6 +865,9 @@ class PrepararOperacion(BaseModel):
     retrato_medio_id: Optional[str] = None
     prompt_manual: Optional[str] = None
     simular_resultado: SimulacionPrueba = SimulacionPrueba.normal
+    id_peticion: Optional[str] = Field(default=None, max_length=64)
+    zona: Optional[str] = None
+    confirmado_por_encima_del_presupuesto: bool = False
 
 
 class EditarOperacion(BaseModel):

@@ -58,3 +58,12 @@ def test_fal_una_peticion_por_variante():
     assert [d for d, _ in encargos] == ["fal-ai/nano-banana-pro"] * 2
     assert "Encuadre: Primer plano." in encargos[0][1]["prompt"]
     assert "Plano medio" not in encargos[0][1]["prompt"]
+
+
+def test_max_lote_opcional_en_el_catalogo():
+    from app.motor import catalogo as cat
+
+    assert cat.modelo("sim-imagen").max_lote == 3
+    assert cat.limite_lote(cat.modelo("sim-imagen")) == 3
+    sin_limite = cat.modelo("fal-nano-banana-pro")
+    assert sin_limite.max_lote is None and cat.limite_lote(sin_limite) == cat.LOTE_MAXIMO == 4

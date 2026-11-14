@@ -64,8 +64,9 @@ app.include_router(taller.router)
 async def al_arrancar() -> None:
     """El worker retoma lo que quedó a medias. Nunca reenvía nada (§9.4)."""
     from app.api.voces import asegurar_ids_dialogos
-    from app.motor import worker
+    from app.motor import operaciones, worker
 
+    await operaciones.asegurar_indices()
     await asegurar_ids_dialogos()
     await exportaciones.reparar_al_arrancar()
     await worker.retomar()

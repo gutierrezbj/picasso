@@ -75,6 +75,35 @@
   --color-exito: #3f6b4f;
   --color-aviso: #8a5a0b;
   --color-error: #b42318;
+  --color-sobre-acento: #ffffff;
+}
+
+/* Picasso Studio (PIC-01 D11): grafito, blanco cálido y ámbar. Solo dentro del Taller. */
+.tema-studio {
+  --color-fondo: #141414;
+  --color-superficie: #222222;
+  --color-superficie-2: #2b2b2b;
+  --color-tinta: #f5f0e8;
+  --color-tinta-2: #b8b2a9;
+  --color-tinta-3: #8f8a82;
+  --color-linea: #3d3d3d;
+  --color-acento: #f5a623;
+  --color-acento-tinta: #ffb740;
+  --color-acento-suave: #3a2e14;
+  --color-exito: #81b88b;
+  --color-aviso: #f5a623;
+  --color-error: #e57373;
+  --color-sobre-acento: #191919;
+  --color-mesa: #191919;
+  --elevation-card: 0 4px 20px rgba(0, 0, 0, 0.35);
+  --elevation-context: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  color-scheme: dark;
+}
+
+.tema-studio .bg-tinta\/25 {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 * {

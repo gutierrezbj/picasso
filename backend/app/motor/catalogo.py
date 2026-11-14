@@ -29,6 +29,7 @@ CLAVES_PROVEEDOR: dict[str, str] = {
 }
 
 UNIDADES = ("imagen", "segundo", "caracter", "operacion")
+LOTE_MAXIMO = 4
 
 
 class ErrorCatalogo(RuntimeError):
@@ -79,6 +80,7 @@ class ModeloCatalogo(BaseModel):
     formato: Formato = Field(default_factory=Formato)
     plantilla: bool = False
     nota: Optional[str] = None
+    max_lote: Optional[int] = Field(default=None, ge=1)
 
 
 def _leer() -> list[ModeloCatalogo]:
@@ -164,3 +166,8 @@ def estimar(m: ModeloCatalogo, entradas: EntradaOperacion) -> Optional[Decimal]:
     elif m.coste.unidad == "caracter":
         unidades = Decimal(len(entradas.texto or ""))
     return a_centimos(valor * unidades)
+
+
+def limite_lote(m: ModeloCatalogo) -> int:
+    """PIC-03 D16: cuántas peticiones de una imagen admite un lote del Taller."""
+    return min(m.max_lote or LOTE_MAXIMO, LOTE_MAXIMO)

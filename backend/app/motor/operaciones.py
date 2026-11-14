@@ -16,6 +16,8 @@ import hashlib
 import json
 from typing import Any, Optional
 
+from pymongo.errors import DuplicateKeyError
+
 from app.db import db, sin_id
 from app.dominio.modelos import (
     EntradaOperacion,
@@ -219,7 +221,13 @@ async def crear_operacion(
     correccion_id: Optional[str] = None,
     toma_origen_id: Optional[str] = None,
     es_exploracion: bool = False,
+    id_peticion: Optional[str] = None,
+    extra: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
+    if id_peticion:
+        previa = await por_peticion(espacio_id, id_peticion)
+        if previa:
+            return previa
     op = Operacion(
         proyecto_id=proyecto_id,
         espacio_id=espacio_id,
@@ -236,9 +244,36 @@ async def crear_operacion(
     doc = await _con_coste(op.model_dump(mode="json"), entradas)
     doc["estado"] = EstadoOperacion.presupuestada.value
     doc["clave_idempotencia"] = clave_idempotencia(doc["id"], 1, entradas)
+    doc.update(extra or {})
+    if id_peticion:
+        doc["id_peticion"] = id_peticion
     doc["_id"] = doc["id"]
-    await db.operaciones.insert_one(doc)
+    try:
+        await db.operaciones.insert_one(doc)
+    except DuplicateKeyError:
+        previa = await por_peticion(espacio_id, id_peticion) if id_peticion else None
+        if previa is None:
+            raise
+        return previa
     return await vista(sin_id(doc))
+
+
+async def por_peticion(espacio_id: str, id_peticion: str) -> Optional[dict[str, Any]]:
+    """PIC-03 §5.3: la misma petición (doble clic, reconexión) devuelve la
+    operación que ya creó, marcada como repetida."""
+    previa = await db.operaciones.find_one({"espacio_id": espacio_id, "id_peticion": id_peticion})
+    if not previa:
+        return None
+    return {**await vista(sin_id(previa)), "repetida": True}
+
+
+async def asegurar_indices() -> None:
+    await db.operaciones.create_index(
+        [("espacio_id", 1), ("id_peticion", 1)],
+        unique=True,
+        partialFilterExpression={"id_peticion": {"$type": "string"}},
+        name="peticion_unica",
+    )
 
 
 async def vista(op: dict[str, Any]) -> dict[str, Any]:

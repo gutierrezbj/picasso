@@ -961,7 +961,7 @@ async def editar_toma(toma_id: str, datos: TomaEditar):
 
 
 @router.post("/tomas/{toma_id}/ajustar", status_code=201)
-async def ajustar_toma(toma_id: str, datos: PrepararOperacion):
+async def ajustar_toma(toma_id: str, datos: PrepararOperacion, response: Response):
     """§7.6: `Ajustar` sobre una toma de imagen prepara `editar_imagen` con esa
     toma como entrada. El resultado es una toma nueva; la original se conserva."""
     doc = await db.tomas.find_one({"_id": toma_id})
@@ -972,6 +972,10 @@ async def ajustar_toma(toma_id: str, datos: PrepararOperacion):
         raise HTTPException(409, "Solo se ajustan tomas de imagen.")
     if not (datos.instruccion or "").strip():
         raise HTTPException(422, "Escribe qué hay que ajustar.")
+    if doc.get("carpeta_id"):
+        from app.api import taller
+
+        return await taller.editar_en_carpeta(doc, datos, response)
     datos.destino_id = doc["plano_id"]
     datos.accion = Accion.editar_imagen
     datos.toma_origen_id = toma_id
