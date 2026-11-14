@@ -7,7 +7,24 @@
 Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulos; el Director como ayuda opcional; aplazado no es desaprobado; tabla de estado única.
 
 ## Decisiones de Juan incorporadas en la revisión 3 (14-11-2026)
-1. **Paleta:** grafito, blanco cálido y ámbar.
+1. **Paleta oscura** (grafito, blanco cálido y ámbar), con valores propuestos para pasar a código el 14-11-2026. No se extrajeron de la imagen de referencia. No hay fondos blancos ni crema: el blanco cálido es solo para el texto.
+
+   | Uso | HEX |
+   |---|---|
+   | Fondo general | `#141414` |
+   | Lienzo / Mesa | `#191919` |
+   | Paneles y barra inferior | `#222222` |
+   | Campos y tarjetas | `#2B2B2B` |
+   | Bordes discretos | `#3D3D3D` |
+   | Texto principal (blanco cálido) | `#F5F0E8` |
+   | Texto secundario | `#B8B2A9` |
+   | Ámbar: acción y selección | `#F5A623` |
+   | Ámbar al pasar el cursor | `#FFB740` |
+   | Texto sobre botón ámbar | `#191919` |
+   | Error | `#E57373` |
+   | Éxito | `#81B88B` |
+
+   En código vivirán como tokens de tema. Hoy el maestro (§0.9) dice «modo claro por defecto»; la decisión de Juan del 14-11-2026 lo sustituye para Picasso Studio y queda anotada en D11.
 2. **La Mesa es la superficie principal.** La creación entra por una **barra inferior**, que sustituye a los tres pasos de la izquierda.
 3. **Dirección desplegable** junto a la entrada, con controles según el trabajo: para una imagen nueva, encuadre, ángulo, luz, óptica, formato y cantidad; para una edición, la zona del cambio, con el formato del origen y una sola imagen.
 4. **El alcance siempre visible** en la barra: «Nueva imagen» o «Editar V2». Seleccionar una versión cambia el alcance; «Nueva imagen» lo devuelve.
@@ -205,6 +222,6 @@ Pruebas operadas por Juan en la interfaz:
 | D8 | Una imagen por edición | Propuesta recomendada que se mantiene |
 | D9 | Una «incierta» marcada fallida queda como «posible cargo sin confirmar» | Recomendación nueva |
 | D10 | La URL de la carpeta (`?carpeta=`) para reabrir directamente | Recomendación nueva |
-| D11 | Paleta grafito, blanco cálido y ámbar; barra inferior; dirección desplegable; alcance visible; lateral | Decidido por Juan (14-11-2026) |
+| D11 | Paleta oscura (tabla de la revisión 3), barra inferior, dirección desplegable, alcance visible y lateral | Decidido por Juan (14-11-2026). Sustituye al «modo claro por defecto» del §0.9 del maestro para Picasso Studio |
 | D12 | Director de Studio a demanda, por tipo de trabajo; las sugerencias preparan sin gastar | Decidido por Juan (14-11-2026); en la maqueta solo como ejemplo, sin implementar |
 | D13 | ¿Dónde vive «Mejorar mi descripción»? | Recomendación: dentro del Director de Studio, como una sugerencia más. Hasta que exista, se queda como botón en la barra con su coste de texto visible |

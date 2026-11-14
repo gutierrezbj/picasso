@@ -13,7 +13,7 @@ La versión navegable está en https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG
 
 ## Revisión 3 (14-11-2026): `Studio16.dc.html`, navegable
 
-Tablero «16 · Studio (navegable) · rev. 3», con el botón Play. Paleta grafito, blanco cálido y ámbar. La Mesa ocupa toda la pantalla y la creación va en la barra inferior: alcance siempre visible (Nueva imagen o Editar Vn), referencias, texto, «Dirección ▾» con controles según el alcance, y el botón con el precio. El lateral sirve para inspeccionar (★, Descartar, lo enviado frente a lo del linaje, «Cómo se hizo», nota y Comparar). El **Director de Studio** se abre a demanda, con los modos Fotografía, Publicidad y Cine; es un ejemplo ilustrativo y no está implementado. «Preparar» rellena la dirección o el texto sin generar ni gastar.
+Tablero «16 · Studio (navegable) · rev. 3», con el botón Play. Paleta oscura con los valores de la revisión 3 (fondo `#141414`, Mesa `#191919`, paneles `#222222`, ámbar `#F5A623`). La Mesa ocupa toda la pantalla y la creación va en la barra inferior: alcance siempre visible (Nueva imagen o Editar Vn), referencias, texto, «Dirección ▾» con controles según el alcance, y el botón con el precio. El lateral sirve para inspeccionar (★, Descartar, lo enviado frente a lo del linaje, «Cómo se hizo», nota y Comparar). El **Director de Studio** se abre a demanda, con los modos Fotografía, Publicidad y Cine; es un ejemplo ilustrativo y no está implementado. «Preparar» rellena la dirección o el texto sin generar ni gastar.
 
 Una franja de prototipo permite simular un fallo, un «sin confirmar» y cerrar y volver a abrir la carpeta. Nada se genera de verdad.
 
