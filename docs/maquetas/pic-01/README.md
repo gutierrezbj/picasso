@@ -18,3 +18,12 @@ Tablero «16 · Studio (navegable) · rev. 3», con el botón Play. Paleta oscur
 Una franja de prototipo permite simular un fallo, un «sin confirmar» y cerrar y volver a abrir la carpeta. Nada se genera de verdad.
 
 La lógica del componente se probó fuera del lienzo con Node: crear, editar, comparar, rama con error, preparar del Director y reabrir. La imagen renderizada no la he revisado.
+
+## Revisión 4 (14-11-2026): `Studio17.dc.html`, validación visual antes de PIC-03
+
+Tablero «17 · Studio (navegable) · rev. 4 · lateral único», con el botón Play. Parte del 16 y cambia solo esto:
+- **Un único lateral** con dos pestañas, «Imagen · Vn» y «Director de Studio». Cambiar de pestaña no toca la selección ni el alcance; el Director dice sobre qué trabaja («Editar V1» o «Nueva imagen»).
+- Con el Director abierto, pulsar otra versión cambia su contexto sin cerrarlo. ✕ cierra el lateral y conserva la selección; «Nueva imagen» en la barra la quita.
+- Se corrigen cuatro controles que tenían fondo blanco cálido con texto blanco (pestaña activa, botones de la franja de prototipo y «Entendido»): pasan a `#2B2B2B`, y la pestaña activa lleva un filete ámbar.
+
+Probado: la lógica con Node (13 comprobaciones de pestañas, selección, Preparar, cierre y reapertura) y el recorrido renderizado en el lienzo publicado (V1, pestaña Director, Preparar abre Dirección con «Preparado por el Director»).

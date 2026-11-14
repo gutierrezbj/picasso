@@ -1,8 +1,8 @@
 # PIC-01 · Módulo 1: imagen y edición desde resultados
 
-**Estado:** especificación revisada (revisión 3), sin código.
-- Revisión 1: `ef5e1d3`. Revisión 2: `0a0fd09`. Revisión 3: 14-11-2026, con las decisiones de Juan sobre la interfaz.
-- Maqueta navegable: https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG, tablero **«16 · Studio (navegable)»**, con el botón Play. Fuentes en `docs/maquetas/pic-01/`. Los tableros 10–15 (revisión 2) quedan como historia.
+**Estado:** especificación revisada (revisión 4), sin código. PIC-03 no empieza hasta que Juan valide el tablero 17 y cierre las decisiones D14–D17.
+- Revisión 1: `ef5e1d3`. Revisión 2: `0a0fd09`. Revisión 3: `457235f`, con las decisiones de Juan sobre la interfaz. Revisión 4: 14-11-2026, lateral único y evaluación de referencias externas (§11 y §12).
+- Maqueta navegable: https://claude.ai/artifact/9sKRMtyLSwpq171yPR6mfG, tablero **«17 · Studio (navegable) · rev. 4 · lateral único»**, con el botón Play. Fuentes en `docs/maquetas/pic-01/`. El 16 (revisión 3) y los 10–15 (revisión 2) quedan como historia.
 
 Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulos; el Director como ayuda opcional; aplazado no es desaprobado; tabla de estado única.
 
@@ -29,6 +29,7 @@ Decisiones consolidadas en el maestro (§1.00 y §21): construcción por módulo
 3. **Dirección desplegable** junto a la entrada, con controles según el trabajo: para una imagen nueva, encuadre, ángulo, luz, óptica, formato y cantidad; para una edición, la zona del cambio, con el formato del origen y una sola imagen.
 4. **El alcance siempre visible** en la barra: «Nueva imagen» o «Editar V2». Seleccionar una versión cambia el alcance; «Nueva imagen» lo devuelve.
 5. **Lateral** para inspeccionar la versión: imagen, ★, Descartar, referencias enviadas y del linaje, «Cómo se hizo», nota y «Comparar con el origen».
+   **Revisión 4:** es **un único lateral** con dos pestañas, «Imagen · Vn» y «Director de Studio». Cambiar de pestaña conserva la selección y el alcance; el Director indica sobre qué trabaja («Editar V1» o «Nueva imagen»). Con el Director abierto, seleccionar otra versión cambia su contexto sin cerrarlo. ✕ cierra el lateral y conserva la selección; «Nueva imagen» en la barra la quita (D14).
 6. **El asistente se llama «Director de Studio».** Se abre a demanda desde la barra superior y orienta según el trabajo: fotografía, publicidad o cine.
 7. **Las sugerencias preparan cambios revisables** en la dirección o en el texto. Aplicar una sugerencia no genera ni gasta. Generar exige pulsar el botón con el coste visible.
 
@@ -225,3 +226,119 @@ Pruebas operadas por Juan en la interfaz:
 | D11 | Paleta oscura (tabla de la revisión 3), barra inferior, dirección desplegable, alcance visible y lateral | Decidido por Juan (14-11-2026). Sustituye al «modo claro por defecto» del §0.9 del maestro para Picasso Studio |
 | D12 | Director de Studio a demanda, por tipo de trabajo; las sugerencias preparan sin gastar | Decidido por Juan (14-11-2026); en la maqueta solo como ejemplo, sin implementar |
 | D13 | ¿Dónde vive «Mejorar mi descripción»? | Recomendación: dentro del Director de Studio, como una sugerencia más. Hasta que exista, se queda como botón en la barra con su coste de texto visible |
+| D14 | Un único lateral que alterna entre Imagen y Director de Studio, conservando la selección (tablero 17) | Pedido por Juan (14-11-2026); pendiente de su validación visual |
+| D15 | Colocación del árbol en la Mesa: función propia de árbol ordenado sobre React Flow, sin dagre ni d3-hierarchy (§12.1) | Recomendación |
+| D16 | Catálogo: añadir solo `max_salidas` para que «Cantidad» en Dirección no ofrezca más de lo que el modelo admite; resoluciones con precio y reglas cruzadas se aplazan al módulo de vídeo (§12.2) | Recomendación; el valor se verifica contra fal antes de escribirlo |
+| D17 | Comparar: `ComparadorTomas` tal cual; el deslizador antes/después queda como mejora posterior | Decidido por Juan (14-11-2026) |
+
+## 11. PIC-03 en el proceso SDD-01 a SDD-08
+
+Mismo esquema que `SDD-director-de-escena.md`. Este documento hace de SDD de PIC-03; no se abre otro.
+
+| Paso | Dónde está | Estado |
+|---|---|---|
+| SDD-01 Problema | §1 (recorrido) y caso del sombrero (§8) | Escrito |
+| SDD-02 Alcance y límites | Decisiones de la revisión 3; fuera: Director implementado, vídeo, montaje | Escrito |
+| SDD-03 Arquitectura | §2 (reutilización), §5.3 (`id_peticion`), §12.1 (Mesa sobre React Flow) | Escrito; §12.1 nuevo en la revisión 4 |
+| SDD-04 Decisiones (ADR) | §10, D1–D17 | Abiertas D14 (validación visual), D15 y D16 |
+| SDD-05 Backlog con criterios | §8 (criterios del sombrero) y §9 | Escrito |
+| SDD-06 Reglas de desarrollo | CLAUDE.md del proyecto; paleta en tokens (D11); sin dependencias nuevas sin aprobar (§12) | Escrito |
+| SDD-07 Plan de pruebas | §7 (motor, interfaz y validación de Juan) más las comprobaciones de §12 | Escrito |
+| SDD-08 Despliegue | Rama propia sin fusionar; imágenes Docker de pruebas `picasso-pruebas-*`; Juan fusiona | Escrito |
+
+**Puerta para empezar código:** Juan valida el tablero 17 y cierra D14–D16.
+
+## 12. Referencias externas evaluadas (14-11-2026)
+
+Referencias para reutilizar piezas, no para cambiar el stack ni ampliar el alcance. No se ha instalado nada ni copiado código. **Leído** significa leído en GitHub, npm o la documentación oficial el 14-11-2026. **Probado** significa ejecutado. Picasso usa React 19.3.0 (`yarn.lock`), Vite y `@xyflow/react` 12.12.0.
+
+### 12.1 Para PIC-03
+
+**React Flow (`@xyflow/react`, MIT), ya instalado.**
+- **Problema que resuelve:** el lienzo de la Mesa (zoom, desplazamiento, nodos y aristas).
+- **Qué reutilizamos:** `SuperficieLienzo.tsx` y el patrón de `lib/lienzo.ts`: ids estables, posición automática solo si no hay posición guardada, nodos propios.
+- **Qué hay que adaptar:**
+  - un tipo de nodo «versión», con la imagen, ★, el estado y el pie de coste;
+  - una arista con la instrucción como etiqueta;
+  - la selección, que maneja el alcance de la barra;
+  - los colores de la paleta oscura, como tokens.
+- **Dependencias:** ninguna nueva.
+- **Cómo se comprueba:**
+  - una prueba de interfaz en simulado: crear V1, editar V2 y crear una rama V3;
+  - el árbol se ve igual después de cerrar y volver a abrir la carpeta.
+- **Estado:** leído y en uso en el lienzo de planos. En la Mesa no está probado.
+
+**Dagre (`@dagrejs/dagre` 3.1.3, MIT; única dependencia `@dagrejs/graphlib`; no depende de React).**
+- **Problema que resuelve:** colocar automáticamente las versiones y sus ramas.
+- **Hechos leídos:**
+  - React Flow lo recomienda para árboles y tiene un ejemplo oficial.
+  - Admite nodos de distinto tamaño y nodos con varios padres.
+  - Las alternativas que lista React Flow son d3-hierarchy (ISC), que exige una sola raíz y nodos iguales, y elkjs (EPL-2.0 o GPL-3.0), que **se descarta por la licencia**.
+- **Encaje en la Mesa:** el árbol de la Mesa es puro. Cada versión tiene un único origen, la raíz es la imagen nueva y las tarjetas miden lo mismo. La maqueta ya lo coloca con una función de unas quince líneas (hijos a la derecha, una fila por hoja), y eso cumple.
+- **Recomendación (D15):**
+  - No añadir dagre ni d3-hierarchy.
+  - Llevar esa función a `lib/mesa.ts` con su prueba.
+  - Dagre se reconsidera solo si llega una versión con dos orígenes (combinar V3 y V5) o tarjetas de alto variable.
+- **Cómo se comprueba:** una prueba unitaria del colocador con 1, 3 y 12 versiones, que verifique:
+  - que no hay solapes;
+  - que cada hijo queda a la derecha de su origen;
+  - que los hermanos quedan apilados;
+  - que la misma entrada da la misma salida.
+- **Estado:** leído. La función está probada en la maqueta, no en el código.
+
+**Comparador.**
+- **Qué reutilizamos:** `ComparadorTomas.tsx`, tal cual (D17).
+- **Mejora posterior:** el deslizador de sneas/img-comparison-slider (8.0.7, MIT, *web component* sin dependencias). Hay que tener en cuenta dos cosas:
+  - su envoltorio de React (`@img-comparison-slider/react` 8.0.2) no se actualiza desde mayo de 2024 y no declara React;
+  - por eso, cuando llegue, se usaría el elemento directamente.
+- **Cómo se comprobaría:** que las dos imágenes quedan alineadas píxel a píxel con el mismo formato, y que funciona con teclado.
+- **Estado:** leído.
+
+### 12.2 Para Dirección: cómo describe los modelos Open-Generative-AI
+
+Repositorio Anil-matcha/Open-Generative-AI, licencia MIT. Leído en `packages/studio/src/models.js`, `modelCapabilities.js` y `muapi.js`.
+
+**Cómo lo describe:**
+- Un modelo por entrada, agrupados en listas por modo (t2i, i2i, t2v, i2v).
+- Entradas de medios con un máximo para cada tipo (`maxImages`, `maxVideos`, `maxAudios`, último fotograma).
+- `required`, para lo que es obligatorio.
+- `inputs`, con un esquema por parámetro: enumerado, mínimo, máximo y paso.
+- Reglas cruzadas, del tipo «a 1080p, solo 5 s».
+
+**Lo que no se toma:**
+- Todo está atado a MuAPI: el campo `endpoint` es su ruta, el coste lo estima su servidor y las claves y subidas van a su API.
+- No se importan su catálogo, sus precios ni sus endpoints.
+- Claves, autorización, historial y generación siguen en nuestro backend.
+
+**Lo que ya tenemos** en `catalogo_modelos.yaml`:
+- `acciones` cubre el modo.
+- `admite.referencias` cubre el máximo de imágenes.
+- `relaciones` cubre los formatos.
+- `duraciones_s` cubre las duraciones.
+- `coste` con `verificado_en` llega con PIC-02, en la rama `pic-02/medios-y-costes`; en `main` la fecha va todavía en `nota`.
+
+**Lo mínimo que falta para la Dirección de imagen (D16):**
+- Solo `max_salidas`, para que «Cantidad» no ofrezca más de lo que el modelo admite. El valor de Nano Banana Pro se verifica en fal antes de escribirlo; no lo invento.
+- Se aplaza al módulo de vídeo, donde sí hacen falta con Seedance 2.5:
+  - las resoluciones con su precio (en fal, el 4K cuesta el doble);
+  - el rango de duración;
+  - los vídeos y audios de referencia;
+  - las entradas obligatorias;
+  - las reglas cruzadas.
+- **Cómo se comprueba:**
+  - con una prueba del catálogo (el campo se lee y es opcional);
+  - y en la interfaz: con un modelo de `max_salidas: 1`, «Cantidad» no aparece.
+
+### 12.3 Para módulos posteriores (solo anotado; no entra en PIC-03)
+
+Cada una pasará a la especificación de su módulo cuando se abra.
+
+| Pieza | Problema | Qué reutilizaríamos | Qué habría que adaptar | Licencia y dependencias (leído) | Cómo se comprobaría |
+|---|---|---|---|---|---|
+| assistant-ui (`@assistant-ui/react` 0.15.36) | Conversación del Director de Studio | Primitivas sin estilo (`Thread`, `Composer`, `Message`) con `LocalRuntime` contra nuestro backend; no hace falta el Vercel AI SDK | Nuestra piel; propuestas aceptables una a una; contexto del proyecto y aplicación revisable, que son nuestros | MIT; React 18 o 19; arrastra radix-ui, zustand, zod 4 y paquetes propios (unos 3 MB) | Una conversación simulada donde «Preparar» rellena la barra sin gastar; el bundle no crece más de lo aceptado |
+| wavesurfer.js 8.1 + `@wavesurfer/react` 1.0.14 | Ver y recortar voz y sonido | Onda, regiones y línea de tiempo | Regiones atadas al desfase del plano | BSD-3-Clause; sin dependencias; React 18 o 19 | Cargar una voz, marcar una región y que el desfase guardado coincida al fotograma |
+| react-three-fiber 9.8 (+ drei 10, three) | Cámara 3D para bloquear planos | Escena, cámara y controles | Exportar la posición de cámara a la dirección del plano | MIT; **pide React ≥19 y <19.4**: no se sube React a 19.4 sin una R3F que lo admita; drei arrastra muchas dependencias | Mover la cámara y que la dirección del plano reciba ángulo y óptica |
+| OpenCut | Referencia de montaje | Solo ideas de la línea de tiempo | — | MIT; la versión usable (`opencut-classic`) está archivada y el repositorio nuevo se reescribe en Rust con TanStack Start | No se integra |
+
+Ninguna cambia la paleta ni añade funciones por aparecer en estos repositorios.
+
