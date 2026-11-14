@@ -98,7 +98,7 @@
   admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 6, audio: false}
   duraciones_s: []
   relaciones: ["9:16", "16:9", "1:1", "4:5"]
-  coste: {unidad: imagen, valor: 0.15, moneda: USD, verificado: true}
+  coste: {unidad: imagen, valor: 0.15, moneda: USD, verificado: true, verificado_en: "2026-10-13"}
   formato: {png_lado_largo: 2048}
   nota: "Precio publicado en fal.ai/models/fal-ai/nano-banana-pro, verificado el 13-10-2026."
 
@@ -111,7 +111,7 @@
   admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
   duraciones_s: []
   relaciones: ["9:16", "16:9", "1:1", "4:5"]
-  coste: {unidad: segundo, valor: 0.16, moneda: USD, verificado: true}
+  coste: {unidad: segundo, valor: 0.16, moneda: USD, verificado: true, verificado_en: "2026-10-14"}
   formato: {fps: 25, lado_largo: 1280, hz: 48000}
   nota: "Precio publicado en fal.ai/models/fal-ai/bytedance/omnihuman/v1.5, verificado el 14-10-2026. La duración la marca la voz."
 
@@ -124,7 +124,7 @@
   admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
   duraciones_s: []
   relaciones: ["9:16", "16:9", "1:1", "4:5"]
-  coste: {unidad: segundo, valor: 0.115, moneda: USD, verificado: true}
+  coste: {unidad: segundo, valor: 0.115, moneda: USD, verificado: true, verificado_en: "2026-10-14"}
   formato: {fps: 25, lado_largo: 1280, hz: 48000}
   nota: "Precio publicado en fal.ai/models/fal-ai/kling-video/ai-avatar/v2/pro, verificado el 14-10-2026. Admite prompt."
 
@@ -137,7 +137,7 @@
   admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
   duraciones_s: []
   relaciones: []
-  coste: {unidad: caracter, valor: 0.00008, moneda: USD, verificado: true}
+  coste: {unidad: caracter, valor: 0.00008, moneda: USD, verificado: true, verificado_en: "2026-10-14"}
   formato: {hz: 44100}
   nota: "Precio publicado en elevenlabs.io/pricing/api, verificado el 14-10-2026. Con voces clonadas al instante se parece más a la persona que v3 (prueba con Tania, 14-10)."
 
@@ -148,7 +148,7 @@
   admite: {primer_fotograma: false, ultimo_fotograma: false, referencias: 0, audio: true}
   duraciones_s: []
   relaciones: []
-  coste: {unidad: caracter, valor: 0.00008, moneda: USD, verificado: true}
+  coste: {unidad: caracter, valor: 0.00008, moneda: USD, verificado: true, verificado_en: "2026-10-14"}
   formato: {hz: 44100}
   nota: "Precio publicado en elevenlabs.io/pricing/api, verificado el 14-10-2026. Máximo 5.000 caracteres."
 

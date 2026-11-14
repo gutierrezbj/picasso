@@ -167,7 +167,7 @@ async def tomas_de_carpeta(carpeta_id: str):
                 "texto": (op.get("taller") or {}).get("texto"),
                 "referencias": (op.get("taller") or {}).get("referencias") or [],
                 "relacion": (op.get("entradas") or {}).get("relacion_aspecto"),
-                "coste": op.get("coste_real") if op.get("coste_real") is not None else op.get("coste_estimado"),
+                "coste": ops.coste_de(op) if op else None,
             }
         )
     en_marcha = [

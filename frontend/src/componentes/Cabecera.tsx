@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Settings, Receipt } from "lucide-react";
 import IndicadorGuardado from "./IndicadorGuardado";
 import { formatoMoneda } from "../lib/formato";
+import { textoGasto } from "./motor/comun";
 
 // Cabecera fija (§5.3). Ubicación pulsable, indicador de guardado y, dentro de un
 // proyecto, el gasto (siempre visible aunque sea 0 — precisión del usuario).
@@ -17,7 +18,7 @@ interface Props {
   migas?: Miga[];
   gasto?: number | null;
   moneda?: string;
-  gastoDetalle?: { real: number; reservado: number; total: number; sin_verificar: number } | null;
+  gastoDetalle?: { informado: number; estimado: number; reservado: number; posible_cargo: number; total: number; sin_verificar: number } | null;
 }
 
 export default function Cabecera({
@@ -71,12 +72,7 @@ export default function Cabecera({
         {gasto !== null && (
           <span
             data-testid="indicador-gasto"
-            title={
-              gastoDetalle
-                ? `${formatoMoneda(gastoDetalle.real, moneda)} cobrado + ` +
-                  `${formatoMoneda(gastoDetalle.reservado, moneda)} reservado`
-                : undefined
-            }
+            title={gastoDetalle ? textoGasto(gastoDetalle, moneda) : undefined}
             className="tabular text-[14px] leading-[20px] text-tinta2"
           >
             Gasto: {formatoMoneda(gasto, moneda)}

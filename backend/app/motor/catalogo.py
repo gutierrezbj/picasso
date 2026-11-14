@@ -42,6 +42,7 @@ class Coste(BaseModel):
     valor: Optional[Decimal] = None
     moneda: str = "USD"
     verificado: bool = False
+    verificado_en: Optional[str] = None
 
 
 class Admite(BaseModel):

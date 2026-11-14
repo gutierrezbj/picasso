@@ -1,3 +1,4 @@
+import { textoGasto } from "../componentes/motor/comun";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -55,7 +56,7 @@ export default function Registro() {
     queryFn: () => api.operaciones(filtros),
     refetchInterval: 6000,
   });
-  const { data: totales } = useQuery({
+  const { data: totales, refetch: refetchTotales } = useQuery({
     queryKey: ["registro-global-totales", filtros],
     queryFn: () => api.totalesRegistro(filtros),
     refetchInterval: 6000,
@@ -66,7 +67,7 @@ export default function Registro() {
     if (que === "comprobar") await api.comprobarOperacion(op.id);
     if (que === "reintentar") await api.reintentarOperacion(op.id);
     if (que === "fallida") await api.marcarFallida(op.id);
-    await refetch();
+    await Promise.all([refetch(), refetchTotales()]);
   };
 
   return (
@@ -76,7 +77,7 @@ export default function Registro() {
         <h1 className="text-4xl leading-[44px] font-semibold text-tinta">Registro</h1>
         <p className="mt-3 max-w-[68ch] text-base leading-[24px] text-tinta2">
           Todo lo que ha pasado por el motor: qué se pidió, a qué modelo, a qué plano fue, qué se
-          estimó y qué se cobró.
+          estimó y qué importe informó el proveedor.
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -144,6 +145,11 @@ export default function Registro() {
                 en {totales.operaciones} operaciones
               </span>
             </p>
+            {totales.capas && (
+              <p className="mt-1 text-[13px] leading-[18px] text-tinta2" data-testid="totales-capas">
+                {textoGasto(totales.capas, moneda)}
+              </p>
+            )}
             {totales.sin_verificar > 0 && (
               <p className="mt-1 text-[13px] leading-[18px] text-aviso">
                 {totales.sin_verificar} con coste sin verificar.
@@ -188,6 +194,10 @@ export default function Registro() {
             onComprobar={(op) => accion(op, "comprobar")}
             onReintentar={(op) => accion(op, "reintentar")}
             onMarcarFallida={(op) => accion(op, "fallida")}
+            onResolverCargo={async (intentoId, cobrado, importe) => {
+              await api.resolverCargo(intentoId, { cobrado, importe });
+              await Promise.all([refetch(), refetchTotales()]);
+            }}
           />
         </div>
       </main>

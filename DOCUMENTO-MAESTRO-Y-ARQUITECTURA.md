@@ -1103,7 +1103,7 @@ Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-202
 | §7.6: Ajustar una toma (editar imagen) | Aprobada (24-09-2026) | Parcial: solo en el lienzo de un plano | p8 | Pendiente | **1** (PIC-01 lo generaliza) |
 | 18.30: control de ingredientes | Decidida (14-10-2026) | Parcial: Taller, reglas simples | p15 | Pendiente | 1 (lo que ya hay) |
 | PIC-01: la Mesa (edición desde resultados, versiones, comparar) | Propuesta (13-11-2026) | No | — | — | **1** |
-| R1 y R2: proteger los medios enlazados; origen del coste (ORD-24) | Propuesta (13-11-2026) | No | — | — | **1** |
+| PIC-02: proteger los medios enlazados (R1); coste en tres capas (R2) (ORD-24) | Pedido por Juan (14-11-2026) | Sí, rama `pic-02/medios-y-costes`, sin fusionar | p16, p8, p13 y batería completa | Pendiente | **1** |
 | 18.3, 18.3b, 18.10, 18.10b, 18.13, 18.15, 18.16, 18.16b, 18.17, 18.18, 18.19, 18.19b, 18.26, 18.27, 18.28 | Aprobadas (07 al 13-10-2026), aplazadas | No | — | — | Posteriores |
 | 18.23: varias tomas del mismo prompt | Aprobada (08-10-2026) | Parcial: Explorar y Taller | p8, p15 | Pendiente | 1 (Taller) |
 | 18.36, 18.37, 18.38 | Aprobadas (22-10-2026), aplazadas | No | — | — | Vídeo |

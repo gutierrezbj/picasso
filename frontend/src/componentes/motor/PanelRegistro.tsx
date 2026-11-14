@@ -1,3 +1,4 @@
+import { textoGasto } from "./comun";
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X, Download } from "lucide-react";
@@ -20,7 +21,7 @@ export default function PanelRegistro({ proyectoId, onCerrar }: Props) {
     queryFn: () => api.operaciones(filtros),
     refetchInterval: 5000,
   });
-  const { data: totales } = useQuery({
+  const { data: totales, refetch: refetchTotales } = useQuery({
     queryKey: ["registro-totales", proyectoId],
     queryFn: () => api.totalesRegistro(filtros),
     refetchInterval: 5000,
@@ -40,6 +41,7 @@ export default function PanelRegistro({ proyectoId, onCerrar }: Props) {
           {totales && (
             <p className="mt-1 text-[13px] leading-[18px] text-tinta2">
               {totales.operaciones} operaciones · {formatoMoneda(totales.total, moneda)}
+              {totales.capas && ` (${textoGasto(totales.capas, moneda)})`}
               {totales.sin_verificar > 0 && ` · ${totales.sin_verificar} con coste sin verificar`}
             </p>
           )}
@@ -70,15 +72,19 @@ export default function PanelRegistro({ proyectoId, onCerrar }: Props) {
           conProyecto={false}
           onComprobar={async (op) => {
             await api.comprobarOperacion(op.id);
-            await refetch();
+            await Promise.all([refetch(), refetchTotales()]);
           }}
           onReintentar={async (op) => {
             await api.reintentarOperacion(op.id);
-            await refetch();
+            await Promise.all([refetch(), refetchTotales()]);
+          }}
+          onResolverCargo={async (intentoId, cobrado, importe) => {
+            await api.resolverCargo(intentoId, { cobrado, importe });
+            await Promise.all([refetch(), refetchTotales()]);
           }}
           onMarcarFallida={async (op) => {
             await api.marcarFallida(op.id);
-            await refetch();
+            await Promise.all([refetch(), refetchTotales()]);
           }}
         />
       </div>

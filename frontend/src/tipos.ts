@@ -438,10 +438,33 @@ export interface ModeloCatalogo {
 }
 
 export interface GastoProyecto {
-  real: number;
+  informado: number;
+  estimado: number;
   reservado: number;
+  posible_cargo: number;
   total: number;
   sin_verificar: number;
+}
+
+export interface CosteOperacion {
+  estimado: number | null;
+  informado: number | null;
+  fuente: string | null;
+  tarifa_verificada_en: string | null;
+  categoria: "informado" | "estimado" | "historico_tarifa" | "reservado" | "nada";
+  contado: number | null;
+  etiqueta: string;
+  cargos: CargoIntento[];
+  posible_cargo: number;
+  informado_cargos: number;
+}
+
+export interface CargoIntento {
+  intento_id: string;
+  numero: number;
+  estado: "pendiente" | "sin_cargo" | "cobrado";
+  estimado: number | null;
+  importe: number | null;
 }
 
 export interface Presupuesto {
@@ -518,7 +541,10 @@ export interface Operacion {
   coste_estimado: number | null;
   coste_unidad: string;
   coste_verificado: boolean;
+  tarifa_verificada_en?: string | null;
   coste_real: number | null;
+  coste_informado?: number | null;
+  coste_informado_fuente?: string | null;
   estado: EstadoOperacion;
   clave_idempotencia: string;
   correccion_id: string | null;
@@ -538,6 +564,7 @@ export interface Operacion {
   proyecto_nombre?: string | null;
   espacio_nombre?: string | null;
   numero_intentos?: number;
+  coste?: CosteOperacion;
   intentos_detalle?: IntentoOperacion[];
   tomas?: Toma[];
 }
@@ -571,6 +598,7 @@ export interface TotalRegistro {
 
 export interface TotalesRegistro {
   total: number;
+  capas?: { informado: number; estimado: number; reservado: number; posible_cargo: number };
   operaciones: number;
   sin_verificar: number;
   moneda: string;

@@ -22,6 +22,7 @@ from app.dominio.modelos import (
     EstadoOperacion,
     Operacion,
     ahora,
+    nuevo_id,
 )
 from app.motor import catalogo as cat
 from app.motor import estados, eventos
@@ -45,31 +46,100 @@ def clave_idempotencia(operacion_id: str, numero_intento: int, entradas: Entrada
 # --- dinero (§9.4.2 y 3) -----------------------------------------------------
 
 
-async def gasto(proyecto_id: str) -> dict[str, Any]:
-    """Gasto del proyecto: real (cobrado) + reservado (autorizado y sin cerrar)."""
-    real = 0.0
-    reservado = 0.0
-    sin_verificar = 0
-    ops = await db.operaciones.find({"proyecto_id": proyecto_id}).to_list(5000)
-    for op in ops:
-        if op["estado"] == "completada":
-            if op.get("coste_real") is not None:
-                real += float(op["coste_real"])
-            elif op.get("coste_estimado") is not None:
-                real += float(op["coste_estimado"])
-            else:
-                sin_verificar += 1
-        elif op["estado"] in ESTADOS_RESERVA:
-            if op.get("coste_estimado") is not None:
-                reservado += float(op["coste_estimado"])
-            else:
-                sin_verificar += 1
+def _cargos(intentos: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    cargos = []
+    for it in sorted(intentos, key=lambda x: x.get("numero") or 0):
+        if not it.get("posible_cargo") and not it.get("cargo_resuelto"):
+            continue
+        resuelto = it.get("cargo_resuelto")
+        cargos.append(
+            {
+                "intento_id": it.get("id") or it.get("_id"),
+                "numero": it.get("numero"),
+                "estado": resuelto or "pendiente",
+                "estimado": float(it["coste_estimado"]) if it.get("coste_estimado") is not None else None,
+                "importe": float(it["coste_informado"]) if resuelto == "cobrado" and it.get("coste_informado") is not None else None,
+            }
+        )
+    return cargos
+
+
+def coste_de(op: dict[str, Any], intentos: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:
+    """PIC-02 §2: estimación, reserva e importe informado, sin mezclarlos. Los
+    posibles cargos pertenecen a cada intento: un reintento no los oculta."""
+    estimado = op.get("coste_estimado")
+    informado = op.get("coste_informado")
+    fuente = op.get("coste_informado_fuente")
+    if informado is None and op.get("coste_real") is not None:
+        if op.get("proveedor") == "simulado":
+            informado, fuente = op["coste_real"], "simulado"
+        else:
+            fuente = "tarifa_historica"
+    estado = op.get("estado")
+    if estado == "completada" and informado is not None:
+        categoria, contado = "informado", informado
+        etiqueta = "informado por el simulado" if fuente == "simulado" else "informado por el proveedor"
+    elif estado == "completada" and fuente == "tarifa_historica":
+        categoria, contado = "historico_tarifa", op.get("coste_real")
+        etiqueta = "según tarifa (histórico, sin confirmar)"
+    elif estado == "completada":
+        categoria, contado = "estimado", estimado
+        etiqueta = "estimado, sin importe del proveedor"
+    elif estado in ESTADOS_RESERVA:
+        categoria, contado = "reservado", estimado
+        etiqueta = "reservado"
+    else:
+        categoria, contado, etiqueta = "nada", None, ""
+    cargos = _cargos(intentos or [])
+    pendiente = [c for c in cargos if c["estado"] == "pendiente"]
     return {
-        "real": round(real, 2),
-        "reservado": round(reservado, 2),
-        "total": round(real + reservado, 2),
-        "sin_verificar": sin_verificar,
+        "estimado": float(estimado) if estimado is not None else None,
+        "informado": float(informado) if informado is not None else None,
+        "fuente": fuente,
+        "tarifa_verificada_en": op.get("tarifa_verificada_en"),
+        "categoria": categoria,
+        "contado": float(contado) if contado is not None else None,
+        "etiqueta": etiqueta,
+        "cargos": cargos,
+        "posible_cargo": round(sum(c["estimado"] or 0 for c in pendiente), 4),
+        "posible_cargo_sin_precio": sum(1 for c in pendiente if c["estimado"] is None),
+        "informado_cargos": round(sum(c["importe"] or 0 for c in cargos if c["estado"] == "cobrado"), 4),
     }
+
+
+def sumar_capas(lista: list[dict[str, Any]]) -> dict[str, Any]:
+    """Suma por capas una lista de `coste_de`."""
+    capas = {"informado": 0.0, "estimado": 0.0, "reservado": 0.0, "posible_cargo": 0.0}
+    sin_verificar = 0
+    for c in lista:
+        capas["informado"] += c["informado_cargos"]
+        capas["posible_cargo"] += c["posible_cargo"]
+        sin_verificar += c["posible_cargo_sin_precio"]
+        if c["categoria"] == "nada":
+            continue
+        if c["contado"] is None:
+            sin_verificar += 1
+            continue
+        capas["estimado" if c["categoria"] == "historico_tarifa" else c["categoria"]] += c["contado"]
+    capas = {k: round(v, 2) for k, v in capas.items()}
+    return {**capas, "total": round(sum(capas.values()), 2), "sin_verificar": sin_verificar}
+
+
+async def intentos_por_operacion(op_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
+    salida: dict[str, list[dict[str, Any]]] = {}
+    if not op_ids:
+        return salida
+    for it in await db.intentos.find({"operacion_id": {"$in": op_ids}}).to_list(20000):
+        salida.setdefault(it["operacion_id"], []).append(it)
+    return salida
+
+
+async def gasto(proyecto_id: str) -> dict[str, Any]:
+    """Gasto del proyecto en capas: informado, estimado (completadas sin importe
+    y antiguas por tarifa), reservado y posible cargo sin confirmar."""
+    docs = await db.operaciones.find({"proyecto_id": proyecto_id}).to_list(5000)
+    por_op = await intentos_por_operacion([d["_id"] for d in docs])
+    return sumar_capas([coste_de(d, por_op.get(d["_id"], [])) for d in docs])
 
 
 async def presupuesto(proyecto_id: str, coste_estimado: Optional[float]) -> dict[str, Any]:
@@ -134,6 +204,7 @@ async def _con_coste(op_doc: dict[str, Any], entradas: EntradaOperacion) -> dict
         "coste_estimado": float(estimado) if estimado is not None else None,
         "coste_unidad": modelo.coste.unidad,
         "coste_verificado": modelo.coste.verificado,
+        "tarifa_verificada_en": modelo.coste.verificado_en,
     }
 
 
@@ -257,6 +328,44 @@ async def marcar_fallida(op_id: str, motivo: str = "Marcada como fallida a mano.
             {"_id": ultimo["_id"]},
             {"$set": {"estado": "fallida", "fin": ahora(), "error": motivo}},
         )
-    # Al fallar sin cobro, la reserva se libera: el estado deja de contar.
+    # Si venía de «incierta», el proveedor pudo cobrar ese intento: queda como
+    # posible cargo DEL INTENTO hasta que se revise (PIC-02 §2). Si no, la reserva
+    # se libera.
+    if doc["estado"] == EstadoOperacion.incierta.value:
+        if ultimo:
+            await db.intentos.update_one(
+                {"_id": ultimo["_id"]},
+                {"$set": {"posible_cargo": True, "coste_estimado": ultimo.get("coste_estimado", doc.get("coste_estimado"))}},
+            )
+        else:
+            numero = int(doc.get("intentos") or 0) or 1
+            registro = {
+                "_id": nuevo_id(), "operacion_id": op_id, "numero": numero,
+                "proveedor": doc.get("proveedor") or "", "estado": "fallida", "fin": ahora(),
+                "error": motivo, "posible_cargo": True, "coste_estimado": doc.get("coste_estimado"),
+                "clave_idempotencia": doc.get("clave_idempotencia") or "", "inicio": ahora(),
+                "medios_resultado": [],
+            }
+            registro["id"] = registro["_id"]
+            await db.intentos.insert_one(registro)
+            await db.operaciones.update_one({"_id": op_id}, {"$set": {"intentos": numero}})
     await guardar_estado(op_id, EstadoOperacion.fallida.value, {"error": motivo})
     return await vista(sin_id(await db.operaciones.find_one({"_id": op_id})))
+
+
+async def resolver_cargo(intento_id: str, cobrado: bool, importe: Optional[float]) -> dict[str, Any]:
+    """Cierra el posible cargo de UN intento. No toca la operación ni otros intentos."""
+    it = await db.intentos.find_one({"_id": intento_id})
+    if not it:
+        raise LookupError("Intento no encontrado")
+    if not it.get("posible_cargo") or it.get("cargo_resuelto"):
+        raise PermissionError("Este intento no tiene un posible cargo pendiente.")
+    cambios: dict[str, Any] = {"posible_cargo": False, "cargo_resuelto_en": ahora()}
+    if cobrado:
+        if importe is None or importe < 0:
+            raise ValueError("Indica el importe cobrado.")
+        cambios.update({"cargo_resuelto": "cobrado", "coste_informado": float(importe), "coste_informado_fuente": "manual"})
+    else:
+        cambios["cargo_resuelto"] = "sin_cargo"
+    await db.intentos.update_one({"_id": intento_id}, {"$set": cambios})
+    return sin_id(await db.intentos.find_one({"_id": intento_id}))

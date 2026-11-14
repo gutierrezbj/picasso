@@ -11,6 +11,7 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from app.almacen import almacen
+from app.almacen.usos import usos_de_medio
 from app.db import db, sin_id
 from app.dominio.modelos import ClaseMedio, Medio
 
@@ -122,14 +123,9 @@ async def borrar_medio(medio_id: str):
     doc = await db.medios.find_one({"_id": medio_id})
     if not doc:
         raise HTTPException(404, "Medio no encontrado")
-    usos = await db.fichas.find({"referencias.medio_id": medio_id}).to_list(200)
+    usos = await usos_de_medio(medio_id)
     if usos:
-        ids = list({u["elemento_id"] for u in usos})
-        elementos = await db.elementos.find({"_id": {"$in": ids}}).to_list(200)
-        nombres = ", ".join(e["nombre"] for e in elementos)
-        raise HTTPException(409, f"No se puede borrar: se usa como referencia en {nombres}.")
-    if await db.pistas_audio.find_one({"medio_id": medio_id}):
-        raise HTTPException(409, "No se puede borrar: se usa como música o ambiente en una pieza.")
+        raise HTTPException(409, "No se puede borrar: se usa como " + "; ".join(usos) + ".")
     almacen.borrar(doc["ruta"])
     await db.medios.delete_one({"_id": medio_id})
     return {"ok": True}
