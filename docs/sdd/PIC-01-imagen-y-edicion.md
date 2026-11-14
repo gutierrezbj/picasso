@@ -226,7 +226,7 @@ Pruebas operadas por Juan en la interfaz:
 | D11 | Paleta oscura (tabla de la revisión 3), barra inferior, dirección desplegable, alcance visible y lateral | Decidido por Juan (14-11-2026). Sustituye al «modo claro por defecto» del §0.9 del maestro para Picasso Studio |
 | D12 | Director de Studio a demanda, por tipo de trabajo; las sugerencias preparan sin gastar | Decidido por Juan (14-11-2026); en la maqueta solo como ejemplo, sin implementar |
 | D13 | ¿Dónde vive «Mejorar mi descripción»? | Recomendación: dentro del Director de Studio, como una sugerencia más. Hasta que exista, se queda como botón en la barra con su coste de texto visible |
-| D14 | Un único lateral que alterna entre Imagen y Director de Studio, conservando la selección (tablero 17) | Pedido por Juan (14-11-2026). El revisor confirma que encaja; falta la validación visual del recorrido |
+| D14 | Un único lateral que alterna entre Imagen y Director de Studio, conservando la selección (tablero 17) | **Validado el 14-11-2026** con la grabación del recorrido; la paleta respeta lo acordado. Ajustes de implementación en §11 |
 | D15 | Colocación del árbol en la Mesa: función propia sobre React Flow, sin dagre ni d3-hierarchy, con varias raíces y orden determinista (§12.1) | Recomendación, respaldada por el revisor (14-11-2026) |
 | D16 | Cantidad es un lote de peticiones de una imagen; su límite por modelo (`max_lote`) va en el catálogo y se valida en el servidor. Ninguna opción que cambie el precio se ofrece sin presupuestarla; la resolución queda fuera de PIC-03 (§12.2) | Recomendación revisada con el revisor (14-11-2026) |
 | D17 | Comparar: `ComparadorTomas` tal cual; el deslizador antes/después queda como mejora posterior | Decidido por Juan (14-11-2026); el revisor lo mantiene |
@@ -246,7 +246,13 @@ Mismo esquema que `SDD-director-de-escena.md`. Este documento hace de SDD de PIC
 | SDD-07 Plan de pruebas | §7 (motor, interfaz y validación de Juan) más las comprobaciones de §12 | Escrito |
 | SDD-08 Despliegue | Rama propia sin fusionar; imágenes Docker de pruebas `picasso-pruebas-*`; Juan fusiona | Escrito |
 
-**Puerta para empezar código:** Juan valida el tablero 17 (enlace compartido o grabación del recorrido) y cierra D14–D16.
+**Puerta para empezar código:** D14 validada el 14-11-2026. D15 y D16 incorporan los ajustes del revisor (`cd3ab5e`): bosque con orden determinista y lote con límite validado en el servidor. El código empieza cuando Juan lo autorice.
+
+**Ajustes visuales para la implementación (de la validación de D14):**
+- El inspector muestra la imagen real de la versión, no un bloque de color.
+- La etiqueta de la instrucción en la flecha tiene espacio propio: más separación entre columnas de la Mesa y la etiqueta, sin pisar las tarjetas; si el texto es largo, se corta con «…» y el texto entero se ve al pasar el ratón y en «Cómo se hizo».
+
+**Lo que la grabación no valida:** comparar con el origen, reabrir la carpeta y la persistencia. Siguen en las pruebas de PIC-03 (§7.1 y §7.2) y en la validación de Juan (§7.3).
 
 ## 12. Referencias externas evaluadas (14-11-2026)
 
