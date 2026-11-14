@@ -28,6 +28,7 @@ from app.dominio.modelos import (
 from app.motor import catalogo as cat
 from app.motor import ficheros
 from app.motor import operaciones as ops
+from app.motor import estados
 
 router = APIRouter(prefix="/api", tags=["taller"])
 
@@ -194,7 +195,7 @@ async def tomas_de_carpeta(carpeta_id: str):
             {"destino.tipo": "taller", "destino.id": carpeta_id, "estado": {"$in": list(EN_MARCHA) + ["incierta", "fallida", "presupuestada"]}}
         ).sort("created_at", -1).to_list(50)
         if o["estado"] in EN_MARCHA
-        or (o["estado"] == "presupuestada" and int(o.get("intentos") or 0) > 0)
+        or o["estado"] == "presupuestada"
         or (o["estado"] in ("incierta", "fallida") and not o.get("visto"))
     ]
     ops_tomas = {
@@ -407,13 +408,21 @@ async def generar(espacio_id: str, datos: PeticionTaller, response: Response):
 
 
 async def _autorizar_nueva(vista: dict[str, Any], confirmado: bool, response: Response) -> dict[str, Any]:
+    """La primera petición autoriza. Una repetición (mismo `id_peticion`) recupera
+    la operación: si quedó presupuestada sin ningún intento (falló su
+    autorización, por ejemplo por el presupuesto), la autoriza ahora."""
+    op = vista["operacion"]
     if vista.get("repetida"):
         response.status_code = 200
-        return vista
+        if op["estado"] != "presupuestada" or int(op.get("intentos") or 0) > 0:
+            return vista
     try:
-        return await ops.autorizar(vista["operacion"]["id"], confirmado)
+        resultado = await ops.autorizar(op["id"], confirmado)
     except PermissionError as e:
         raise HTTPException(409, str(e)) from e
+    except estados.TransicionNoPermitida:
+        resultado = await ops.vista(sin_id(await db.operaciones.find_one({"_id": op["id"]})))
+    return {**resultado, "repetida": True} if vista.get("repetida") else resultado
 
 
 async def editar_en_carpeta(toma: dict[str, Any], datos: PrepararOperacion, response: Response) -> dict[str, Any]:
@@ -464,6 +473,16 @@ async def editar_en_carpeta(toma: dict[str, Any], datos: PrepararOperacion, resp
     except ValueError as e:
         raise HTTPException(422, str(e)) from e
     return await _autorizar_nueva(vista, datos.confirmado_por_encima_del_presupuesto, response)
+
+
+@router.get("/espacios/{espacio_id}/peticiones/{id_peticion}")
+async def peticion(espacio_id: str, id_peticion: str):
+    """PIC-03 §5.3: reconciliar una petición que se quedó sin respuesta. 404 = el
+    servidor no la recibió y se puede repetir con el mismo identificador."""
+    vista = await ops.por_peticion(espacio_id, id_peticion)
+    if not vista:
+        raise HTTPException(404, "El servidor no recibió esa petición.")
+    return vista
 
 
 @router.post("/operaciones/{operacion_id}/visto")

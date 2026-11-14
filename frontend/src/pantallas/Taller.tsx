@@ -40,6 +40,18 @@ const ZONAS = [
   ["libre", "Libre"],
 ];
 
+interface Pendiente {
+  id: string;
+  tipo: "generar" | "ajustar";
+  tomaId?: string;
+  cuerpo: Record<string, unknown>;
+  texto: string;
+  precio: string;
+  noLlego?: boolean;
+}
+
+const esPresupuesto = (e: unknown) => e instanceof ErrorApi && e.status === 409 && /presupuesto/i.test(e.message);
+
 interface Referencia {
   medio_id: string;
   nombre: string;
@@ -126,8 +138,27 @@ export default function Taller() {
   const [esperando, setEsperando] = useState<string | null>(null);
   const [reintento, setReintento] = useState<any | null>(null);
   const [marcarFallida, setMarcarFallida] = useState<any | null>(null);
+  const [confirmarPresupuesto, setConfirmarPresupuesto] = useState<{ mensaje: string; seguir: () => Promise<unknown> } | null>(null);
   const areaTexto = useRef<HTMLTextAreaElement>(null);
   const [alFinal, setAlFinal] = useState(false);
+  const clavePendiente = `picasso.taller.${espacioId}.pendiente`;
+  const [pendiente, setPendienteEstado] = useState<Pendiente | null>(() => {
+    try {
+      const crudo = localStorage.getItem(`picasso.taller.${espacioId}.pendiente`);
+      return crudo ? (JSON.parse(crudo) as Pendiente) : null;
+    } catch {
+      return null;
+    }
+  });
+  const guardarPendiente = (p: Pendiente | null) => {
+    setPendienteEstado(p);
+    try {
+      if (p) localStorage.setItem(clavePendiente, JSON.stringify(p));
+      else localStorage.removeItem(clavePendiente);
+    } catch {
+      /* sin almacenamiento local: la petición pendiente vive solo en esta pestaña */
+    }
+  };
 
   const carpetas: any[] = data?.carpetas || [];
   const guardada = (() => {
@@ -261,23 +292,75 @@ export default function Taller() {
     setPestana((p) => (p === "imagen" ? null : p));
   };
 
-  const accion = async () => {
-    if (!carpeta || !texto.trim() || enviando || precio === null) return;
+  const enviar = async (p: Pendiente) => {
     setError(null);
     setEnviando(true);
-    const idPeticion = crypto.randomUUID();
+    guardarPendiente({ ...p, noLlego: false });
     try {
       const r: any = await conReconexion(() =>
-        editando
-          ? api.ajustarToma(sel.id, {
-              destino_id: carpeta.id,
-              accion: "editar_imagen",
-              modelo: modeloEdicion?.id,
-              instruccion: texto,
-              zona,
-              id_peticion: idPeticion,
-            })
-          : api.generarTaller(espacioId, {
+        p.tipo === "ajustar" ? api.ajustarToma(p.tomaId as string, p.cuerpo) : api.generarTaller(espacioId, p.cuerpo)
+      );
+      guardarPendiente(null);
+      setEsperando(r.operacion.id);
+      setTexto("");
+      setMejora(null);
+      setEditandoTexto(true);
+      setDirAbierta(false);
+      setZona(null);
+    } catch (e) {
+      if (e instanceof ErrorApi) {
+        guardarPendiente(null);
+        if (esPresupuesto(e))
+          setConfirmarPresupuesto({
+            mensaje: e.message,
+            seguir: () => enviar({ ...p, cuerpo: { ...p.cuerpo, confirmado_por_encima_del_presupuesto: true } }),
+          });
+        else setError(e.message);
+      } else {
+        setError("No hubo respuesta del servidor. La petición queda pendiente: compruébala antes de repetirla.");
+      }
+    } finally {
+      setEnviando(false);
+      await refrescar();
+    }
+  };
+
+  const comprobarPendiente = async (p: Pendiente) => {
+    try {
+      const r: any = await api.peticionTaller(espacioId, p.id);
+      guardarPendiente(null);
+      setEsperando(r.operacion.id);
+      await refrescar();
+    } catch (e) {
+      if (e instanceof ErrorApi && e.status === 404) guardarPendiente({ ...p, noLlego: true });
+      else setError("Sigue sin haber respuesta del servidor. Vuelve a comprobarlo en un momento.");
+    }
+  };
+
+  useEffect(() => {
+    if (pendiente && !enviando) void comprobarPendiente(pendiente);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const accion = async () => {
+    if (!carpeta || !texto.trim() || enviando || pendiente || precio === null) return;
+    const id = crypto.randomUUID();
+    await enviar(
+      editando
+        ? {
+            id,
+            tipo: "ajustar",
+            tomaId: sel.id,
+            texto,
+            precio: precioTexto(precio),
+            cuerpo: { destino_id: carpeta.id, accion: "editar_imagen", modelo: modeloEdicion?.id, instruccion: texto, zona, id_peticion: id },
+          }
+        : {
+            id,
+            tipo: "generar",
+            texto,
+            precio: precioTexto(precio),
+            cuerpo: {
               carpeta_id: carpeta.id,
               modelo: modelo?.id,
               texto,
@@ -285,28 +368,31 @@ export default function Taller() {
               relacion,
               cuantas,
               direccion,
-              id_peticion: idPeticion,
-            })
-      );
-      setEsperando(r.operacion.id);
-      setTexto("");
-      setMejora(null);
-      setEditandoTexto(true);
-      setDirAbierta(false);
-      setZona(null);
-      await refrescar();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se ha podido enviar.");
-    } finally {
-      setEnviando(false);
-    }
+              id_peticion: id,
+            },
+          }
+    );
   };
 
+  const autorizar = (o: any) =>
+    operar(async () => {
+      try {
+        await api.autorizarOperacion(o.id);
+      } catch (e) {
+        if (!esPresupuesto(e)) throw e;
+        setConfirmarPresupuesto({ mensaje: (e as Error).message, seguir: () => operar(() => api.autorizarOperacion(o.id, true)) });
+      }
+    });
+
   const otraComoEsta = async (t: any) => {
-    setError(null);
-    setEnviando(true);
-    try {
-      const r: any = await api.generarTaller(espacioId, {
+    if (!carpeta || enviando || pendiente) return;
+    const id = crypto.randomUUID();
+    await enviar({
+      id,
+      tipo: "generar",
+      texto: t.texto || "",
+      precio: precioTexto(costeEstimado(porId(t.modelo), { variantes: 1 })),
+      cuerpo: {
         carpeta_id: carpeta.id,
         modelo: t.modelo,
         texto: t.texto,
@@ -314,15 +400,9 @@ export default function Taller() {
         relacion: t.relacion,
         cuantas: 1,
         direccion: t.direccion || {},
-        id_peticion: crypto.randomUUID(),
-      });
-      setEsperando(r.operacion.id);
-      await refrescar();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se ha podido generar.");
-    } finally {
-      setEnviando(false);
-    }
+        id_peticion: id,
+      },
+    });
   };
 
   const operar = async (fn: () => Promise<unknown>) => {
@@ -385,7 +465,14 @@ export default function Taller() {
             onComprobar: () => operar(() => api.comprobarOperacion(o.id)),
             onMarcarFallida: () => setMarcarFallida(o),
           };
-        else datos[id] = { ...base, tipo: "reintento", onAutorizar: () => operar(() => api.autorizarOperacion(o.id)) };
+        else
+          datos[id] = {
+            ...base,
+            tipo: "reintento",
+            nuevo: !o.intentos,
+            onAutorizar: () => autorizar(o),
+            onQuitar: () => operar(() => api.descartarOperacion(o.id)),
+          };
         if (o.origen_toma_id && o.texto) textoArista[id] = { texto: o.texto, destino: `op-${o.id}` };
       }
     }
@@ -409,7 +496,7 @@ export default function Taller() {
   const marcadosDir = editando ? (zona ? 1 : 0) : Object.keys(direccion).length;
   const sobranRefs = !editando && refs.length > maxRefs;
   const puedeAccion =
-    !!texto.trim() && !enviando && precio !== null && !!carpeta && !sobranRefs && (editando ? !!modeloEdicion?.elegible : !!modelo?.elegible);
+    !!texto.trim() && !enviando && !pendiente && precio !== null && !!carpeta && !sobranRefs && (editando ? !!modeloEdicion?.elegible : !!modelo?.elegible);
   const tarifa = (m: ModeloCatalogo | null) =>
     !m ? "" : m.coste.verificado ? `tarifa verificada${m.coste.verificado_en ? " el " + m.coste.verificado_en.split("-").reverse().join("-") : ""}` : "precio simulado";
 
@@ -579,7 +666,7 @@ export default function Taller() {
               sel && sel.accion !== "editar_imagen"
                 ? {
                     texto: `Otra como esta · ${precioTexto(costeEstimado(porId(sel.modelo), { variantes: 1 }))}`,
-                    desactivado: enviando || !porId(sel.modelo)?.elegible,
+                    desactivado: enviando || !!pendiente || !porId(sel.modelo)?.elegible,
                     onClick: () => otraComoEsta(sel),
                   }
                 : null
@@ -677,9 +764,9 @@ export default function Taller() {
           {!editando && (
             <button
               data-testid="taller-mejorar"
-              disabled={!texto.trim() || mejorando}
+              disabled
               onClick={mejorar}
-              title="Mejorar mi descripción (usa el asistente de texto, con su coste)"
+              title="Mejorar mi descripción: desactivado hasta que enseñe su coste antes de usarlo"
               className="flex w-[52px] items-center justify-center rounded-[12px] border-[1.5px] border-linea bg-superficie2 text-acento disabled:opacity-40"
             >
               {mejorando ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
@@ -707,6 +794,27 @@ export default function Taller() {
           </button>
         </div>
         <div className="flex min-h-[18px] flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-tinta2">
+          {pendiente && !enviando && (
+            <span className="flex flex-wrap items-center gap-2 text-aviso" data-testid="taller-pendiente">
+              {pendiente.noLlego
+                ? `El servidor no recibió «${pendiente.texto.slice(0, 40)}»: puedes enviarla otra vez, con el mismo identificador.`
+                : `Petición sin respuesta: «${pendiente.texto.slice(0, 40)}». Compruébala antes de repetir.`}
+              {pendiente.noLlego ? (
+                <button data-testid="pendiente-reenviar" className="text-acento underline" onClick={() => enviar(pendiente)}>
+                  Enviar otra vez · {pendiente.precio}
+                </button>
+              ) : (
+                <button data-testid="pendiente-comprobar" className="text-acento underline" onClick={() => comprobarPendiente(pendiente)}>
+                  Comprobar
+                </button>
+              )}
+              {pendiente.noLlego && (
+                <button data-testid="pendiente-descartar" className="text-tinta2 underline" onClick={() => guardarPendiente(null)}>
+                  Descartar
+                </button>
+              )}
+            </span>
+          )}
           {error || sobranRefs ? (
             <span className="text-error" data-testid="taller-error">
               {error || (maxRefs ? `Este modelo admite ${maxRefs} referencias: quita ${refs.length - maxRefs}.` : "Este modelo no admite referencias: quítalas o elige otro modelo.")}
@@ -771,13 +879,28 @@ export default function Taller() {
             onClick={async () => {
               const o = reintento;
               setReintento(null);
-              await operar(async () => {
-                await api.reintentarOperacion(o.id);
-                await api.autorizarOperacion(o.id);
-              });
+              await operar(() => api.reintentarOperacion(o.id));
+              await autorizar(o);
             }}
           >
             Reintentar · {reintento ? precioDe(reintento) : ""}
+          </Boton>
+        </div>
+      </Dialogo>
+
+      <Dialogo abierto={!!confirmarPresupuesto} onCerrar={() => setConfirmarPresupuesto(null)} titulo="Supera el presupuesto" data-testid="dialogo-presupuesto">
+        <p className="text-[14px] leading-[20px] text-tinta2">{confirmarPresupuesto?.mensaje}</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Boton variante="secundario" onClick={() => setConfirmarPresupuesto(null)}>Cancelar</Boton>
+          <Boton
+            data-testid="confirmar-presupuesto"
+            onClick={async () => {
+              const c = confirmarPresupuesto;
+              setConfirmarPresupuesto(null);
+              if (c) await c.seguir();
+            }}
+          >
+            Autorizar igualmente
           </Boton>
         </div>
       </Dialogo>

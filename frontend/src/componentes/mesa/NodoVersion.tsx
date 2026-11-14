@@ -14,6 +14,7 @@ export interface DatosVersion {
   mensaje?: string;
   cargos?: string[];
   precio?: string;
+  nuevo?: boolean;
   onSeleccionar?: () => void;
   onReintentar?: () => void;
   onAutorizar?: () => void;
@@ -79,7 +80,7 @@ export default function NodoVersion({ data }: NodeProps<NodoVersionMesa>) {
       )}
       {d.tipo === "reintento" && (
         <div className="flex min-h-0 flex-1 flex-col gap-1.5 rounded-[14px] border-[1.5px] border-dashed border-tinta3 bg-superficie p-2.5 text-[12px] leading-[16px] text-tinta2">
-          <b className="text-tinta">Reintento sin autorizar</b>
+          <b className="text-tinta">{d.nuevo ? "Sin autorizar" : "Reintento sin autorizar"}</b>
           <span>No se envía hasta que lo autorices.</span>
           {(d.cargos || []).map((c) => (
             <span key={c} className="text-aviso">{c}</span>
@@ -87,6 +88,7 @@ export default function NodoVersion({ data }: NodeProps<NodoVersionMesa>) {
           <button className={`${BOTON} mt-auto border-acento bg-acento text-sobreAcento`} onClick={d.onAutorizar}>
             Autorizar · {d.precio}
           </button>
+          <button className="nodrag text-[11px] text-tinta2 underline" onClick={d.onQuitar}>Descartar</button>
         </div>
       )}
       <div className="flex items-center justify-between px-1 pt-1.5 text-[12px]">

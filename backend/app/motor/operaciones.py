@@ -324,9 +324,15 @@ async def autorizar(op_id: str, confirmado: bool) -> dict[str, Any]:
             "Esta operación supera el presupuesto restante "
             f"({presu['presupuesto_restante']} {presu['moneda']}). Confírmalo para seguir."
         )
-    op = await guardar_estado(
-        op_id, EstadoOperacion.autorizada.value, {"autorizada_en": ahora(), "error": None}
+    hecho = await db.operaciones.update_one(
+        {"_id": op_id, "estado": doc["estado"]},
+        {"$set": {"estado": EstadoOperacion.autorizada.value, "updated_at": ahora(), "autorizada_en": ahora(), "error": None}},
     )
+    if not hecho.modified_count:
+        actual = (await db.operaciones.find_one({"_id": op_id}) or {}).get("estado", doc["estado"])
+        raise estados.TransicionNoPermitida(actual, EstadoOperacion.autorizada.value)
+    op = sin_id(await db.operaciones.find_one({"_id": op_id}))
+    eventos.publicar(op["proyecto_id"], {"tipo": "operacion", "operacion": op})
     await worker.encolar(op)
     return await vista(sin_id(await db.operaciones.find_one({"_id": op_id})))
 

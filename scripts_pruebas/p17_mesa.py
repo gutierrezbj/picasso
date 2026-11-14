@@ -205,3 +205,52 @@ ok(any(c["numero"] == 1 and c["estado"] == "pendiente" for c in oi2["coste"]["ca
    "el reintento no oculta el posible cargo del intento anterior")
 g = req("GET", f"/api/espacios/{EP}/taller")["gasto"]
 ok(g["posible_cargo"] > 0 and g["reservado"] > 0, "el gasto del Taller separa reservado y posible cargo")
+
+# --- respuesta perdida: el servidor aceptó, el cliente no se enteró ---------------
+st, r = generar(carpeta, "Respuesta perdida, foto realista", "p17-perdida")
+op_perdida = r["operacion"]["id"]
+st, rec = requests.get(f"{API}/api/espacios/{EP}/peticiones/p17-perdida", timeout=30).status_code, requests.get(f"{API}/api/espacios/{EP}/peticiones/p17-perdida", timeout=30).json()
+ok(st == 200 and rec["operacion"]["id"] == op_perdida and rec["operacion"]["estado"] != "presupuestada",
+   "tras recargar, la petición pendiente se reconcilia por su id_peticion: ya está creada y autorizada")
+st, r = generar(carpeta, "Respuesta perdida, foto realista", "p17-perdida")
+ok(st == 200 and r["operacion"]["id"] == op_perdida, "repetirla con el mismo id_peticion no crea otra imagen ni otro cargo")
+ok(requests.get(f"{API}/api/espacios/{EP}/peticiones/p17-nunca-llego", timeout=30).status_code == 404,
+   "una petición que nunca llegó da 404: se puede reenviar con el mismo identificador")
+st, r = generar(carpeta, "La que nunca llegó, foto realista", "p17-nunca-llego")
+ok(st == 201, "y el reenvío con ese mismo identificador crea la operación una sola vez")
+esperar(carpeta, lambda v: toma_de_op(v, op_perdida), "la imagen de la respuesta perdida")
+
+# --- superar el presupuesto: la operación queda sin autorizar y se recupera ----------
+ajustes = req("GET", "/api/ajustes")
+original = ajustes.get("presupuesto_por_defecto")
+total = req("GET", f"/api/espacios/{EP}/taller")["gasto"]["total"]
+req("PUT", "/api/ajustes", {"presupuesto_por_defecto": round(total + 0.01, 2)})
+try:
+    st, r = generar(carpeta, "Por encima del presupuesto, foto realista", "p17-presu")
+    ok(st == 409 and "presupuesto" in r.get("detail", ""), "superar el presupuesto da 409 y pide confirmación")
+    pend = req("GET", f"/api/espacios/{EP}/peticiones/p17-presu")["operacion"]
+    ok(pend["estado"] == "presupuestada" and int(pend.get("intentos") or 0) == 0, "la operación quedó guardada sin autorizar ni enviar")
+    ok(any(o["id"] == pend["id"] and o["estado"] == "presupuestada" for o in vista(carpeta)["en_marcha"]),
+       "la Mesa enseña la operación sin autorizar (no queda oculta)")
+    st, r = generar(carpeta, "Por encima del presupuesto, foto realista", "p17-presu")
+    ok(st == 409, "repetir sin confirmar sigue pidiendo confirmación (no da éxito falso)")
+    cuerpo_ok = {"carpeta_id": carpeta, "modelo": "sim-imagen", "texto": "Por encima del presupuesto, foto realista", "referencias": [],
+                 "relacion": "9:16", "cuantas": 1, "id_peticion": "p17-presu", "confirmado_por_encima_del_presupuesto": True}
+    res = []
+    hilos = [threading.Thread(target=lambda: res.append(post(f"/api/espacios/{EP}/taller/generar", cuerpo_ok))) for _ in range(2)]
+    [h.start() for h in hilos]
+    [h.join() for h in hilos]
+    ok(all(st == 200 and r["operacion"]["id"] == pend["id"] and r["operacion"]["estado"] != "presupuestada" for st, r in res),
+       "repetir con confirmación (dos a la vez) autoriza la misma operación")
+    v = esperar(carpeta, lambda v: toma_de_op(v, pend["id"]), "la imagen autorizada tras confirmar")
+    ok(operacion(pend["id"]).get("intentos") == 1, "se envió una sola vez")
+
+    st, e5 = ajustar(v1, "otra edición por encima del presupuesto", "p17-presu-edit")
+    ok(st == 409, "Ajustar por encima del presupuesto también pide confirmación")
+    pe = req("GET", f"/api/espacios/{EP}/peticiones/p17-presu-edit")["operacion"]
+    st, r = post(f"/api/operaciones/{pe['id']}/autorizar", {"confirmado_por_encima_del_presupuesto": True})
+    ok(st == 200 and r["operacion"]["estado"] == "autorizada", "desde la Mesa se autoriza con la confirmación")
+    st, r = post(f"/api/operaciones/{pe['id']}/autorizar", {"confirmado_por_encima_del_presupuesto": True})
+    ok(st == 409, "y no se autoriza dos veces")
+finally:
+    req("PUT", "/api/ajustes", {"presupuesto_por_defecto": original if original is not None else 1000})

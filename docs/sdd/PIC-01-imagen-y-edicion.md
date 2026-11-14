@@ -377,3 +377,13 @@ Autorizado por Juan sobre `b4f4b67`. Rama `pic-03/mesa`, que integra PIC-02 (`50
 
 **Pendiente de la validación de Juan (§7.3):** el recorrido con Nano Banana Pro real (4 generaciones, tarifa verificada ese día) y su juicio sobre el sombrero, el resto de la imagen, el árbol y la rejilla.
 
+
+### 13.1 Correcciones de la revisión de `e9d4975` (14-11-2026)
+
+1. **Petición atascada.** Si la operación se guardó pero su autorización falló (por ejemplo, por el presupuesto), repetir el mismo `id_peticion` ya no devuelve un éxito falso: recupera la operación y, si sigue presupuestada sin intentos, la autoriza con la confirmación que traiga (o vuelve a dar 409). La autorización pasa a ser atómica (solo cambia de estado si sigue en el que se leyó), así que dos repeticiones simultáneas autorizan y envían una sola vez. La Mesa enseña esas operaciones como «Sin autorizar», con «Autorizar · X $» (que pide confirmar si supera el presupuesto) y «Descartar».
+2. **Duplicados tras recargar.** La petición pendiente se guarda en el navegador antes de enviarla y solo se borra cuando el servidor contesta. Mientras exista, el botón principal queda bloqueado. Al abrir el Taller se reconcilia con `GET /api/espacios/{e}/peticiones/{id_peticion}`: si el servidor la tiene, se adopta esa operación; si da 404, se ofrece «Enviar otra vez» con el **mismo** identificador o «Descartar». Generar, Ajustar y «Otra como esta» pasan por este camino.
+3. **«Mejorar mi descripción»** queda desactivado hasta poder enseñar su coste antes de usarlo. La tarifa del asistente se verificó el 15-10-2026; una estimación previa (con tope de salida) exige volver a verificarla y queda para después.
+
+**Pruebas nuevas en `p17_mesa`:** respuesta perdida tras aceptar (reconciliación y repetición sin otra imagen); petición que nunca llegó (404 y reenvío con el mismo identificador, una sola operación); superar el presupuesto (409, operación sin autorizar visible en la Mesa, repetir sin confirmar sigue dando 409, dos repeticiones confirmadas a la vez autorizan una sola vez y se envía un solo intento); Ajustar por encima del presupuesto y autorización desde la Mesa con confirmación, sin doble autorización. Batería completa en verde.
+
+**En navegador** (imágenes `picasso-pruebas-*`, base aislada borrada al terminar): una petición aceptada cuya respuesta no llegó se reconcilia al recargar sin duplicar; con el backend parado, la petición queda pendiente, sobrevive a la recarga con el botón bloqueado y, al volver el servidor, «Comprobar» → «Enviar otra vez» (doble clic) crea una sola operación; por encima del presupuesto sale el diálogo, la tarjeta «Sin autorizar» y «Autorizar igualmente» envía una vez; «Mejorar» aparece desactivado con su motivo.
