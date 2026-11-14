@@ -407,4 +407,4 @@ Autorizado por Juan sobre `b4f4b67`. Rama `pic-03/mesa`, que integra PIC-02 (`50
 - Cuatro imágenes reales con Nano Banana Pro en fal (V1 con referencia, V2 «sombrero», rama desde V1 y versión desde V2): 4 × 0,15 $ = 0,60 $, tarifa verificada ese día.
 - Ajustes pedidos tras la prueba y validados por Juan en su instalación (`6400cef`): comparador lado a lado sin desplazamiento en ventanas estrechas y fecha de tarifa visible «14-11-2026».
 - Las cuatro operaciones reales conservan en su historial la fecha de tarifa del catálogo al crearlas (13-10-2026); el precio era el mismo y no se reescriben.
-- PIC-03 queda cerrado en la rama `pic-03/mesa`, montada en la instalación de Juan, sin fusionar en `main` ni desplegar.
+- PIC-03 queda cerrado y fusionado en `main` (`2748b20`), que es lo que corre en la instalación de Juan. Las ramas `pic-01`, `pic-02`, `pic-03` y de traspaso se han borrado.

@@ -1089,7 +1089,7 @@ Es la única tabla de estado. Las demás secciones describen diseño e historia;
 - **Pruebas técnicas:** automáticas, en simulado.
 - **Validación de Juan:** operada en la interfaz.
 
-Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-2026).
+Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-2026). Filas de §7.6, PIC-01 y PIC-02 actualizadas contra `main` en `2748b20` (cierre de PIC-03, 14-11-2026).
 
 | Pieza | Aprobación | Implementación | Pruebas técnicas | Validación de Juan | Módulo |
 |---|---|---|---|---|---|
@@ -1100,10 +1100,10 @@ Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-202
 | 18.22: qué conservar de cada referencia | Aprobada (08-10-2026) | Sí | pytest (`test_fal_y_referencias`) | Pendiente | **1** |
 | 18.20: cláusula de persona real | Aprobada (07-10-2026) | Sí | pytest (`test_fal_y_referencias`), p15 | Pendiente | **1** |
 | 18.8: «qué evitar» | Aprobada (07-10-2026) | Sí | p14 | Sí | Base |
-| §7.6: Ajustar una toma (editar imagen) | Aprobada (24-09-2026) | Parcial: solo en el lienzo de un plano | p8 | Pendiente | **1** (PIC-01 lo generaliza) |
+| §7.6: Ajustar una toma (editar imagen) | Aprobada (24-09-2026) | Sí: en el lienzo de un plano y en la Mesa del Taller (PIC-03) | p8, p17 | Sí en la Mesa (14-11-2026); en el lienzo, pendiente | **1** |
 | 18.30: control de ingredientes | Decidida (14-10-2026) | Parcial: Taller, reglas simples | p15 | Pendiente | 1 (lo que ya hay) |
-| PIC-01: la Mesa (edición desde resultados, versiones, comparar) | Propuesta (13-11-2026) | No | — | — | **1** |
-| PIC-02: proteger los medios enlazados (R1); coste en tres capas (R2) (ORD-24) | Pedido por Juan (14-11-2026) | Sí, rama `pic-02/medios-y-costes`, sin fusionar | p16, p8, p13 y batería completa | Pendiente | **1** |
+| PIC-01 / PIC-03: la Mesa (edición desde resultados, versiones y ramas, comparar, Dirección, lateral único, `id_peticion`, `max_lote`) | Aprobada (14-11-2026: D14 validada e implementación autorizada) | Sí, en `main` (`2748b20`). Director de Studio aplazado; Mejorar desactivado hasta enseñar su coste | p17, `mesa.test.ts`, `peticiones.test.ts` y batería completa | Sí (14-11-2026): cuatro imágenes reales con Nano Banana Pro, 0,60 $; comparador en ventana estrecha y fecha de tarifa (SDD PIC-01 §13.3) | **1** |
+| PIC-02: proteger los medios enlazados (R1); coste en tres capas (R2) (ORD-24) | Pedido por Juan (14-11-2026) | Sí, en `main` (entró con PIC-03) | p16, p8, p13 y batería completa | Pendiente | **1** |
 | 18.3, 18.3b, 18.10, 18.10b, 18.13, 18.15, 18.16, 18.16b, 18.17, 18.18, 18.19, 18.19b, 18.26, 18.27, 18.28 | Aprobadas (07 al 13-10-2026), aplazadas | No | — | — | Posteriores |
 | 18.23: varias tomas del mismo prompt | Aprobada (08-10-2026) | Parcial: Explorar y Taller | p8, p15 | Pendiente | 1 (Taller) |
 | 18.36, 18.37, 18.38 | Aprobadas (22-10-2026), aplazadas | No | — | — | Vídeo |
