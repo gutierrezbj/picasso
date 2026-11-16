@@ -1,6 +1,6 @@
 # PIC-02 · Protección de medios y corrección de costes
 
-**Estado:** implementado y probado en simulado el 14-11-2026, en la rama `pic-02/medios-y-costes`. Sin fusionar ni desplegar; falta la validación de Juan. Parte de PIC-01 revisión 3 (`457235f`), apartados 5.1 y 6.
+**Estado:** validado por el revisor el 16-11-2026 en una instancia aislada, con las correcciones de `425f366` (§7). Las correcciones siguen en la rama `pic-02/correcciones-validacion`, sin fusionar en `main` ni desplegar en la instalación de Juan. Parte de PIC-01 revisión 3 (`457235f`), apartados 5.1 y 6.
 
 **Fuera de alcance:**
 - `id_peticion` contra duplicados y la Mesa, que son PIC-03.
@@ -128,3 +128,10 @@ Casos nuevos en `p16`:
 2. **«Sin usar» en la Biblioteca dice lo mismo que el borrado.** «Usado en» sale de `almacen_usos.usos_de_medio`, la misma comprobación que el 409 de `DELETE /api/medios/{id}`: fichas, pistas de audio, tomas y entradas del historial. Un medio que el borrado protege nunca aparece como «Sin usar». Los usos se separan con «;».
 
 **Fuera de alcance:** archivar medios y cambiar la API de cargos.
+
+**Resultado de la validación (16-11-2026), en la instancia aislada con `425f366`:**
+- La Biblioteca enseña dónde se usa cada medio, igual que el borrado. Las salidas de toma ya no aparecen como «Sin usar».
+- El diálogo «Hubo cargo…» rechaza un importe negativo y guarda 0,04 $ en el intento 2. El intento 1 sigue sin cargo y el 3 sigue pendiente.
+- Registro, Taller y CSV coinciden: 0,50 $ = 0,12 informado + 0,30 estimado + 0,08 posible cargo, sin reservas.
+- Pruebas técnicas: pytest, p1–p17 y las pruebas del frontend. `p16` comprueba además que la Biblioteca y el borrado dicen lo mismo en los nueve casos.
+- No se llamó a proveedores reales: claves vacías y sus dominios bloqueados en el contenedor. No hubo gasto. La instalación de Juan no se modificó. La instancia aislada se retiró al terminar.
