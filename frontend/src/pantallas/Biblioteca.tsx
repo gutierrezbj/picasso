@@ -259,7 +259,7 @@ export default function Biblioteca() {
                         {m.ancho && m.alto ? ` · ${m.ancho}×${m.alto}` : ""} · {m.origen}
                       </div>
                       <div className="mt-1 text-[13px] leading-[18px] text-tinta2">
-                        {m.usado_en.length ? `Usado en: ${m.usado_en.join(", ")}` : "Sin usar"}
+                        {m.usado_en.length ? `Usado en: ${m.usado_en.join("; ")}` : "Sin usar"}
                       </div>
                       <div className="mt-3 flex items-center gap-2">
                         <a

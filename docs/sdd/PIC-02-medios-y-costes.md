@@ -105,3 +105,26 @@ Casos nuevos en `p16`:
   - el Taller enseña en pantalla «Gasto del Taller: 0,31 $ (0,16 $ informado · 0,00 $ estimado · 0,00 $ reservado · 0,15 $ posible cargo sin confirmar)».
 - **Las etiquetas de la instalación no se han reconstruido:** `picasso-backend` y `picasso-frontend` apuntan a las mismas imágenes que tienen en marcha los contenedores de Juan. Una reconstrucción anterior de `picasso-backend:latest` se devolvió a la imagen original (`6b1a7eb3`).
 - **Cambio de API respecto a la versión 1:** el cargo se resuelve con `POST /api/intentos/{id}/cargo`. Desaparece `/api/operaciones/{id}/cargo` (nunca llegó a `main`).
+
+## 7. Validación parcial y correcciones (16-11-2026)
+
+**Validado por el revisor en la interfaz**, sobre una instancia aislada y en la instalación de Juan sin modificarla:
+- los medios enlazados no se borran y uno libre sí;
+- reintentar conserva el posible cargo anterior;
+- «Comprobar» completa el segundo intento con su propio importe;
+- «No hubo cargo» cambia solo el intento elegido;
+- Taller, Registro y CSV coinciden;
+- V1–V4 siguen en 0,60 $ estimados, sin reservas ni cargos pendientes.
+
+**Pendiente:** «Hubo cargo…». Usaba `window.prompt`, que el navegador integrado no muestra. En Chrome sí apareció, pero bloqueó el control del navegador y el importe no se guardó.
+
+**Correcciones pedidas por el revisor:**
+1. **«Hubo cargo…» abre un diálogo de Picasso** (`Dialogo`), no uno del navegador.
+   - Título: «Hubo cargo en el intento N».
+   - Un campo de importe en la moneda del estudio, relleno con la estimación del intento. Acepta coma o punto. No admite números negativos ni texto.
+   - Botones «Apuntar cargo» y «Cancelar».
+   - Mientras se guarda, el botón queda desactivado. Si el servidor rechaza el apunte, el error se ve dentro del diálogo y no se cierra.
+   - Al guardar se cierra, y la fila y los totales se refrescan como con «No hubo cargo».
+2. **«Sin usar» en la Biblioteca dice lo mismo que el borrado.** «Usado en» sale de `almacen_usos.usos_de_medio`, la misma comprobación que el 409 de `DELETE /api/medios/{id}`: fichas, pistas de audio, tomas y entradas del historial. Un medio que el borrado protege nunca aparece como «Sin usar». Los usos se separan con «;».
+
+**Fuera de alcance:** archivar medios y cambiar la API de cargos.

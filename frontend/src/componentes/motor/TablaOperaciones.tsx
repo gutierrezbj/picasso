@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { AlertTriangle, Search, RefreshCw } from "lucide-react";
 import Boton from "../Boton";
+import Dialogo from "../Dialogo";
+import { Campo, Entrada } from "../Campo";
 import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, textoCoste, textoImporte } from "./comun";
 import type { Operacion } from "../../tipos";
 
@@ -17,6 +19,93 @@ interface Props {
 const fecha = (iso: string): string =>
   new Date(iso).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
 
+type CargoAbierto = { intentoId: string; numero: number; estimado: number | null };
+
+function DialogoCargo({
+  cargo,
+  moneda,
+  onCerrar,
+  onApuntar,
+}: {
+  cargo: CargoAbierto | null;
+  moneda: string;
+  onCerrar: () => void;
+  onApuntar: (intentoId: string, importe: number) => void | Promise<unknown>;
+}) {
+  const [texto, setTexto] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+  const [abiertoPara, setAbiertoPara] = useState<string | null>(null);
+  if (cargo && abiertoPara !== cargo.intentoId) {
+    setAbiertoPara(cargo.intentoId);
+    setTexto(cargo.estimado === null ? "" : String(cargo.estimado).replace(".", ","));
+    setError(null);
+    setGuardando(false);
+  }
+  const limpio = texto.trim().replace(",", ".");
+  const importe = /^\d+(\.\d+)?$/.test(limpio) ? Number(limpio) : null;
+  const cerrar = () => {
+    if (guardando) return;
+    setAbiertoPara(null);
+    onCerrar();
+  };
+  const apuntar = async () => {
+    if (!cargo || importe === null || guardando) return;
+    setGuardando(true);
+    setError(null);
+    try {
+      await onApuntar(cargo.intentoId, importe);
+      setGuardando(false);
+      setAbiertoPara(null);
+      onCerrar();
+    } catch (e) {
+      setGuardando(false);
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+  return (
+    <Dialogo
+      abierto={cargo !== null}
+      onCerrar={cerrar}
+      titulo={cargo ? `Hubo cargo en el intento ${cargo.numero}` : ""}
+      ancho="max-w-[480px]"
+      data-testid="dialogo-cargo"
+    >
+      <Campo
+        etiqueta={`Importe cobrado, según el proveedor (${moneda})`}
+        htmlFor="importe-cargo"
+        ayuda={cargo && cargo.estimado !== null ? `Estimación de este intento: ${textoCoste(cargo.estimado, moneda)}.` : undefined}
+      >
+        <Entrada
+          id="importe-cargo"
+          data-testid="importe-cargo"
+          inputMode="decimal"
+          autoFocus
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && apuntar()}
+        />
+      </Campo>
+      {texto.trim() !== "" && importe === null && (
+        <p className="mt-3 text-[13px] leading-[18px] text-aviso">Escribe un importe en número, sin signo (por ejemplo 0,15).</p>
+      )}
+      {error && (
+        <p data-testid="error-cargo" className="mt-3 text-[13px] leading-[18px] text-aviso">
+          {error}
+        </p>
+      )}
+      <div className="mt-8 flex flex-wrap items-center gap-3">
+        <Boton data-testid="btn-apuntar-cargo" disabled={importe === null || guardando} onClick={apuntar}>
+          {guardando ? "Apuntando…" : "Apuntar cargo"}
+        </Boton>
+        <Boton data-testid="btn-cancelar-cargo" variante="secundario" disabled={guardando} onClick={cerrar}>
+          Cancelar
+        </Boton>
+      </div>
+    </Dialogo>
+  );
+}
+
 export default function TablaOperaciones({
   operaciones,
   moneda,
@@ -26,6 +115,7 @@ export default function TablaOperaciones({
   onMarcarFallida,
   onResolverCargo,
 }: Props) {
+  const [cargoAbierto, setCargoAbierto] = useState<CargoAbierto | null>(null);
   if (operaciones.length === 0) {
     return (
       <p data-testid="registro-vacio" className="text-[14px] leading-[20px] text-tinta3">
@@ -119,16 +209,9 @@ export default function TablaOperaciones({
                           pequeno
                           variante="texto"
                           data-testid={`con-cargo-${cargo.intento_id}`}
-                          onClick={() => {
-                            const texto = window.prompt(
-                              `Importe cobrado por el intento ${cargo.numero}, según el proveedor (USD):`,
-                              String(cargo.estimado ?? "")
-                            );
-                            if (texto === null) return;
-                            const importe = Number(texto.replace(",", "."));
-                            if (!Number.isFinite(importe) || importe < 0) return;
-                            onResolverCargo(cargo.intento_id, true, importe);
-                          }}
+                          onClick={() =>
+                            setCargoAbierto({ intentoId: cargo.intento_id, numero: cargo.numero, estimado: cargo.estimado })
+                          }
                         >
                           Hubo cargo…
                         </Boton>
@@ -186,6 +269,14 @@ export default function TablaOperaciones({
           ))}
         </tbody>
       </table>
+      {onResolverCargo && (
+        <DialogoCargo
+          cargo={cargoAbierto}
+          moneda={moneda}
+          onCerrar={() => setCargoAbierto(null)}
+          onApuntar={(intentoId, importe) => onResolverCargo(intentoId, true, importe)}
+        />
+      )}
     </div>
   );
 }

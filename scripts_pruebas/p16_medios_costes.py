@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from comun import API, req, subir_imagen  # noqa: E402
 
+from app.almacen.usos import usos_de_medio  # noqa: E402
 from app.db import db  # noqa: E402
 from app.motor import operaciones as ops  # noqa: E402
 from app.motor import worker  # noqa: E402
@@ -45,6 +46,10 @@ def borrar(medio_id):
     return requests.delete(f"{API}/api/medios/{medio_id}", timeout=30)
 
 
+def usado_en(medio_id):
+    return next(m for m in req("GET", f"/api/espacios/{EP}/biblioteca")["medios"] if m["id"] == medio_id)["usado_en"]
+
+
 def op_doc(oid, **extra):
     base = {
         "_id": oid, "id": oid, "proyecto_id": PROYECTO, "espacio_id": EP,
@@ -58,6 +63,7 @@ def op_doc(oid, **extra):
 
 async def proteccion():
     libre = subir_imagen(EP, "libre.png")
+    ok(usado_en(libre["id"]) == [], "la Biblioteca dice «Sin usar» de un medio libre")
     ok(borrar(libre["id"]).status_code == 200, "un medio que no se usa se borra")
 
     casos = {
@@ -74,6 +80,7 @@ async def proteccion():
         r = borrar(medio["id"])
         ok(r.status_code == 409 and "No se puede borrar" in r.json().get("detail", ""), f"409 si es {nombre}: {r.json().get('detail')}")
         ok((await db.medios.find_one({"_id": medio["id"]})) is not None, f"el medio sigue ahí ({nombre})")
+        ok(usado_en(medio["id"]) == await usos_de_medio(medio["id"]) != [], f"la Biblioteca enseña el mismo uso que el borrado ({nombre})")
     await db.tomas.delete_many({"_id": "p16-toma"})
     await db.operaciones.delete_many({"proyecto_id": PROYECTO})
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
+from app.almacen.usos import usos_de_medio
 from app.db import db, sin_id
 
 router = APIRouter(prefix="/api", tags=["biblioteca"])
@@ -25,14 +26,10 @@ async def biblioteca(espacio_id: str):
 
     elementos_docs = await db.elementos.find({"espacio_id": espacio_id}).sort("nombre", 1).to_list(2000)
     elementos = []
-    usos_medio: dict[str, list[str]] = {}
     for d in elementos_docs:
         el = sin_id(d)
         fichas = await db.fichas.find({"elemento_id": el["id"]}).sort("version", 1).to_list(200)
         vigente = next((f for f in fichas if f["version"] == el["ficha_vigente"]), None)
-        for f in fichas:
-            for r in f.get("referencias", []):
-                usos_medio.setdefault(r["medio_id"], []).append(el["nombre"])
         elementos.append(
             {
                 **el,
@@ -43,6 +40,6 @@ async def biblioteca(espacio_id: str):
         )
 
     medios_docs = await db.medios.find({"espacio_id": espacio_id}).sort("created_at", -1).to_list(2000)
-    medios = [{**sin_id(d), "usado_en": sorted(set(usos_medio.get(d["_id"], [])))} for d in medios_docs]
+    medios = [{**sin_id(d), "usado_en": await usos_de_medio(d["_id"])} for d in medios_docs]
 
     return {"espacio": sin_id(esp), "elementos": elementos, "medios": medios}
