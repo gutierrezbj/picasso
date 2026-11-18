@@ -1,6 +1,6 @@
 # PIC-02 · Protección de medios y corrección de costes
 
-**Estado:** validado por el revisor el 16-11-2026 en una instancia aislada, con las correcciones de `425f366` (§7). Las correcciones siguen en la rama `pic-02/correcciones-validacion`, sin fusionar en `main` ni desplegar en la instalación de Juan. Parte de PIC-01 revisión 3 (`457235f`), apartados 5.1 y 6.
+**Estado:** validado por el revisor el 16-11-2026 en una instancia aislada, con las correcciones de `425f366` (§7). Las correcciones están fusionadas en `main` (`57131f7`) y desplegadas en la instalación de Juan desde el 18-11-2026 (§7). Parte de PIC-01 revisión 3 (`457235f`), apartados 5.1 y 6.
 
 **Fuera de alcance:**
 - `id_peticion` contra duplicados y la Mesa, que son PIC-03.
@@ -135,3 +135,9 @@ Casos nuevos en `p16`:
 - Registro, Taller y CSV coinciden: 0,50 $ = 0,12 informado + 0,30 estimado + 0,08 posible cargo, sin reservas.
 - Pruebas técnicas: pytest, p1–p17 y las pruebas del frontend. `p16` comprueba además que la Biblioteca y el borrado dicen lo mismo en los nueve casos.
 - No se llamó a proveedores reales: claves vacías y sus dominios bloqueados en el contenedor. No hubo gasto. La instalación de Juan no se modificó. La instancia aislada se retiró al terminar.
+
+**Despliegue en la instalación de Juan (18-11-2026):**
+- Respaldo previo de la base (`picasso-antes-pic02c-20261118-1633.gz`) y de las imágenes (`picasso-backend:antes-pic02c`, `picasso-frontend:antes-pic02c`).
+- `main` avanza a `57131f7` sin commit de fusión; la aplicación arranca y la base conserva el mismo recuento de documentos.
+- El revisor comprueba en la instalación que la Biblioteca muestra tomas, referencias y usos en el historial, y que V1–V4 siguen intactas: 0,60 $ estimados, sin reservas pendientes.
+- El diálogo «Hubo cargo…» se validó en la instancia aislada. En la instalación no se abrió porque no hay cargos pendientes, y no se creó ninguno.
