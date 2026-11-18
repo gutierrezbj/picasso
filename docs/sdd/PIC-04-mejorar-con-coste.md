@@ -1,6 +1,6 @@
 # PIC-04 · «Mejorar mi descripción» con su coste delante
 
-**Estado:** borrador, revisión 3 (18-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
+**Estado:** borrador, revisión 4 (18-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
 - Revisión 1: `2c88289`.
 - Revisión 2: correcciones del revisor del 18-11-2026:
   - la reserva no es un máximo;
@@ -19,6 +19,14 @@
   - los límites de entrada quedan definidos;
   - se quita la falsa cota de tokens;
   - el cierre del Módulo 1 se separa de PIC-04.
+- Revisión 3: `184a23d`.
+- Revisión 4: tercera revisión del revisor del 18-11-2026:
+  - el consumo de los intentos anteriores sigue visible mientras corre el siguiente (§4.2);
+  - la revisión del borrador se guarda y se confirma antes de presupuestar y de enviar (§5.1);
+  - la reserva incluye la escritura en caché de la configuración elegida (§3);
+  - fuentes oficiales de las columnas de caché, de la salida con el razonamiento dentro y de los motivos de respuesta incompleta, con un mensaje por motivo (§2, §5.3);
+  - D3 se concreta: segundo plano y consulta por identificador, con caducidad y respuesta sin consumo, que nunca valen coste cero (§4.4);
+  - contar tokens con otra llamada queda fuera de PIC-04.
 
 **Origen:** PIC-01 D13 y §13.3: «Mejorar» quedó desactivado en la Mesa hasta poder enseñar su coste antes de usarlo, y la estimación previa con tope exigía volver a verificar la tarifa.
 
@@ -53,25 +61,43 @@
 
 **Sin cambios respecto al 15-10-2026.** Picasso usa la tarifa estándar: no pide Fast, Batch, Flex ni residencia regional.
 
-**Caché de la entrada** (developers.openai.com/api/docs/guides/prompt-caching, 18-11-2026):
-- `input_tokens` incluye las lecturas de caché (`cached_tokens`) y las escrituras (`cache_write_tokens`). La entrada normal es lo que queda: el ejemplo de la guía resta las dos de `input_tokens`.
-- Las lecturas se cobran a la tarifa de entrada en caché.
-- Las escrituras se cobran más caras que la entrada normal:
-  - 1,25× con la duración por defecto de 30 minutos;
-  - 2,5× con la de 12 horas.
-- La caché empieza en 1 024 tokens de prompt (GPT-5.6 en adelante).
-- En la fila de `gpt-6.1-sol` de la página de precios aparecen 2,50 $ y 5,00 $, que coinciden con 1,25× y 2,5× de 2,00 $. **Falta confirmar las cabeceras de esas columnas antes de implementar.**
+**Columnas de caché en la página de precios** (developers.openai.com/api/docs/pricing, tabla estándar, 18-11-2026). Cabeceras literales y fila de `gpt-6.1-sol`:
+
+| Short context input | Short context output | Short context cached input | Short context 30m write | Short context 12h write |
+|---|---|---|---|---|
+| 2,00 $ | 10,00 $ | 0,10 $ | **2,50 $** | **5,00 $** |
+
+- Nota de la página: «Short context» es ≤ 272K tokens de entrada. Las columnas de contexto largo (4,00 / 15,00 / 0,20 / 5,00 / 10,00) no aplican: Mejorar no pasa de unos miles.
+- Confirma lo que la revisión 3 dejaba pendiente: 2,50 $ es la escritura a 30 minutos y 5,00 $ la de 12 horas.
+
+**Caché de la entrada** (developers.openai.com/api/docs/guides/prompt-caching y referencia de `POST /v1/responses`, 18-11-2026):
+- `cached_tokens` cuenta las lecturas cobradas y excluye lo que se cobra como escritura. La entrada normal es `input_tokens` − `cached_tokens` − `cache_write_tokens` (ejemplo de la guía: 12 000 − 4 000 − 7 000 = 1 000).
+- `input_tokens_details.cache_write_tokens_details` reparte las escrituras en `ttl_30m_tokens` y `ttl_12h_tokens`, que no se solapan y suman `cache_write_tokens`.
+- Parámetro `prompt_cache_options` (gpt-5.6 en adelante):
+  - `mode`: `implicit` (por defecto) o `explicit`. En `implicit`, OpenAI pone un punto de caché al final del último mensaje apto, y la primera petición **escribe** ese prefijo;
+  - `ttl`: `30m` (por defecto) o `12h`;
+  - en `explicit`, la guía dice que, sin puntos de caché marcados, la petición no usa caché ni crea escrituras.
+- La caché empieza en 1 024 tokens de prompt (GPT-5.6 en adelante). La entrada de Mejorar puede pasar de esa cifra (§3).
 
 **Campos de consumo de la respuesta** (referencia de `POST /v1/responses`, objeto Response, 18-11-2026):
-- `usage.input_tokens`, `input_tokens_details.cached_tokens`, `output_tokens`, `output_tokens_details.reasoning_tokens` y `total_tokens`.
-- Estados posibles: `completed`, `failed`, `in_progress`, `cancelled`, `queued` e `incomplete`.
-- La referencia **no dice** si `output_tokens` ya incluye `reasoning_tokens`. La guía de razonamiento dice que el razonamiento «se factura como tokens de salida», pero no aclara el campo.
+- `usage.input_tokens`, `input_tokens_details.cached_tokens`, `input_tokens_details.cache_write_tokens`, `cache_write_tokens_details` (opcional), `output_tokens`, `output_tokens_details.reasoning_tokens` y `total_tokens`.
+- Estados de la respuesta: `completed`, `failed`, `in_progress`, `cancelled`, `queued` e `incomplete`.
 
-**No verificado todavía, y necesario antes de decidir D3:**
-- en modo segundo plano, si `GET /v1/responses/{id}` devuelve `usage`, la lista completa de estados (la guía solo nombra `queued` e `in_progress` como no terminales) y cuánto tiempo se puede recuperar una respuesta;
-- si contar tokens (`POST /v1/responses/input_tokens`) se cobra. La página no lo dice, y este diseño no depende de ello;
-- los valores de `incomplete_details.reason` además de `max_output_tokens`;
-- las cabeceras de las columnas de escritura en caché (arriba).
+**La salida incluye el razonamiento** (developers.openai.com/api/docs/guides/reasoning, 18-11-2026):
+- La guía dice que los tokens de razonamiento «se facturan como» tokens de salida y que `max_output_tokens` limita todo lo generado, razonamiento incluido.
+- Su ejemplo de `usage` trae `input_tokens` 75, `output_tokens` 1 186, `reasoning_tokens` 1 024 y `total_tokens` 1 261. Como 75 + 1 186 = 1 261, el razonamiento está **dentro** de `output_tokens`: si se sumara aparte, el total sería 2 285.
+- La guía no lo dice con una frase. Por eso se mantiene la comprobación de §4.3 en cada respuesta.
+- La guía recomienda reservar al principio al menos 25 000 tokens para razonamiento y salida. El `max_output_tokens` propuesto (2 000, §3) es mucho menor; las pruebas reales dirán si basta con `low`.
+
+**Motivos de respuesta incompleta** (referencia, `incomplete_details.reason`, 18-11-2026): `max_output_tokens`, `max_messages`, `content_filter` y `steered`. Este último solo se da tras un evento `response.steer` por WebSocket, que Picasso no usa. El mensaje de cada uno está en §5.3.
+
+**Segundo plano** (developers.openai.com/api/docs/guides/background y guides/your-data, 18-11-2026):
+- `background: true` y consulta con `GET /v1/responses/{id}` mientras el estado sea `queued` o `in_progress`.
+- **Caducidad:** con la ventana por defecto, la respuesta se guarda en disco «unos 10 minutos» y, si `store` falta o es `false`, se borra al terminar ese plazo. Con `store: true` sigue la retención normal de la Responses API: al menos 30 días.
+- Cancelar dos veces es idempotente y devuelve el objeto final. La guía no dice si una respuesta cancelada se cobra.
+- **No documentado:** si la consulta devuelve `usage` siempre, ni ninguna clave de idempotencia o búsqueda sin el id. El diseño (§4.4) no da nada de eso por hecho.
+
+**Fuera de PIC-04:** contar tokens con otra llamada (`POST /v1/responses/input_tokens`). La entrada se estima por bytes (§3).
 
 ## 3. Reserva estimada antes del clic (no es un máximo)
 
@@ -89,26 +115,33 @@ El botón deja de ser un icono mudo y enseña la cifra: **«Mejorar · ≈ X $ �
 | Por referencia, rasgos de su ficha | Sin límite. En la base de Juan, el más largo ocupa hoy 112 caracteres | **400 caracteres** unidos con «; ». Se recorta con «…» y la vista previa lo muestra |
 | Formato del mensaje que añade la API | Desconocido | **Margen de 256 tokens**, sumado a la entrada. Es una cifra propuesta, no demostrada |
 
-**Reserva estimada** = (bytes medidos de todo lo anterior + margen) × tarifa de entrada + `max_output_tokens` × tarifa de salida.
+**Configuración de caché propuesta:** `prompt_cache_options: {mode: "explicit", ttl: "30m"}`, sin puntos de caché marcados. Según la guía (§2), así la petición no usa caché ni escribe. Mejorar no gana nada con la caché: cada texto es distinto y las instrucciones fijas (1 153 bytes) no llegan a los 1 024 tokens.
+
+**Reserva estimada** = (bytes medidos de todo lo anterior + margen) × **tarifa de escritura de la `ttl` elegida** + `max_output_tokens` × tarifa de salida.
+- **La entrada se reserva a la tarifa de escritura a 30 minutos (2,50 $), no a la normal (2,00 $).** Es lo más caro que la configuración elegida puede cobrar por un token de entrada. Así la reserva cubre la escritura aunque OpenAI llegara a escribir pese a no haber puntos de caché.
+- Si Juan prefiriera otra configuración, la reserva cambia con ella: `ttl: "12h"` se reserva a 5,00 $. La reserva siempre usa la tarifa de escritura de la `ttl` que se envía.
+- Si una respuesta trae `cache_write_tokens` > 0 con la configuración propuesta, el intento se marca «escritura en caché no esperada» y se trata como «superó la reserva» (§6): queda contado y Mejorar se bloquea hasta revisarlo.
 - **La parte de salida sí tiene tope:** OpenAI no genera más de `max_output_tokens`, razonamiento incluido (guía de razonamiento).
 - **La parte de entrada es una estimación por exceso**, no una garantía.
+- **La reserva se calcula en el servidor**, con el texto de la revisión guardada y confirmada del borrador (§5.1), nunca con lo que mande el navegador.
 
 **Estimación (≈):** cifra típica, también sin garantía. Sale de la entrada medida más una salida típica, y después se ajusta con la media de lo calculado en las últimas llamadas del estudio.
 
 Al pasar el cursor: «Estimación y reserva calculadas por Picasso con la tarifa del DD-MM-AAAA. La salida tiene un tope; la entrada se estima por exceso. Ninguna de las dos es una cifra garantizada por OpenAI».
 
 **Ejemplo de cálculo, no una cota.** Con 300 bytes de texto, dos referencias de unos 150 bytes cada una y `max_output_tokens` = 2 000:
-- **Entrada:** 1 153 + 20 + 300 + 300 bytes, más 256 de margen, son unos 2 030 «tokens por exceso» → unos 0,004 $ a la tarifa de entrada normal.
+- **Entrada:** 1 153 + 20 + 300 + 300 bytes, más 256 de margen, son unos 2 030 «tokens por exceso» → unos 0,005 $ a la tarifa de escritura a 30 minutos (2,50 $).
 - **Salida:** 2 000 tokens → 0,020 $.
-- **Reserva estimada:** unos 0,024 $.
+- **Reserva estimada:** unos 0,025 $.
 
-La entrada se mide en cada llamada. Si la caché llegara a escribirse, la entrada podría costar hasta 2,5× (§4.3), y eso la reserva no lo cubre. Es otra razón para no llamarla máximo.
+La entrada se mide en cada llamada. Sigue sin ser un máximo: la cota de un token por byte no está documentada.
 
 **Parámetros propuestos para probar, sin aprobar** (antes D1 y D2):
 
 | Parámetro | Valor propuesto | Motivo |
 |---|---|---|
-| `max_output_tokens` | 2 000 | La respuesta visible son unas 110 palabras y 2 a 6 cambios en JSON |
+| `max_output_tokens` | 2 000 | La respuesta visible son unas 110 palabras y 2 a 6 cambios en JSON. La guía recomienda empezar con 25 000 (§2); si 2 000 deja demasiadas `incomplete`, se sube con su nueva reserva delante |
+| `prompt_cache_options` | `mode: "explicit"`, `ttl: "30m"`, sin puntos de caché | Sin caché ni escrituras según la guía; la reserva cubre la escritura a 30 minutos igualmente |
 | `reasoning.effort` | `low` | Con `medium`, el valor por defecto, el razonamiento puede comerse el tope y dejar `incomplete` sin texto |
 | Longitud del texto | 2 000 caracteres | Que la reserva no se dispare. Por encima, el botón explica por qué no se puede |
 
@@ -149,12 +182,14 @@ Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y
 | Rechazo 4xx de la petición (clave, modelo, parámetros o formato) | `fallida`. OpenAI no aceptó el trabajo. Si la respuesta trae `usage`, se apunta como estimado | nada, o estimado |
 | Error 5xx al crear | **`incierta`**: un 5xx no demuestra que no se procesara (la lección de PIC-03). Nunca `fallida` sin más | reservado, y al marcarla fallida, posible cargo |
 | Respuesta con estado `failed` o `cancelled` y su `usage` | `fallida`, con el consumo que traiga apuntado como estimado | estimado |
+| Respuesta terminada **sin `usage`**, o con `usage` vacío o a cero en `failed` o `cancelled` | «terminada sin consumo informado» (§4.4). **No es coste cero** | posible cargo = reserva estimada, hasta que Juan lo resuelva |
+| Respuesta caducada o no encontrada al consultar (§4.4) | `incierta`, «respuesta caducada o no encontrada». **No es coste cero** | reservado, y al marcarla fallida, posible cargo |
 | Sin respuesta después de enviar (tiempo agotado o corte) | `incierta` (§4.1) | reservado, y al marcarla fallida, posible cargo |
 | Doble clic o recarga | Mismo `id_peticion` → la misma operación (PIC-03) | — |
 
-**Cómo se habla con OpenAI: D3 queda pendiente.** No se decide hasta verificar lo que falta en §2: recuperación, estados y consumo de la respuesta en segundo plano.
-- **Opción A, segundo plano (`background: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker.
-- **Opción B, llamada directa** como hoy, con un tiempo de espera largo.
+**Cómo se habla con OpenAI: [DECIDIR] D3.** Recomendación: **opción A**, concretada en §4.4.
+- **Opción A, segundo plano (`background: true`, `store: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker y permite recuperar el resultado tras un corte.
+- **Opción B, llamada directa** como hoy, con un tiempo de espera largo. Cualquier corte deja la operación incierta sin forma de consultar.
 
 ### 4.1 Respuesta perdida o 5xx
 - **Opción A, se pierde la respuesta inicial antes de guardar el id** (corte de red, tiempo agotado o caída del backend entre el POST y la escritura en la base):
@@ -187,17 +222,27 @@ Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y
 **Coste de la operación** = suma de `coste_segun_tarifa` de **todos** sus intentos, más los cargos de PIC-02.
 - Un intento `incomplete` que consumió tokens sigue sumando aunque el siguiente termine bien.
 
-**Cambio en `coste_de` (PIC-02 §2.3), el único:**
-- una operación terminada cuyos intentos tengan `coste_segun_tarifa` cuenta la suma en **estimado**, en lugar de su `coste_estimado`;
-- los intentos sin `usage` siguen el camino de PIC-02: reserva mientras está en curso y posible cargo si se marca fallida;
+**Mientras corre un intento nuevo, lo anterior no desaparece.** La operación enseña a la vez:
+- en **estimado**, la suma de `coste_segun_tarifa` de los intentos anteriores ya terminados;
+- en **reservado**, la reserva estimada del intento en curso.
+
+Por ejemplo, con el intento 1 `incomplete` a 0,021 $ y el intento 2 en curso con 0,025 $ de reserva: estimado 0,021 $ + reservado 0,025 $. Al terminar el intento 2, su reserva se sustituye por su coste según tarifa y el estimado pasa a 0,021 $ + b $.
+
+**Cambio en `coste_de` (PIC-02 §2.3), el único:** para las operaciones `mejorar_texto`, el coste se calcula **por intento**:
+- cada intento terminado con `coste_segun_tarifa` cuenta ese valor en **estimado**, esté la operación terminada o en curso;
+- el intento en curso cuenta su `coste_estimado` en **reservado**;
+- los intentos sin `usage` siguen el camino de PIC-02: reserva mientras está en curso y posible cargo si se marca fallida o termina sin consumo informado (§4.4);
 - las demás operaciones no cambian.
 
 **Registro:** una línea por intento bajo la fila de la operación. Por ejemplo:
 - «Intento 1: incompleta (`max_output_tokens`) · según tarifa 0,021 $»;
-- «Intento 2: completa · según tarifa 0,012 $».
+- «Intento 2: en curso · reserva estimada 0,025 $», que al terminar pasa a «Intento 2: completa · según tarifa 0,012 $».
+
+**Mesa:** el lateral de la propuesta y los totales del espacio enseñan las mismas dos cifras que el Registro mientras el intento corre.
 
 **CSV:** columnas nuevas por operación:
-- `coste_segun_tarifa`, que es la suma;
+- `coste_segun_tarifa`, que es la suma de los intentos terminados;
+- `reserva_en_curso`, la reserva del intento que siga en marcha al exportar (vacía si no hay);
 - `intentos_con_consumo`;
 - `tokens_entrada`, `tokens_cache_lectura`, `tokens_cache_escritura`, `tokens_salida` y `tokens_razonamiento`, sumados.
 
@@ -225,11 +270,45 @@ Nunca se recalcula con una tarifa posterior.
 - escrituras de caché = `cache_write_tokens`, a su tarifa según la duración (`cache_write_tokens_details`);
 - salida = `output_tokens`, a la tarifa de salida.
 
-**Los tokens de razonamiento no se suman aparte.** `reasoning_tokens` se guarda solo como desglose. Como la referencia no dice si `output_tokens` ya los incluye, cada respuesta se comprueba:
-- **si `total_tokens` = `input_tokens` + `output_tokens`:** el razonamiento ya está dentro de `output_tokens`;
+**Los tokens de razonamiento no se suman aparte.** `reasoning_tokens` se guarda solo como desglose: el ejemplo oficial de la guía de razonamiento los trae dentro de `output_tokens` (§2). Como la guía no lo afirma con una frase, cada respuesta se comprueba:
+- **si `total_tokens` = `input_tokens` + `output_tokens`** y `reasoning_tokens` ≤ `output_tokens`: el razonamiento ya está dentro de `output_tokens`;
 - **si no cuadra:** el intento se marca «consumo sin cuadrar», el cálculo **no** suma el razonamiento por su cuenta y el caso se revisa antes de seguir. Así no se cuenta dos veces.
 
 **Si llega un campo de `usage` que Picasso no conoce:** el intento lo guarda tal cual y queda marcado «consumo con campos desconocidos». Esto evita calcular a ciegas.
+
+### 4.4 D3 concretado: segundo plano y consulta por identificador (recomendado)
+
+**Petición:** `POST /v1/responses` con:
+- `background: true`;
+- `store: true`, porque sin él la respuesta se borra a los 10 minutos (§2);
+- `max_output_tokens`, `reasoning.effort` y `prompt_cache_options` de §3.
+
+**Consecuencia de `store: true`:** OpenAI guarda el texto enviado y la respuesta al menos 30 días. Las referencias llevan sus rasgos (§3), incluidas las de persona real. Juan lo acepta al decidir D3; si no, D3 pasa a la opción B.
+
+**Secuencia en el worker:**
+1. `enviar`: hace el POST y guarda el id remoto en el intento **antes** de cualquier otra cosa. Si el POST no devuelve el id, se aplica §4.1 (incierta sin id).
+2. `consultar`: `GET /v1/responses/{id}` cada 2 segundos, como los ejemplos de la guía, mientras el estado sea `queued` o `in_progress`.
+3. Estado final:
+   - `completed` o `incomplete` con `usage` → coste según tarifa (§4.3) y propuesta (§5);
+   - `failed` o `cancelled` con `usage` → `fallida`, con ese consumo en estimado;
+   - cualquier estado final sin consumo informado → el caso de abajo.
+4. Picasso **no cancela** respuestas en esta fase.
+
+**Plazo propio de Picasso:** si a los **15 minutos** (propuesto) la respuesta sigue en `queued` o `in_progress`, el worker deja de consultar y la operación queda `incierta`, «sin final de OpenAI en 15 minutos». «Comprobar» vuelve a consultar cuando Juan lo pide.
+
+**Caducidad o respuesta no encontrada** (la consulta devuelve 404, o la respuesta ya no existe):
+- la operación queda `incierta`, «respuesta caducada o no encontrada», con el id guardado;
+- **no es coste cero:** OpenAI pudo procesarla y cobrarla;
+- marcada fallida, el posible cargo es la reserva estimada del intento;
+- se resuelve a mano con «No hubo cargo» o «Hubo cargo…», mirando el panel de uso de OpenAI.
+
+**Respuesta sin consumo** (estado final sin `usage`, o con `usage` vacío; también `failed` o `cancelled` con todo a cero):
+- el intento queda «terminada sin consumo informado», sin `coste_segun_tarifa`;
+- **no es coste cero:** la documentación no dice que esos estados no se cobren;
+- cuenta como posible cargo igual a la reserva estimada del intento, hasta que Juan lo resuelva con «No hubo cargo» o «Hubo cargo…»;
+- si trae texto, se trata como respuesta incompleta (§5.3): sin Aceptar directo.
+
+**Nada de lo anterior relanza la petición.** Cada nuevo intento es un clic de Juan (§4.2).
 
 ## 5. La propuesta: revisar, aceptar o descartar, atada a su borrador
 
@@ -253,7 +332,17 @@ Nunca se recalcula con una tarifa posterior.
 - **Al escribir,** la barra guarda el texto con `PUT /api/borradores/{id}`, con un retraso corto y enviando la revisión que tiene. Si el servidor ya tiene una revisión mayor, responde 409 y la barra no pisa nada.
 - **El navegador recuerda** el `id` del borrador activo por espacio y carpeta en `localStorage`, como ya hace con la petición pendiente (PIC-03).
   - Si se pierde, se recupera el borrador más reciente de esa carpeta y ese alcance con `GET /api/espacios/{e}/borradores?carpeta_id=…&alcance=…`.
-- **Al pulsar Mejorar,** la petición lleva `borrador_id` y `revision`. La operación guarda en su entrada, que es inmutable:
+- **Antes de presupuestar:** la cifra del botón sale de la **revisión guardada y confirmada** por el servidor.
+  - Mientras la barra tenga cambios sin guardar, el botón dice «guardando…» y no se puede pulsar.
+  - Con la revisión confirmada, el servidor devuelve estimación y reserva para esa revisión: `GET /api/borradores/{id}/mejorar/presupuesto?revision=N`. Si la revisión ya no es la actual, responde 409 y el botón vuelve a «guardando…».
+- **Al pulsar Mejorar:**
+  1. la barra fuerza el guardado pendiente y espera la confirmación con su número de revisión;
+  2. la petición lleva `borrador_id`, `revision` e `id_peticion`, **sin texto**: el servidor lee el texto de esa revisión guardada;
+  3. el servidor comprueba que la revisión es la actual y que el borrador no está cerrado, recalcula la reserva y crea la operación con esa cifra;
+  4. **si hay conflicto** (409 al guardar, revisión que no es la actual o borrador cerrado): no se crea operación, **no se llama al proveedor** y el texto de la barra se conserva tal cual. La barra explica «el borrador cambió en otra ventana; revisa antes de mejorar» y ofrece recargar la revisión del servidor sin pisar la suya hasta que Juan elija;
+  5. si la reserva recalculada difiere de la mostrada, no se envía: el botón enseña la cifra nueva y hace falta otro clic.
+
+  La operación guarda en su entrada, que es inmutable:
   - `borrador_id`;
   - `revision`;
   - `carpeta_id`;
@@ -286,7 +375,17 @@ Nunca se recalcula con una tarifa posterior.
 
 **Respuesta cortada** (`incomplete`) o sin JSON válido:
 - se apunta el consumo disponible (§4);
-- el aviso «propuesta incompleta: el modelo se quedó sin margen»;
+- el aviso corresponde al motivo recibido en `incomplete_details.reason`:
+
+| Motivo | Aviso |
+|---|---|
+| `max_output_tokens` | «Propuesta incompleta: el modelo llegó al límite de salida (N tokens)» |
+| `content_filter` | «Propuesta incompleta: el filtro de contenido de OpenAI cortó la respuesta» |
+| `max_messages` | «Propuesta incompleta: OpenAI alcanzó su límite de mensajes». No debería darse con un solo mensaje; se marca para revisar |
+| `steered` | «Propuesta incompleta por un motivo no esperado (`steered`)». Picasso no usa WebSocket; se marca para revisar y no se espera ninguna respuesta sucesora |
+| Otro o ninguno | «Propuesta incompleta: motivo «…» de OpenAI», con el valor literal, marcado para revisar |
+| Sin JSON válido | «La respuesta no trae una propuesta legible» |
+
 - si hay texto parcial, se puede ver, pero **no hay Aceptar directo**: solo «Editar antes de aceptar» o Descartar;
 - si no hay texto: «no hubo propuesta; coste según tarifa X $»;
 - **no se repite la llamada.**
@@ -313,7 +412,7 @@ Nunca se recalcula con una tarifa posterior.
 
 ## 7. Pruebas
 
-**En aislado, sin gasto:** la imagen `picasso-pruebas-backend`, la base `picasso_pruebas` o una instancia propia, la clave vacía y el dominio de OpenAI bloqueado. El proveedor simulado gana el caso `mejorar_texto`, con los resultados `normal`, `incompleta`, `rechazada`, `incierta`, `incierta_sin_id`, `error_5xx` y `supera_reserva`.
+**En aislado, sin gasto:** la imagen `picasso-pruebas-backend`, la base `picasso_pruebas` o una instancia propia, la clave vacía y el dominio de OpenAI bloqueado. El proveedor simulado gana el caso `mejorar_texto`, con los resultados `normal`, `incompleta` (con cada `reason`: `max_output_tokens`, `content_filter`, `max_messages`, `steered` y uno desconocido), `rechazada`, `incierta`, `incierta_sin_id`, `error_5xx`, `supera_reserva`, `escritura_cache`, `sin_consumo`, `caducada` y `sin_final`. El simulado lleva un contador de llamadas, para comprobar cuántas veces se habló con el «proveedor».
 
 El proveedor simulado devuelve también `usage`, para poder probar el cálculo según tarifa.
 
@@ -332,6 +431,31 @@ Casos nuevos en `p18_mejorar`:
 9. **Tarifa:** el cálculo separa la entrada normal, las lecturas y escrituras de caché y la salida, con un `usage` simulado que trae las cuatro. El razonamiento no se suma dos veces. Un `usage` que no cuadra queda marcado y no se calcula a ciegas.
 10. **Tarifa inmutable:** al cambiar la tarifa del código, los intentos antiguos conservan su `tarifa_aplicada` y su coste.
 11. Registro, totales de la Mesa y CSV coinciden. Ninguna llamada se repite sola.
+
+Casos añadidos en la revisión 4, con su criterio de aprobado:
+
+12. **Consumo anterior visible con el intento en curso.** Intento 1 `incompleta` con a $; intento 2 lanzado a mano y detenido en `in_progress`, con reserva r $.
+    - Pasa si el Registro enseña dos líneas («según tarifa a $» y «en curso · reserva estimada r $»), la Mesa enseña estimado a $ + reservado r $, y el CSV exportado en ese momento trae `coste_segun_tarifa` = a y `reserva_en_curso` = r.
+    - Al terminar el intento 2 con b $: estimado a + b, reservado 0, `reserva_en_curso` vacía. Las tres vistas coinciden en cada momento.
+13. **Revisión confirmada antes de presupuestar.** Con cambios sin guardar, el botón dice «guardando…» y no se puede pulsar. Tras guardar, la cifra corresponde a la revisión confirmada.
+    - Pasa si la reserva del botón es la calculada por el servidor para esa revisión y la operación creada guarda esa misma revisión y esa reserva.
+14. **Conflicto de revisión al pulsar.** Otra ventana guarda una revisión mayor; la primera pulsa Mejorar.
+    - Pasa si hay 409, **no se crea operación**, el contador del proveedor simulado sigue igual y el texto de la barra no cambia.
+    - Lo mismo con el borrador cerrado y con una reserva recalculada distinta de la mostrada (esta última exige otro clic, sin llamada).
+15. **Escritura en caché en la reserva.** Con la configuración propuesta, la reserva usa 2,50 $ por millón en la entrada; con `ttl: "12h"`, 5,00 $.
+    - Pasa si las cifras coinciden con el cálculo a mano.
+    - `escritura_cache` (respuesta con `cache_write_tokens` > 0) → coste según tarifa con la escritura a su tarifa, marca «escritura en caché no esperada» y bloqueo como `supera_reserva`.
+16. **Motivo de respuesta incompleta.** Cada `reason` simulado da su aviso de §5.3, y ninguno ofrece Aceptar directo ni lanza otra llamada.
+    - Pasa si el texto del aviso es el de la tabla para cada motivo y el desconocido enseña su valor literal.
+17. **Razonamiento dentro de la salida.** Un `usage` como el del ejemplo oficial (75 / 1 186 / 1 024 / 1 261) da 75 tokens a entrada y 1 186 a salida, sin sumar los 1 024.
+    - Un `usage` con `total_tokens` distinto de entrada + salida queda «consumo sin cuadrar».
+18. **Segundo plano (D3, opción A).**
+    - La petición simulada lleva `background: true` y `store: true`, y el id se guarda en el intento antes de consultar.
+    - `sin_final`: a los 15 minutos simulados, `incierta` «sin final de OpenAI», y el worker deja de consultar.
+    - `caducada` (404 al consultar): `incierta` «respuesta caducada o no encontrada»; marcada fallida, posible cargo = reserva estimada. **Nunca coste cero.**
+    - `sin_consumo` (estado final sin `usage`, o `failed` con todo a cero): «terminada sin consumo informado», posible cargo = reserva estimada. **Nunca coste cero.**
+    - Pasa si en los tres casos el contador del proveedor no sube por sí solo, y Registro, Mesa y CSV dan las mismas cifras.
+    - «No hubo cargo» deja el coste en 0 solo tras ese clic de Juan, y «Hubo cargo…» lo lleva a informado, como en PIC-02.
 
 Además, toda la batería: pytest, p1–p17 y las pruebas del frontend.
 
