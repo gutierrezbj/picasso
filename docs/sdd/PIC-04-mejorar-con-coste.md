@@ -1,6 +1,15 @@
 # PIC-04 · «Mejorar mi descripción» con su coste delante
 
-**Estado:** borrador para revisión (18-11-2026). Sin código. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
+**Estado:** borrador, revisión 2 (18-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
+- Revisión 1: `2c88289`.
+- Revisión 2: correcciones del revisor del 18-11-2026:
+  - la reserva no es un máximo;
+  - el coste por tokens es un cálculo según tarifa, no un importe informado;
+  - la respuesta cortada no se acepta;
+  - D3 queda pendiente de verificar;
+  - original y propuesta van atados a su borrador;
+  - los parámetros son propuestas para probar;
+  - 18.29 y 19.29 no se cierran sin demostrarlo.
 
 **Origen:** PIC-01 D13 y §13.3: «Mejorar» quedó desactivado en la Mesa hasta poder enseñar su coste antes de usarlo, y la estimación previa con tope exigía volver a verificar la tarifa.
 
@@ -35,44 +44,53 @@
 
 **Sin cambios respecto al 15-10-2026.** Picasso usa la tarifa estándar: no pide Fast, Batch, Flex ni residencia regional.
 
-**No verificado todavía, y necesario antes de construir:**
-- si consultar una respuesta en segundo plano (`GET /v1/responses/{id}`) devuelve `usage`;
+**No verificado todavía, y necesario antes de decidir D3:**
+- en modo segundo plano, si `GET /v1/responses/{id}` devuelve `usage`, la lista completa de estados (la guía solo nombra `queued` e `in_progress` como no terminales) y cuánto tiempo se puede recuperar una respuesta;
 - si contar tokens (`POST /v1/responses/input_tokens`) se cobra. La página no lo dice, y este diseño no depende de ello.
 
-## 3. Estimación y máximo antes del clic
+## 3. Reserva estimada antes del clic (no es un máximo)
 
-El botón deja de ser un icono mudo y enseña la cifra: **«Mejorar · ≈ 0,01 $ (máx. 0,03 $)»**.
+El botón deja de ser un icono mudo y enseña la cifra: **«Mejorar · ≈ X $ · reserva estimada Y $»**. **No se usa la palabra «máximo».** La entrada no tiene una cota demostrada: que un token de texto ocupe al menos un byte es una propiedad de cómo trocea el texto el modelo, pero OpenAI no la documenta.
 
-**Máximo:** lo calcula Picasso antes de enviar.
-- **Salida:** `max_output_tokens` × tarifa de salida. Este límite lo hace cumplir OpenAI.
-- **Entrada:** el tamaño en bytes UTF-8 de instrucciones más contexto, más un margen fijo de formato, × tarifa de entrada. Un token de texto no ocupa menos de un byte, así que es una cota por exceso. Es un cálculo de Picasso, no una garantía escrita de OpenAI.
-- El texto del usuario tiene un tope de longitud para que el máximo no se dispare.
+**Qué se envía de verdad, y se mide antes de enviar** (`taller.py`, `mejorar`):
 
-**Estimación:** es una cifra típica, no una garantía. Sale del tamaño de la entrada y de una salida típica.
-- Al principio se usa una salida típica fija.
-- Después se ajusta con la media de lo informado en las últimas llamadas del estudio.
+| Parte | Tamaño hoy | Límite propuesto |
+|---|---|---|
+| Instrucciones fijas (`INSTRUCCIONES_MEJORAR`) | 1 153 bytes UTF-8 | Fijas; si cambian, se vuelven a medir |
+| «Prompt del usuario: » + texto | Sin límite | Parámetro a probar: 2 000 caracteres |
+| «Formato: » + relación | Unos 15 bytes | — |
+| Por cada referencia: «@nombre = clase (persona real). Rasgos de su ficha: …» | Sin límite: los rasgos fijos de una ficha no tienen tope, y Mejorar no limita cuántas referencias recibe | Parámetro a probar: tantas referencias como admite el modelo de imagen elegido, y los rasgos de cada una recortados a una longitud fija |
+| Formato del mensaje que añade la API | Desconocido | Margen fijo, sin demostrar |
 
-**En pantalla se distinguen las dos:**
-- **«≈ X $»** es la estimación;
-- **«máx. Y $»** es el máximo.
+**Reserva estimada** = (bytes medidos de todo lo anterior + margen) × tarifa de entrada + `max_output_tokens` × tarifa de salida.
+- **La parte de salida sí tiene tope:** OpenAI no genera más de `max_output_tokens`, razonamiento incluido (guía de razonamiento).
+- **La parte de entrada es una estimación por exceso**, no una garantía.
 
-Al pasar el cursor: «La estimación puede quedarse corta. El máximo lo pone el límite de salida que Picasso envía a OpenAI. Tarifa verificada el DD-MM-AAAA».
+**Estimación (≈):** cifra típica, también sin garantía. Sale de la entrada medida más una salida típica, y después se ajusta con la media de lo calculado en las últimas llamadas del estudio.
 
-**Cifras orientativas**, con las instrucciones actuales, 2 000 caracteres de texto como máximo y `max_output_tokens` = 2 000:
-- **Entrada:** ≤ 4 500 tokens → ≤ 0,009 $.
-- **Salida:** ≤ 2 000 tokens → ≤ 0,020 $.
-- **Máximo:** ≈ 0,03 $ por llamada.
+Al pasar el cursor: «Estimación y reserva calculadas por Picasso con la tarifa del DD-MM-AAAA. La salida tiene un tope; la entrada se estima por exceso. Ninguna de las dos es una cifra garantizada por OpenAI».
 
-**[DECIDIR] D1. Límite de salida.**
-- **Recomendación:** `max_output_tokens` = 2 000 y `reasoning.effort` = `low`.
-- **Motivo:** la respuesta visible son unas 110 palabras más 2 a 6 cambios en JSON. Con razonamiento `medium`, el razonamiento puede comerse el límite y dejar `incomplete` sin texto.
+**Cifras orientativas** con los parámetros propuestos (2 000 caracteres de texto, rasgos recortados y `max_output_tokens` = 2 000):
+- **Entrada:** unos 4 500 tokens como mucho → unos 0,009 $.
+- **Salida:** 2 000 tokens como mucho → 0,020 $.
+- **Reserva estimada:** unos 0,03 $ por llamada.
 
-**[DECIDIR] D2. Longitud máxima del texto que se envía a mejorar.**
-- **Recomendación:** 2 000 caracteres. Si el texto es más largo, el botón explica por qué no se puede.
+Estas cifras se comprueban en la validación (§7).
+
+**Parámetros propuestos para probar, sin aprobar** (antes D1 y D2):
+
+| Parámetro | Valor propuesto | Motivo |
+|---|---|---|
+| `max_output_tokens` | 2 000 | La respuesta visible son unas 110 palabras y 2 a 6 cambios en JSON |
+| `reasoning.effort` | `low` | Con `medium`, el valor por defecto, el razonamiento puede comerse el tope y dejar `incomplete` sin texto |
+| Longitud del texto | 2 000 caracteres | Que la reserva no se dispare. Por encima, el botón explica por qué no se puede |
+| Rasgos por referencia | Recorte fijo; el valor se fija tras medir las fichas reales | — |
+
+Se fijan con lo que salga de las pruebas y de la validación real, y Juan los aprueba entonces.
 
 ## 4. Gasto en las capas de PIC-02, sin piezas nuevas de contabilidad
 
-Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y proveedor nuevo `openai_texto`. Hereda sin cambios:
+Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y proveedor nuevo `openai_texto`. Hereda, con el único cambio en `coste_de` descrito abajo:
 - `crear_operacion`;
 - `autorizar`;
 - el worker;
@@ -87,82 +105,114 @@ Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y
 
 `asistente_usos` deja de escribirse. No se migra: tiene los registros antiguos.
 
+**El coste por tokens no es un importe informado.** OpenAI devuelve tokens, no un importe. Picasso los multiplica por la tarifa verificada, y eso sigue siendo **un coste calculado según tarifa**.
+- Va a un campo nuevo del intento, `coste_segun_tarifa`, con el desglose de tokens y `tarifa_verificada_en`. Se copia a la operación como su coste.
+- `coste_estimado` sigue siendo la foto de la reserva al enviar, como manda PIC-02 §2.1. No se sobrescribe.
+- **Único cambio en `coste_de`:** una operación terminada con `coste_segun_tarifa` cuenta ese valor en la capa **estimado**, en lugar de su `coste_estimado`.
+- **Nunca** va a `coste_informado`.
+- **Nunca** aparece como «cobrado» ni como «informado».
+- En el Registro, el Importe dice: «según tarifa: N tokens de entrada y M de salida × tarifa del DD-MM-AAAA (sin importe del proveedor)».
+- Pasa a informado solo si Juan apunta un cargo real con «Hubo cargo…», como en PIC-02.
+
 | Momento | Qué queda | Capa en PIC-02 |
 |---|---|---|
-| Al pulsar | Operación `autorizada`, con `coste_estimado` = **el máximo** y `tarifa_verificada_en` | reservado |
+| Al pulsar | Operación `autorizada`, con `coste_estimado` = **reserva estimada** y `tarifa_verificada_en` | reservado |
 | Enviada | `enviada` / `en_curso` | reservado |
-| Completa | `usage` de OpenAI (entrada, entrada en caché y salida, razonamiento incluido) × tarifa verificada → `coste_informado`, con fuente `proveedor` | informado |
-| Completa con `incomplete` (`max_output_tokens`) | Igual: hay cargo. El intento guarda el motivo y lo que llegó | informado |
-| Rechazada por OpenAI (4xx o 5xx con respuesta) | `fallida`, sin importe | nada |
-| Tiempo agotado o conexión cortada tras enviar | `incierta`. Al marcarla fallida, **posible cargo = el máximo** | posible cargo |
+| Completa | `coste_segun_tarifa` = tokens de `usage` × tarifa, con el desglose | estimado |
+| Cortada (`incomplete`, `max_output_tokens`) | Igual, con el consumo que traiga `usage`. El intento guarda el motivo y el texto parcial | estimado |
+| Rechazada por OpenAI con respuesta (4xx o 5xx) | `fallida`. Si `usage` trae consumo, se apunta como estimado; si no, nada | estimado o nada |
+| Sin respuesta después de enviar | `incierta` (§4.1) | reservado, y al marcarla fallida, posible cargo |
 | Doble clic o recarga | Mismo `id_peticion` → la misma operación (PIC-03) | — |
 
-**Por qué la reserva es el máximo y no la estimación:** el objetivo es que el gasto ya comprometido nunca se quede corto.
+**Cómo se habla con OpenAI: D3 queda pendiente.** No se decide hasta verificar lo que falta en §2: recuperación, estados y consumo de la respuesta en segundo plano.
+- **Opción A, segundo plano (`background: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker.
+- **Opción B, llamada directa** como hoy, con un tiempo de espera largo.
 
-**«Informado»:** el importe sale de los tokens que cuenta OpenAI multiplicados por la tarifa verificada. La fuente se rotula «tokens del proveedor × tarifa del DD-MM-AAAA», para no confundirlo con un importe facturado.
+### 4.1 Respuesta perdida
+- **Opción A, se pierde la respuesta inicial antes de guardar el id** (corte de red, tiempo agotado o caída del backend entre el POST y la escritura en la base):
+  - OpenAI puede haber aceptado el trabajo y Picasso no tiene con qué consultarlo, ni conoce ninguna forma de buscarlo sin el id (la guía no menciona metadatos ni claves de idempotencia);
+  - la operación queda `incierta`, sin id remoto, y «Comprobar» dice «no se puede consultar: no llegó el identificador»;
+  - marcada fallida, el posible cargo es **la reserva estimada**;
+  - se resuelve a mano con «No hubo cargo» o «Hubo cargo…», mirando el panel de uso de OpenAI;
+  - el texto, si llegó a generarse, se da por perdido;
+  - no se reenvía nada solo.
+- **Opción A, con el id guardado y sin poder consultar:** queda `incierta` y «Comprobar» lo reintenta cuando Juan lo pide.
+- **Opción B, cualquier corte después de enviar:** igual que el primer caso de la opción A.
 
-**Cómo se habla con OpenAI** **[DECIDIR] D3:**
-- **Recomendación:** modo en segundo plano (`background: true`).
-  - `enviar` devuelve el id de la respuesta.
-  - `consultar` hace `GET /v1/responses/{id}`.
-  - Es el mismo contrato que fal, y el worker no cambia.
-- **Alternativa:** la llamada directa de hoy, con un tiempo de espera largo. Es más simple, pero un corte deja la operación `incierta` sin ningún id que consultar.
-- Depende de lo pendiente en §2: que la respuesta consultada traiga `usage`.
+## 5. La propuesta: revisar, aceptar o descartar, atada a su borrador
 
-## 5. La propuesta: revisar, aceptar o descartar
+**Borrador:** el texto de la barra en el momento de pulsar Mejorar, más su alcance («Nueva imagen» o «Editar Vn»).
+- La operación guarda en su entrada, que es inmutable, el **texto original** y una **huella del borrador** (texto y alcance).
+- La propuesta se guarda en el resultado de esa operación.
 
-- **El texto original no se toca hasta que se acepta.** Queda guardado en la entrada de la operación, que es inmutable.
-- **El lateral enseña la propuesta junto al original**, con:
-  - los cambios resaltados;
-  - la lista «qué cambió y por qué» de 2 a 6 puntos;
-  - su coste: informado o, si aún no hay importe, estimado.
-- **Botones:**
-  - **Aceptar:** el texto propuesto pasa a la barra. «Deshacer» vuelve al original hasta que se genera.
-  - **Descartar:** la barra queda como estaba. El gasto sigue contado.
-  - **Editar antes de aceptar:** la propuesta se abre en el campo de texto.
-- **Si la respuesta es `incomplete` o no trae JSON válido:**
-  - si trae texto, se enseña con el aviso «propuesta incompleta»;
-  - si no trae texto, aparece «no hubo propuesta; se cobró X $».
-- **La propuesta sobrevive a una recarga:** se recupera desde la operación por su `id_peticion`, igual que una imagen.
+**Una respuesta tardía nunca sustituye nada:**
+- Si al llegar la propuesta la barra sigue con el mismo borrador (misma huella), se enseña al lado del original.
+- Si la barra cambió (has seguido escribiendo, has cambiado de alcance o de imagen):
+  - la propuesta **no se aplica ni se ofrece en la barra**;
+  - aparece como «propuesta para un texto anterior», con el original al que respondía, y se puede abrir, copiar o descartar;
+  - Aceptarla pide confirmar: «Sustituirá lo que tienes ahora».
 
-## 6. Tarifa cambiada o importe mayor de lo mostrado
+**En el lateral**, propuesta y original van juntos, con:
+- los cambios resaltados;
+- la lista «qué cambió y por qué» de 2 a 6 puntos;
+- su coste según tarifa.
+
+**Botones:**
+- **Aceptar:** el texto propuesto pasa a la barra. «Deshacer» vuelve al original hasta que se genera.
+- **Descartar:** la barra queda como estaba. El coste sigue contado.
+- **Editar antes de aceptar:** la propuesta se abre en el campo de texto.
+
+**Respuesta cortada** (`incomplete`) o sin JSON válido:
+- se apunta el consumo disponible (§4);
+- el aviso «propuesta incompleta: el modelo se quedó sin margen»;
+- si hay texto parcial, se puede ver, pero **no hay Aceptar directo**: solo «Editar antes de aceptar» o Descartar;
+- si no hay texto: «no hubo propuesta; coste según tarifa X $»;
+- **no se repite la llamada.**
+
+**Después de recargar**, la propuesta se recupera desde la operación por su `id_peticion`, con su huella. Si el borrador ya no coincide, sale como «propuesta para un texto anterior».
+
+## 6. Tarifa cambiada o coste por encima de lo mostrado
 
 **Nada se repite solo.** Ni el worker ni la interfaz relanzan una mejora. Cada nueva llamada es un clic nuevo con su cifra delante.
 
-**Si el importe informado supera el máximo mostrado:**
-- la operación se marca «superó el máximo mostrado (X $ > Y $)» en la Mesa y en el Registro;
-- Mejorar queda desactivado con ese motivo hasta que Juan lo revise. Se reactiva con un clic explícito: «Entendido, seguir».
+**Si el coste según tarifa supera la reserva estimada mostrada:**
+- la operación se marca «superó la reserva estimada (X $ > Y $)» en la Mesa y en el Registro;
+- Mejorar queda desactivado con ese motivo hasta que Juan lo revise. Se reactiva con un clic explícito: «Entendido, seguir»;
+- el caso indica que el cálculo de la reserva falla, y se revisa antes de seguir.
 
-**Si el importe supera solo la estimación**, sin pasar del máximo: se anota en la fila y no se bloquea nada.
+**Si supera solo la estimación (≈)**, sin pasar de la reserva: se anota en la fila y no se bloquea nada.
 
 **Cambio de tarifa:** Picasso no puede detectarlo solo, porque la tarifa está escrita en el código.
+- **[DECIDIR] D4. Recomendación:** si la tarifa tiene más de 30 días, el botón dice «tarifa sin verificar desde DD-MM-AAAA». Mejorar sigue disponible, pero la confirmación lo repite.
+- Al volver a verificarla, se cambian la tarifa y la fecha en el código, con la fuente en el commit.
+- Los costes antiguos conservan la tarifa y la fecha con las que se calcularon.
 
-**[DECIDIR] D4.**
-- **Recomendación:** si la tarifa tiene más de 30 días, el botón dice «tarifa sin verificar desde DD-MM-AAAA». Mejorar sigue disponible, pero la confirmación lo repite.
-- Al volver a verificarla, se cambian la tarifa y la fecha en el código, con su fuente en el commit.
-
-**Modelo retirado o rechazado** (4xx de modelo): la operación queda fallida sin importe, Mejorar se desactiva con el mensaje del proveedor y no se cambia de modelo en silencio (§9.4 del maestro).
+**Modelo retirado o rechazado** (4xx de modelo): la operación queda fallida, Mejorar se desactiva con el mensaje del proveedor y no se cambia de modelo en silencio (§9.4 del maestro).
 
 ## 7. Pruebas
 
-**En aislado, sin gasto:** la imagen `picasso-pruebas-backend`, la base `picasso_pruebas` o una instancia propia, la clave vacía y el dominio de OpenAI bloqueado. El proveedor simulado gana el caso `mejorar_texto`, con los resultados `normal`, `incompleta`, `rechazada`, `incierta` y `supera_maximo`.
+**En aislado, sin gasto:** la imagen `picasso-pruebas-backend`, la base `picasso_pruebas` o una instancia propia, la clave vacía y el dominio de OpenAI bloqueado. El proveedor simulado gana el caso `mejorar_texto`, con los resultados `normal`, `incompleta`, `rechazada`, `incierta`, `incierta_sin_id` y `supera_reserva`.
+
+El proveedor simulado devuelve también `usage`, para poder probar el cálculo según tarifa.
 
 Casos nuevos en `p18_mejorar`:
-1. El botón enseña estimación y máximo. Con más de 2 000 caracteres, el botón queda desactivado y explica por qué.
+1. El botón enseña estimación y reserva estimada, calculadas con todo lo enviado (instrucciones, texto y referencias con sus rasgos). Por encima del límite de texto, el botón queda desactivado y explica por qué.
 2. Doble clic y recarga → una operación y una propuesta, que se recupera.
-3. `normal` → informado, la propuesta al lado y el original intacto. Aceptar, Descartar y Deshacer.
-4. `incompleta` → informado, con aviso, sin propuesta o con propuesta parcial.
-5. `rechazada` → fallida, sin importe.
-6. `incierta` → al marcarla fallida, posible cargo = máximo. «No hubo cargo» y «Hubo cargo…» lo resuelven.
-7. `supera_maximo` → marca, bloqueo y reactivación explícita.
+3. `normal` → coste según tarifa en la capa **estimado**, nunca en informado; la propuesta al lado y el original intacto. Aceptar, Descartar y Deshacer.
+3b. Respuesta tardía con el borrador cambiado → «propuesta para un texto anterior»; la barra no cambia.
+4. `incompleta` → consumo apuntado como estimado y aviso; sin Aceptar directo; ninguna llamada nueva.
+5. `rechazada` → fallida, con o sin consumo según `usage`.
+6. `incierta` e `incierta_sin_id` → al marcarlas fallidas, posible cargo = reserva estimada. «Comprobar» sin id lo explica. «No hubo cargo» y «Hubo cargo…» lo resuelven.
+7. `supera_reserva` → marca, bloqueo y reactivación explícita.
 8. Registro, totales de la Mesa y CSV coinciden. Ninguna llamada se repite sola.
 
 Además, toda la batería: pytest, p1–p17 y las pruebas del frontend.
 
-**Validación real con presupuesto aparte** **[DECIDIR] D5:**
-- **Recomendación:** tope de 0,20 $ en la instalación de Juan, en el espacio «Pruebas del constructor», con tu autorización viendo la cifra.
-  - Hasta seis mejoras de un máximo de 0,03 $ cada una.
-  - Se usan para comprobar la estimación frente a lo informado, el `usage` real de OpenAI y una propuesta aceptada y otra descartada.
+**Validación real con presupuesto aparte. D5: pendiente de autorización de Juan; no se gasta nada sin ella.**
+- **Propuesta:** tope de 0,20 $ en la instalación de Juan, en el espacio «Pruebas del constructor».
+  - Unas seis mejoras de unos 0,03 $ de reserva estimada cada una.
+  - Se usan para comparar la estimación y la reserva con el coste según tarifa, ver el `usage` real de OpenAI y probar una propuesta aceptada y otra descartada.
+  - Al final, se contrasta el total con el panel de uso de OpenAI.
 - No se fuerza ningún caso de error con dinero real: esos casos se validan en aislado.
 
 ## 8. Contraste con el maestro: qué queda de verdad del Módulo 1
@@ -178,7 +228,7 @@ Leído en §21 y en el SDD PIC-01 el 18-11-2026. Esto no declara nada pendiente:
 | 18.20 Persona real | Sí (07-10) | Sí (en el prompt) | No consta | **Abierta.** El SDD PIC-01 no recoge que V1–V4 usaran una ficha marcada como persona real (en la base, solo «Tania» la lleva) |
 | 18.22 Qué conservar de cada referencia | Sí (08-10) | Sí en el prompt (`dominio/prompt.py`); en la Mesa no hay control para elegirlo | No consta | **Abierta.** Además hay que decidir si la Mesa necesita el control o basta con el valor por defecto |
 | 18.23 Varias tomas | Sí (08-10) | Sí en la Mesa («cuántas» de 1 a 4, `max_lote` en el servidor, p17) | No consta con más de una | **Abierta**, pequeña |
-| 18.29 Taller guiado y 19.29 «no lo entiendo» | Sí (15 y 22-10) | La Mesa lo sustituyó (PIC-01 §2: «la Mesa es la superficie principal») | La Mesa sí | **Probablemente superada por la Mesa.** Proponer cerrarla si Juan lo confirma |
+| 18.29 Taller guiado y 19.29 «no lo entiendo» | Sí (15 y 22-10) | La Mesa sustituyó la interfaz (PIC-01 §2: «la Mesa es la superficie principal»), pero no todas las acciones (§8.1) | La Mesa sí; 18.29 y 19.29, no | **Abiertas.** No se cierran sin comprobar qué necesidad resolvían y demostrar que la Mesa la cubre (§8.1) |
 | 18.30 Control de ingredientes | Decidida (14-10) | Parcial (reglas simples; la Mesa lo consulta) | No consta | **Abierta** «en lo que hay», sin ampliar |
 | 19.20 Recortar referencias al subir | Detectada | No | — | Toca al Taller; **sin aprobar** como trabajo del Módulo 1 |
 | 19.19, 19.21–19.25 | Detectadas | No | — | No son del Taller (Idea, vídeo, voz, personaje que habla). **Fuera del Módulo 1** |
@@ -187,6 +237,36 @@ Leído en §21 y en el SDD PIC-01 el 18-11-2026. Esto no declara nada pendiente:
 **Lectura para cerrar el Módulo 1:**
 - PIC-04;
 - un recorrido corto de lo abierto: 18.20, 18.22, 18.23 y 18.30, más Ajustar desde el lienzo de un plano;
-- confirmar si 18.29 y 19.29 quedan superadas por la Mesa, y si E1 y 19.20 entran o se aplazan.
+- comprobar 18.29 y 19.29 contra la Mesa (§8.1);
+- decidir si E1 y 19.20 entran o se aplazan.
 
 **[DECIDIR] D6:** confirmar esta lectura antes de cerrar el Módulo 1. Hasta entonces, la tabla §21 del maestro no se toca.
+
+### 8.1 Qué resolvían 18.29 y 19.29, y qué cubre hoy la Mesa
+
+**Necesidad de 18.29** (Juan, 14-10-2026, tras los «20 pasos» del corto de Tania): generar en una pantalla, «aquí un prompt, ajustamos y bum, una carpetita para archivar», y un clic en la imagen para ver su ficha y seguir desde ella.
+
+**Necesidad de 19.29:** que Juan entienda el Taller sin ayuda. Era su primera reacción: «no lo entiendo».
+
+**Primera comprobación, solo en el código:** búsqueda de textos en `frontend/src/pantallas/Taller.tsx` en `main` (`9d2b07f`), el 18-11-2026. Es una pista, no una prueba.
+
+| Lo que pedía 18.29 | En la Mesa hoy |
+|---|---|
+| Modelo, referencias con `@`, prompt grande | Hay modelo y referencias. Falta comprobar la mención con `@` |
+| «Mejorar» | Desactivado: es PIC-04 |
+| Control de ingredientes | Hay (se consulta al escribir) |
+| Formato, calidad y cuántas | Hay formato y cuántas. Falta comprobar la calidad |
+| Precio delante y Generar | Hay |
+| Carpetas | Hay |
+| Ficha de la imagen: prompt, referencias, ajustes, coste y fecha | Hay un lateral. Falta comprobar qué campos enseña |
+| Variaciones y otro ángulo | Hay «Otra como esta» y ángulo en Dirección |
+| Editar | Hay (Ajustar, validado en PIC-03) |
+| Ampliar y mejorar resolución | No aparece |
+| Llevarla a vídeo o hacerla hablar | No aparece. Es vídeo, aplazado |
+| «Usar como referencia de una ficha» | No aparece |
+| «Llevar a un plano» | No aparece |
+
+**Para cerrarlas hace falta:**
+1. Comprobar en la interfaz, no solo en el código, cada fila marcada como «Hay» o «Falta comprobar».
+2. Que Juan decida qué hacer con cada fila «No aparece»: entra en el Módulo 1, se aplaza o deja de hacer falta.
+3. Para 19.29: un recorrido de Juan en la Mesa sin ayuda, apuntando dónde se pierde. Se cierra solo si no se pierde, o cuando se corrija lo que apunte.
