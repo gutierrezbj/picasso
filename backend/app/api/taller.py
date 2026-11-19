@@ -4,14 +4,12 @@ Las operaciones van al motor de siempre: destino {tipo: "taller", id: carpeta}
 y proyecto_id `taller:{espacio}`, para que el gasto lleve su propia cuenta."""
 from __future__ import annotations
 
-import json
 import re
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Response
 
 from app.almacen import almacen
-from app.asistente import openai_texto
 from app.db import db, sin_id
 from app.dominio import prompt as constructor_prompt
 from app.dominio.modelos import (
@@ -23,7 +21,6 @@ from app.dominio.modelos import (
     PeticionTaller,
     PrepararOperacion,
     ReferenciaEntrada,
-    ahora,
 )
 from app.motor import catalogo as cat
 from app.motor import ficheros
@@ -289,55 +286,6 @@ def _nivel_foto(r: dict[str, Any]) -> dict[str, Any]:
 async def ingredientes(espacio_id: str, datos: PeticionTaller):
     refs = await _resolver_referencias(espacio_id, datos.referencias)
     return {"ingredientes": [_nivel_foto(r) for r in refs] + [_niveles_prompt(datos.texto)]}
-
-
-# --- mejorar (asistente real) --------------------------------------------------------
-
-INSTRUCCIONES_MEJORAR = """Eres el director de fotografía de Picasso, un estudio de dirección creativa.
-Reescribe el prompt de imagen del usuario para que el modelo de imagen lo clave. Reglas:
-1. Conserva su intención y todo lo que pidió. No cambies el sujeto ni la escena.
-2. No inventes rasgos de personas: si hay rasgos de ficha, úsalos tal cual y no añadas otros (ni pelo, ni edad, ni ropa que no estén).
-3. Completa las seis partes: sujeto, entorno, cámara (tamaño de plano, ángulo, óptica), luz descrita por su fuente (qué la da, desde dónde, cómo es), tono en una o dos palabras, y estilo realista concreto (por ejemplo «foto realista de 35 mm, piel con textura natural»).
-4. Nada de palabras de pulido que dan cara de IA: obra maestra, hiperdetallado, 8k, iluminación perfecta, ultrarrealista, premiado.
-5. Lo imprescindible primero. Frases cortas. Máximo 110 palabras.
-6. No menciones las imágenes de referencia ni el texto «Sin: …»: Picasso añade esas líneas.
-7. Escribe en el mismo idioma que el usuario.
-Devuelve SOLO un JSON: {"texto": "...", "cambios": [{"parte": "...", "motivo": "..."}]} con 2 a 6 cambios explicados en una frase cada uno."""
-
-
-@router.post("/espacios/{espacio_id}/taller/mejorar")
-async def mejorar(espacio_id: str, datos: PeticionTaller):
-    await _espacio(espacio_id)
-    if not datos.texto.strip():
-        raise HTTPException(400, "Escribe primero qué quieres.")
-    refs = await _resolver_referencias(espacio_id, datos.referencias)
-    contexto = [f"Prompt del usuario: {datos.texto.strip()}", f"Formato: {datos.relacion}"]
-    for r in refs:
-        rasgos = "; ".join(r["rasgos_fijos"]) if r["rasgos_fijos"] else "sin rasgos escritos"
-        tipo = r["clase"] or "referencia de estilo"
-        real = " (persona real)" if r["persona_real"] else ""
-        contexto.append(f"@{r['nombre']} = {tipo}{real}. Rasgos de su ficha: {rasgos}")
-    try:
-        crudo, coste = await openai_texto.completar(INSTRUCCIONES_MEJORAR, "\n".join(contexto))
-    except openai_texto.AsistenteNoDisponible as e:
-        raise HTTPException(503, str(e)) from e
-    try:
-        inicio, fin = crudo.index("{"), crudo.rindex("}") + 1
-        respuesta = json.loads(crudo[inicio:fin])
-        texto = str(respuesta["texto"]).strip()
-        cambios = [c for c in respuesta.get("cambios") or [] if isinstance(c, dict)]
-    except (ValueError, KeyError, json.JSONDecodeError):
-        texto, cambios = crudo.strip(), []
-    await db.asistente_usos.insert_one(
-        {
-            "espacio_id": espacio_id,
-            "tarea": "mejorar_prompt",
-            "modelo": openai_texto.MODELO,
-            "coste": float(coste),
-            "created_at": ahora(),
-        }
-    )
-    return {"texto": texto, "cambios": cambios, "coste": round(float(coste), 4)}
 
 
 # --- generar ---------------------------------------------------------------------------

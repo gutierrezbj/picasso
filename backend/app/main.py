@@ -18,6 +18,7 @@ from app.api import (
     guiones,
     lienzo,
     medios,
+    mejorar,
     montaje,
     motor,
     piezas,
@@ -58,6 +59,7 @@ app.include_router(pistas.router)
 app.include_router(montaje.router)
 app.include_router(exportaciones.router)
 app.include_router(taller.router)
+app.include_router(mejorar.router)
 
 
 @app.on_event("startup")
@@ -67,6 +69,7 @@ async def al_arrancar() -> None:
     from app.motor import operaciones, worker
 
     await operaciones.asegurar_indices()
+    await mejorar.asegurar_indices()
     await asegurar_ids_dialogos()
     await exportaciones.reparar_al_arrancar()
     await worker.retomar()

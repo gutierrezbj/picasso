@@ -1083,6 +1083,9 @@ async def _vista_operacion(doc: dict[str, Any]) -> dict[str, Any]:
         destino_etiqueta = op["entradas"].get("etiqueta_destino") or "ficha"
     elif op["destino"]["tipo"] == "dialogo":
         destino_etiqueta = "Voz · " + (op["entradas"].get("etiqueta_destino") or "diálogo")
+    elif op["destino"]["tipo"] == "borrador":
+        carpeta = await db.carpetas.find_one({"_id": (op.get("mejorar") or {}).get("carpeta_id") or ""})
+        destino_etiqueta = "Mejorar · " + ((carpeta or {}).get("nombre") or "borrador")
     proy = await db.proyectos.find_one({"_id": op["proyecto_id"]})
     esp = await db.espacios.find_one({"_id": op["espacio_id"]})
     tomas = await db.tomas.find({"operacion_id": op["id"]}).sort("numero", 1).to_list(50)
@@ -1102,7 +1105,7 @@ async def _vista_operacion(doc: dict[str, Any]) -> dict[str, Any]:
         **op,
         "correccion_texto": correccion_texto,
         "modelo_visible": modelo.nombre_visible if modelo else op["modelo"],
-        "precio_simulado": (not modelo.coste.verificado) if modelo else True,
+        "precio_simulado": (op.get("proveedor") == "simulado") if op.get("accion") == "mejorar_texto" else ((not modelo.coste.verificado) if modelo else True),
         "destino_etiqueta": destino_etiqueta,
         "proyecto_nombre": (proy or {}).get("nombre"),
         "espacio_nombre": (esp or {}).get("nombre"),
@@ -1171,7 +1174,7 @@ async def totales_registro(
     for d in docs:
         c = ops.coste_de(d, por_op.get(d["_id"], []))
         costes.append(c)
-        suma = (c["contado"] if c["categoria"] != "nada" and c["contado"] is not None else 0) + c["informado_cargos"] + c["posible_cargo"]
+        suma = (c["contado"] if c["categoria"] != "nada" and c["contado"] is not None else 0) + c["informado_cargos"] + c["posible_cargo"] + (c.get("estimado_adicional") or 0)
         if suma:
             por_proyecto[d["proyecto_id"]] = round(por_proyecto.get(d["proyecto_id"], 0) + suma, 4)
             por_espacio[d["espacio_id"]] = round(por_espacio.get(d["espacio_id"], 0) + suma, 4)
@@ -1202,6 +1205,30 @@ async def totales_registro(
     }
 
 
+def _columnas_mejorar(v: dict[str, Any]) -> list[Any]:
+    c = v["coste"]
+    if v.get("accion") != "mejorar_texto":
+        return [""] * 9
+    lineas = c.get("intentos_mejora") or []
+    validas = [x for x in lineas if x["estado_consumo"] == "valido" and x["tokens"]]
+
+    def suma(campo: str) -> int:
+        return sum(int(x["tokens"].get(campo) or 0) for x in validas)
+
+    tarifas = [
+        {"intento": x["numero"], **{k: x["tarifa_aplicada"].get(k) for k in ("entrada", "cache_lectura", "escritura_30m", "escritura_12h", "salida", "verificada_en")}}
+        for x in lineas
+        if x.get("tarifa_aplicada")
+    ]
+    return [
+        "" if c.get("segun_tarifa") is None else c["segun_tarifa"],
+        "" if c.get("reserva_en_curso") is None else c["reserva_en_curso"],
+        c.get("intentos_con_consumo") or 0,
+        suma("entrada"), suma("cache_lectura"), suma("cache_escritura"), suma("salida"), suma("razonamiento"),
+        json.dumps(tarifas, ensure_ascii=False) if tarifas else "",
+    ]
+
+
 @router.get("/registro/exportar.csv")
 async def exportar_registro(
     espacio_id: Optional[str] = None,
@@ -1219,7 +1246,9 @@ async def exportar_registro(
             "fecha", "espacio", "proyecto", "destino", "accion", "modelo", "proveedor",
             "coste_estimado", "tarifa_verificada_en", "coste_informado",
             "coste_informado_fuente", "categoria", "posible_cargo_pendiente", "informado_cargos",
-            "estado", "intentos",
+            "estado", "intentos", "coste_segun_tarifa", "reserva_en_curso", "intentos_con_consumo",
+            "tokens_entrada", "tokens_cache_lectura", "tokens_cache_escritura", "tokens_salida",
+            "tokens_razonamiento", "tarifas_aplicadas",
         ]
     )
     for d in docs:
@@ -1237,6 +1266,7 @@ async def exportar_registro(
                 v["coste"]["posible_cargo"] or "",
                 v["coste"]["informado_cargos"] or "",
                 v["estado"], v["numero_intentos"],
+                *_columnas_mejorar(v),
             ]
         )
     return Response(

@@ -49,6 +49,7 @@ SCRIPTS = [
     "p15_taller",
     "p16_medios_costes",
     "p17_mesa",
+    "p18_mejorar",
 ]
 
 
@@ -71,6 +72,9 @@ def levantar() -> subprocess.Popen:
         "KIE_API_KEY": "",
         "OPENAI_API_KEY": "",
         "ELEVENLABS_API_KEY": "",
+        "MEJORAR_PLAZO_S": "6",
+        "MEJORAR_INTERVALO_S": "0.2",
+        "MEJORAR_RETENIDA_S": "3",
     }
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     proc = subprocess.Popen(

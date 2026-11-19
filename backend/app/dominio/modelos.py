@@ -539,6 +539,7 @@ class Accion(str, Enum):
     generar_voz = "generar_voz"
     sincronizar_labios = "sincronizar_labios"
     personaje_hablando = "personaje_hablando"
+    mejorar_texto = "mejorar_texto"
 
 
 class SimulacionPrueba(str, Enum):
@@ -549,6 +550,28 @@ class SimulacionPrueba(str, Enum):
     fallo = "fallo"
     incierto = "incierto"
     timeout = "timeout"
+    incompleta = "incompleta"
+    incompleta_filtro = "incompleta_filtro"
+    incompleta_mensajes = "incompleta_mensajes"
+    incompleta_steered = "incompleta_steered"
+    incompleta_desconocida = "incompleta_desconocida"
+    rechazada = "rechazada"
+    rechazada_con_consumo = "rechazada_con_consumo"
+    incierta = "incierta"
+    incierta_sin_id = "incierta_sin_id"
+    error_5xx = "error_5xx"
+    supera_reserva = "supera_reserva"
+    escritura_cache = "escritura_cache"
+    sin_consumo = "sin_consumo"
+    consumo_nulo = "consumo_nulo"
+    consumo_cero = "consumo_cero"
+    consumo_negativo = "consumo_negativo"
+    sin_cuadrar = "sin_cuadrar"
+    fallida_sin_consumo = "fallida_sin_consumo"
+    caducada = "caducada"
+    sin_final = "sin_final"
+    ilegible = "ilegible"
+    retenida = "retenida"
 
 
 class EstadoOperacion(str, Enum):
@@ -606,6 +629,7 @@ _EXIGE: dict[str, tuple[str, ...]] = {
     "generar_voz": ("texto",),
     "sincronizar_labios": ("video_entrada", "audio_entrada"),
     "personaje_hablando": ("retrato", "audio_entrada"),
+    "mejorar_texto": ("texto",),
 }
 _PROHIBE: dict[str, tuple[str, ...]] = {
     "generar_imagen": (
@@ -635,6 +659,11 @@ _PROHIBE: dict[str, tuple[str, ...]] = {
     "personaje_hablando": (
         "imagen_entrada", "instruccion", "primer_fotograma", "ultimo_fotograma",
         "video_entrada", "texto",
+    ),
+    "mejorar_texto": (
+        "prompt", "negativos", "referencias", "imagen_entrada", "instruccion",
+        "primer_fotograma", "ultimo_fotograma", "video_entrada", "audio_entrada",
+        "retrato", "voz",
     ),
 }
 

@@ -90,6 +90,11 @@ async def _intento_actual(op_id: str) -> Optional[dict[str, Any]]:
 
 async def _enviar_y_seguir(op_id: str) -> None:
     op = sin_id(await db.operaciones.find_one({"_id": op_id}))
+    if op.get("accion") == "mejorar_texto":
+        from app.mejorar import flujo
+
+        await flujo.procesar(op_id)
+        return
     prov = proveedor(op["proveedor"])
     if prov is None:
         await ops.marcar_fallida(op_id, "El proveedor no está configurado.")
@@ -231,6 +236,11 @@ async def comprobar(op_id: str) -> dict[str, Any]:
     op = sin_id(doc)
     if op["estado"] not in ("incierta", "enviada", "en_curso"):
         return await ops.vista(op)
+    if op.get("accion") == "mejorar_texto":
+        from app.mejorar import flujo
+
+        await flujo.comprobar(op_id)
+        return await ops.vista(sin_id(await db.operaciones.find_one({"_id": op_id})))
     intento = await _intento_actual(op_id)
     id_remoto = (intento or {}).get("id_remoto")
     prov = proveedor(op["proveedor"])
@@ -499,6 +509,11 @@ async def retomar() -> None:
         {"estado": {"$in": ["autorizada", "enviada", "en_curso"]}}
     ).to_list(500)
     for doc in pendientes:
+        if doc.get("accion") == "mejorar_texto":
+            from app.mejorar import flujo
+
+            if await flujo.retomar(doc):
+                continue
         intento = await _intento_actual(doc["_id"])
         id_remoto = (intento or {}).get("id_remoto")
         if id_remoto:

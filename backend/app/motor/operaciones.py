@@ -66,9 +66,67 @@ def _cargos(intentos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return cargos
 
 
+def _coste_mejorar(op: dict[str, Any], intentos: list[dict[str, Any]]) -> dict[str, Any]:
+    ordenados = sorted(intentos, key=lambda x: x.get("numero") or 0)
+    validos = [it for it in ordenados if it.get("estado_consumo") == "valido" and it.get("coste_segun_tarifa") is not None]
+    segun_tarifa = round(sum(float(it["coste_segun_tarifa"]) for it in validos), 4)
+    estado = op.get("estado")
+    reserva_en_curso = None
+    if estado in ESTADOS_RESERVA:
+        categoria, contado, adicional = "reservado", op.get("coste_estimado"), segun_tarifa
+        reserva_en_curso = op.get("coste_estimado")
+        etiqueta = "reservado"
+    elif validos:
+        categoria, contado, adicional = "estimado", segun_tarifa, 0.0
+        etiqueta = "según tarifa, sin importe del proveedor"
+    else:
+        categoria, contado, adicional, etiqueta = "nada", None, 0.0, ""
+    cargos = _cargos(ordenados)
+    pendiente = [c for c in cargos if c["estado"] == "pendiente"]
+    lineas = []
+    for it in ordenados:
+        en_curso = estado in ESTADOS_RESERVA and it is ordenados[-1] and it.get("estado") in ("enviada", "en_curso", "incierta")
+        lineas.append(
+            {
+                "intento_id": it.get("id") or it.get("_id"),
+                "numero": it.get("numero"),
+                "estado": it.get("estado"),
+                "estado_respuesta": it.get("estado_respuesta"),
+                "motivo": it.get("motivo_incompleta"),
+                "estado_consumo": it.get("estado_consumo"),
+                "coste_segun_tarifa": it.get("coste_segun_tarifa"),
+                "reserva": it.get("coste_estimado"),
+                "tokens": it.get("tokens"),
+                "tarifa_aplicada": it.get("tarifa_aplicada"),
+                "marcas": it.get("marcas") or [],
+                "en_curso": bool(en_curso),
+            }
+        )
+    return {
+        "estimado": float(op["coste_estimado"]) if op.get("coste_estimado") is not None else None,
+        "informado": None,
+        "fuente": "tarifa",
+        "tarifa_verificada_en": op.get("tarifa_verificada_en"),
+        "categoria": categoria,
+        "contado": float(contado) if contado is not None else None,
+        "etiqueta": etiqueta,
+        "cargos": cargos,
+        "posible_cargo": round(sum(c["estimado"] or 0 for c in pendiente), 4),
+        "posible_cargo_sin_precio": sum(1 for c in pendiente if c["estimado"] is None),
+        "informado_cargos": round(sum(c["importe"] or 0 for c in cargos if c["estado"] == "cobrado"), 4),
+        "estimado_adicional": adicional,
+        "segun_tarifa": segun_tarifa if validos else None,
+        "reserva_en_curso": float(reserva_en_curso) if reserva_en_curso is not None else None,
+        "intentos_con_consumo": len(validos),
+        "intentos_mejora": lineas,
+    }
+
+
 def coste_de(op: dict[str, Any], intentos: Optional[list[dict[str, Any]]] = None) -> dict[str, Any]:
     """PIC-02 §2: estimación, reserva e importe informado, sin mezclarlos. Los
     posibles cargos pertenecen a cada intento: un reintento no los oculta."""
+    if op.get("accion") == "mejorar_texto":
+        return _coste_mejorar(op, intentos or [])
     estimado = op.get("coste_estimado")
     informado = op.get("coste_informado")
     fuente = op.get("coste_informado_fuente")
@@ -116,6 +174,7 @@ def sumar_capas(lista: list[dict[str, Any]]) -> dict[str, Any]:
     for c in lista:
         capas["informado"] += c["informado_cargos"]
         capas["posible_cargo"] += c["posible_cargo"]
+        capas["estimado"] += c.get("estimado_adicional") or 0
         sin_verificar += c["posible_cargo_sin_precio"]
         if c["categoria"] == "nada":
             continue
