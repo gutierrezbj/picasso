@@ -604,3 +604,8 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
 - Reintento que supera el presupuesto del proyecto: la mejora queda «pendiente de tu confirmación» con su presupuesto ya reclamado. La Mesa ofrece la confirmación también en reintentos y, tras recargar, «Continuar · reserva estimada». Se continúa con el mismo presupuesto, sin intento ni envío hasta autorizar. Si la tarifa cambió mientras esperaba, 409 con precio nuevo y otro clic. Lo mismo vale para la primera mejora pendiente, sin depender del id de petición.
 - Si una mejora pendiente recibe un presupuesto nuevo por cambio de tarifa, la tarjeta muestra ese importe y confirma ese presupuesto; «Continuar» con el antiguo deja de ofrecerse.
 - Pruebas: caso 21 en `p18_mejorar` y `frontend/pruebas/borrador.test.ts`.
+
+**Corrección tras la validación real (19-11-2026):**
+- El gasto del proyecto se redondeaba a dos decimales por capa, en el total y en el restante. Una mejora de 0,0032 $ aparecía como «0,00 $» y no contaba para el presupuesto. Ahora las capas, el total y el restante conservan cuatro decimales.
+- Los importes se muestran con dos decimales si son céntimos exactos, y con hasta cuatro si no: «0,0032 $», nunca «0,00 $».
+- Pruebas: `presupuesto_fino` en `p16_medios_costes` comprueba que, con un límite de 0,20 $, un gasto de 0,0032 $ y una reserva nueva de 0,198 $, se exige confirmación (el restante es 0,1968 $). `frontend/pruebas/formato.test.ts` cubre el formato.

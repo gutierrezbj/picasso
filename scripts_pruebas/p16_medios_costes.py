@@ -226,10 +226,40 @@ async def reintentos():
     await db.intentos.delete_many({"operacion_id": {"$in": ["p16-r1", "p16-r2", "p16-r3"]}})
 
 
+async def presupuesto_fino():
+    await db.proyectos.update_one({"_id": PROYECTO}, {"$set": {"id": PROYECTO, "presupuesto_max": 0.20}}, upsert=True)
+    try:
+        await db.operaciones.insert_many([
+            op_doc("p16-mejora", accion="mejorar_texto", proveedor="openai", coste_estimado=0.0238),
+            op_doc("p16-nueva", estado="presupuestada", coste_estimado=0.198),
+        ])
+        await db.intentos.insert_one({
+            "_id": "p16-mejora-i1", "id": "p16-mejora-i1", "operacion_id": "p16-mejora", "numero": 1, "proveedor": "openai",
+            "estado": "completada", "estado_consumo": "valido", "coste_segun_tarifa": 0.0032, "coste_estimado": 0.0238,
+        })
+        p = await ops.presupuesto(PROYECTO, 0.198)
+        ok(p["gasto"]["estimado"] == 0.0032 and p["gasto"]["total"] == 0.0032, f"el gasto conserva 0,0032 $: {p['gasto']['total']}")
+        ok(p["presupuesto_restante"] == 0.1968, f"restante 0,20 − 0,0032 = 0,1968 $: {p['presupuesto_restante']}")
+        ok(p["supera_presupuesto"], "una reserva de 0,198 $ supera el restante")
+        try:
+            await ops.autorizar("p16-nueva", False)
+            exigida = False
+        except PermissionError as e:
+            exigida = "0.1968" in str(e)
+        doc = await db.operaciones.find_one({"_id": "p16-nueva"})
+        ok(exigida and doc["estado"] == "presupuestada", "sin confirmar no se autoriza: pide confirmación y sigue presupuestada")
+        ok(not (await ops.presupuesto(PROYECTO, 0.1968))["supera_presupuesto"], "una reserva de 0,1968 $ cabe justo, sin confirmación")
+    finally:
+        await db.operaciones.delete_many({"proyecto_id": PROYECTO})
+        await db.intentos.delete_many({"operacion_id": "p16-mejora"})
+        await db.proyectos.delete_many({"_id": PROYECTO})
+
+
 async def main():
     await proteccion()
     await costes()
     await reintentos()
+    await presupuesto_fino()
 
 
 asyncio.run(main())

@@ -182,8 +182,8 @@ def sumar_capas(lista: list[dict[str, Any]]) -> dict[str, Any]:
             sin_verificar += 1
             continue
         capas["estimado" if c["categoria"] == "historico_tarifa" else c["categoria"]] += c["contado"]
-    capas = {k: round(v, 2) for k, v in capas.items()}
-    return {**capas, "total": round(sum(capas.values()), 2), "sin_verificar": sin_verificar}
+    capas = {k: round(v, 4) for k, v in capas.items()}
+    return {**capas, "total": round(sum(capas.values()), 4), "sin_verificar": sin_verificar}
 
 
 async def intentos_por_operacion(op_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
@@ -210,7 +210,7 @@ async def presupuesto(proyecto_id: str, coste_estimado: Optional[float]) -> dict
     if maximo is None:
         maximo = (aj or {}).get("presupuesto_por_defecto") or None
     detalle = await gasto(proyecto_id)
-    restante = None if not maximo else round(float(maximo) - detalle["total"], 2)
+    restante = None if not maximo else round(float(maximo) - detalle["total"], 4)
     supera = bool(
         restante is not None and coste_estimado is not None and coste_estimado > restante
     )

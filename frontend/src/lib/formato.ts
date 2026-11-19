@@ -4,9 +4,9 @@ export function simboloMoneda(moneda: string): string {
   return SIMBOLOS[moneda] || moneda;
 }
 
-// Formato español: coma decimal, símbolo detrás. Ej: "0,00 $"
+// Formato español: coma decimal, símbolo detrás. Ej: "0,20 $", "0,0032 $"
 export function formatoMoneda(valor: number | null | undefined, moneda: string): string {
-  const n = Number(valor || 0).toFixed(2).replace(".", ",");
+  const n = Number(valor || 0).toFixed(4).replace(/0{1,2}$/, "").replace(".", ",");
   return `${n} ${simboloMoneda(moneda)}`;
 }
 
