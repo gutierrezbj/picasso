@@ -1,6 +1,11 @@
 # PIC-04 · «Mejorar mi descripción» con su coste delante
 
-**Estado:** borrador, revisión 5 (19-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
+**Estado:** diseño aprobado en la revisión 5 (`cd9a4aa`, 19-11-2026). Construcción autorizada por Juan el 19-11-2026 en la rama `pic-04/mejorar` y en una instancia aislada, sin claves reales y con OpenAI bloqueado. Sin gasto, fusión ni despliegue. Los 0,20 $ de validación real (D5) siguen sin autorizar.
+
+**Decisiones de Juan (19-11-2026):**
+- **D3 aprobado:** segundo plano con `store: true` (§4.4), aceptando la conservación descrita del texto enviado, los rasgos de las referencias y la propuesta.
+- **D4 aprobado:** aviso visible cuando la tarifa pase de 30 días sin verificar, repetido en la confirmación. Mejorar sigue disponible (§6).
+- **Parámetros:** las pruebas simuladas usan los propuestos en §3. Cualquier ajuste posterior que cambie el coste se refleja en el presupuesto mostrado.
 - Revisión 1: `2c88289`.
 - Revisión 2: correcciones del revisor del 18-11-2026:
   - la reserva no es un máximo;
@@ -194,7 +199,7 @@ Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y
 | Sin respuesta después de enviar (tiempo agotado o corte) | `incierta` (§4.1) | reservado, y al marcarla fallida, posible cargo |
 | Doble clic o recarga | Mismo `id_peticion` → la misma operación (PIC-03) | — |
 
-**Cómo se habla con OpenAI: [DECIDIR] D3.** Recomendación: **opción A**, concretada en §4.4.
+**Cómo se habla con OpenAI: D3, aprobado por Juan el 19-11-2026: opción A**, concretada en §4.4.
 - **Opción A, segundo plano (`background: true`, `store: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker. `store: true` permite recuperar el resultado tras un corte más allá del almacenamiento temporal del segundo plano.
 - **Opción B, llamada directa** como hoy, con un tiempo de espera largo. Cualquier corte deja la operación incierta sin forma de consultar. **No implica ausencia de retención** en OpenAI (§4.4).
 
@@ -283,7 +288,7 @@ Nunca se recalcula con una tarifa posterior.
 
 **Si llega un campo de `usage` que Picasso no conoce:** el intento lo guarda tal cual y queda marcado «consumo con campos desconocidos». Esto evita calcular a ciegas.
 
-### 4.4 D3 concretado: segundo plano y consulta por identificador (recomendado)
+### 4.4 D3: segundo plano y consulta por identificador (aprobado el 19-11-2026)
 
 **Petición:** `POST /v1/responses` con:
 - `background: true`;
@@ -441,7 +446,7 @@ Nunca se recalcula con una tarifa posterior.
 **Si supera solo la estimación (≈)**, sin pasar de la reserva: se anota en la fila y no se bloquea nada.
 
 **Cambio de tarifa:** Picasso no puede detectarlo solo, porque la tarifa está escrita en el código.
-- **[DECIDIR] D4. Recomendación:** si la tarifa tiene más de 30 días, el botón dice «tarifa sin verificar desde DD-MM-AAAA». Mejorar sigue disponible, pero la confirmación lo repite.
+- **D4, aprobado por Juan el 19-11-2026:** si la tarifa tiene más de 30 días, el botón dice «tarifa sin verificar desde DD-MM-AAAA». Mejorar sigue disponible, pero la confirmación lo repite.
 - Al volver a verificarla, se cambian la tarifa y la fecha en el código, con la fuente en el commit.
 - Los costes antiguos conservan la tarifa y la fecha con las que se calcularon.
 
