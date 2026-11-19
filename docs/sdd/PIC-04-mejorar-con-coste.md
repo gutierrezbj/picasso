@@ -1,6 +1,6 @@
 # PIC-04 · «Mejorar mi descripción» con su coste delante
 
-**Estado:** borrador, revisión 4 (18-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
+**Estado:** borrador, revisión 5 (19-11-2026), en la rama `pic-04/sdd-mejorar`. Sin código y sin autorización para construir. Los puntos **[DECIDIR]** se cierran con Juan y llevan la recomendación entre paréntesis.
 - Revisión 1: `2c88289`.
 - Revisión 2: correcciones del revisor del 18-11-2026:
   - la reserva no es un máximo;
@@ -27,6 +27,11 @@
   - fuentes oficiales de las columnas de caché, de la salida con el razonamiento dentro y de los motivos de respuesta incompleta, con un mensaje por motivo (§2, §5.3);
   - D3 se concreta: segundo plano y consulta por identificador, con caducidad y respuesta sin consumo, que nunca valen coste cero (§4.4);
   - contar tokens con otra llamada queda fuera de PIC-04.
+- Revisión 4: `7a9f1f1`.
+- Revisión 5: cuarta revisión del revisor del 19-11-2026:
+  - la autorización va atada a un presupuesto inmutable que fija importe, tarifa y configuración, y se comprueba antes de crear la operación (§5.1);
+  - la calidad de la propuesta se separa de su contabilidad, y el consumo ausente se distingue del consumo válido a cero (§4.4, §5.3);
+  - D3 corregido: el segundo plano no exige conservar 30 días y la llamada directa no implica ausencia de retención (§4.4).
 
 **Origen:** PIC-01 D13 y §13.3: «Mejorar» quedó desactivado en la Mesa hasta poder enseñar su coste antes de usarlo, y la estimación previa con tope exigía volver a verificar la tarifa.
 
@@ -175,21 +180,23 @@ Mejorar pasa a ser **una operación del motor**: acción nueva `mejorar_texto` y
 
 | Momento | Qué queda | Capa en PIC-02 |
 |---|---|---|
-| Al pulsar | Operación `autorizada`, con `coste_estimado` = **reserva estimada** y `tarifa_verificada_en` | reservado |
+| Al pulsar, con el presupuesto comprobado (§5.1) | Operación `autorizada`, con `presupuesto_id`, `coste_estimado` = **reserva estimada** del presupuesto y `tarifa_verificada_en` | reservado |
+| Al pulsar, con el presupuesto cambiado | Ninguna operación. Presupuesto nuevo y otro clic | nada |
 | Enviada | `enviada` / `en_curso` | reservado |
 | Completa | `coste_segun_tarifa` = tokens de `usage` × tarifa, con el desglose | estimado |
 | Cortada (`incomplete`, `max_output_tokens`) | Igual, con el consumo que traiga `usage`. El intento guarda el motivo y el texto parcial | estimado |
 | Rechazo 4xx de la petición (clave, modelo, parámetros o formato) | `fallida`. OpenAI no aceptó el trabajo. Si la respuesta trae `usage`, se apunta como estimado | nada, o estimado |
 | Error 5xx al crear | **`incierta`**: un 5xx no demuestra que no se procesara (la lección de PIC-03). Nunca `fallida` sin más | reservado, y al marcarla fallida, posible cargo |
 | Respuesta con estado `failed` o `cancelled` y su `usage` | `fallida`, con el consumo que traiga apuntado como estimado | estimado |
-| Respuesta terminada **sin `usage`**, o con `usage` vacío o a cero en `failed` o `cancelled` | «terminada sin consumo informado» (§4.4). **No es coste cero** | posible cargo = reserva estimada, hasta que Juan lo resuelva |
+| Respuesta terminada **sin `usage`** (ausente, `null` o sin los campos de tokens) | «consumo ausente» (§4.4). **No es coste cero** | posible cargo = reserva estimada, hasta que Juan lo resuelva |
+| Respuesta terminada con `usage` válido a cero tokens | Consumo válido de 0 tokens (§4.4) | estimado, 0 $ según tarifa |
 | Respuesta caducada o no encontrada al consultar (§4.4) | `incierta`, «respuesta caducada o no encontrada». **No es coste cero** | reservado, y al marcarla fallida, posible cargo |
 | Sin respuesta después de enviar (tiempo agotado o corte) | `incierta` (§4.1) | reservado, y al marcarla fallida, posible cargo |
 | Doble clic o recarga | Mismo `id_peticion` → la misma operación (PIC-03) | — |
 
 **Cómo se habla con OpenAI: [DECIDIR] D3.** Recomendación: **opción A**, concretada en §4.4.
-- **Opción A, segundo plano (`background: true`, `store: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker y permite recuperar el resultado tras un corte.
-- **Opción B, llamada directa** como hoy, con un tiempo de espera largo. Cualquier corte deja la operación incierta sin forma de consultar.
+- **Opción A, segundo plano (`background: true`, `store: true`):** `enviar` devuelve el id de la respuesta y `consultar` hace `GET /v1/responses/{id}`. Encaja en el contrato del worker. `store: true` permite recuperar el resultado tras un corte más allá del almacenamiento temporal del segundo plano.
+- **Opción B, llamada directa** como hoy, con un tiempo de espera largo. Cualquier corte deja la operación incierta sin forma de consultar. **No implica ausencia de retención** en OpenAI (§4.4).
 
 ### 4.1 Respuesta perdida o 5xx
 - **Opción A, se pierde la respuesta inicial antes de guardar el id** (corte de red, tiempo agotado o caída del backend entre el POST y la escritura en la base):
@@ -231,7 +238,7 @@ Por ejemplo, con el intento 1 `incomplete` a 0,021 $ y el intento 2 en curso con
 **Cambio en `coste_de` (PIC-02 §2.3), el único:** para las operaciones `mejorar_texto`, el coste se calcula **por intento**:
 - cada intento terminado con `coste_segun_tarifa` cuenta ese valor en **estimado**, esté la operación terminada o en curso;
 - el intento en curso cuenta su `coste_estimado` en **reservado**;
-- los intentos sin `usage` siguen el camino de PIC-02: reserva mientras está en curso y posible cargo si se marca fallida o termina sin consumo informado (§4.4);
+- los intentos sin consumo `valido` siguen el camino de PIC-02: reserva mientras está en curso y posible cargo si se marca fallida o termina con consumo `ausente` o `sin_cuadrar` (§4.4), sea cual sea el estado de su propuesta;
 - las demás operaciones no cambian.
 
 **Registro:** una línea por intento bajo la fila de la operación. Por ejemplo:
@@ -280,18 +287,22 @@ Nunca se recalcula con una tarifa posterior.
 
 **Petición:** `POST /v1/responses` con:
 - `background: true`;
-- `store: true`, porque sin él la respuesta se borra a los 10 minutos (§2);
+- `store: true`, para poder recuperar la respuesta más allá del almacenamiento temporal del segundo plano (unos 10 minutos con la ventana por defecto, §2). El segundo plano funciona sin él; lo que no permite sin él es recuperar la respuesta pasado ese plazo;
 - `max_output_tokens`, `reasoning.effort` y `prompt_cache_options` de §3.
 
-**Consecuencia de `store: true`:** OpenAI guarda el texto enviado y la respuesta al menos 30 días. Las referencias llevan sus rasgos (§3), incluidas las de persona real. Juan lo acepta al decidir D3; si no, D3 pasa a la opción B.
+**Retención** (developers.openai.com/api/docs/guides/your-data#v1responses, 19-11-2026):
+- **Con `store: true`:** la Responses API guarda el estado de la aplicación (petición y respuesta) **al menos 30 días**. Es lo que permite recuperarla después.
+- **Sin `store: true`, en segundo plano:** la respuesta se guarda temporalmente para ejecutarla y recuperarla, y se borra al terminar ese plazo.
+- **En llamada directa (opción B) con `store: false`:** no se guarda estado de la aplicación salvo las excepciones que lista la página (entre ellas, la caché de prompt local a la GPU, hasta 24 horas). **No es ausencia de retención:** los registros de vigilancia de abusos se generan en todo uso de la API y se conservan hasta 30 días por defecto, salvo controles aprobados (Zero Data Retention o vigilancia modificada).
+
+**Lo que decide Juan en D3:** con la opción A recomendada, el texto enviado (con los rasgos de las referencias, incluidas las de persona real) y la propuesta quedan como estado recuperable en OpenAI al menos 30 días, además de los registros de abusos que hay en cualquier opción. Si no lo acepta, D3 pasa a la opción B, sin recuperación tras un corte.
 
 **Secuencia en el worker:**
 1. `enviar`: hace el POST y guarda el id remoto en el intento **antes** de cualquier otra cosa. Si el POST no devuelve el id, se aplica §4.1 (incierta sin id).
 2. `consultar`: `GET /v1/responses/{id}` cada 2 segundos, como los ejemplos de la guía, mientras el estado sea `queued` o `in_progress`.
 3. Estado final:
-   - `completed` o `incomplete` con `usage` → coste según tarifa (§4.3) y propuesta (§5);
-   - `failed` o `cancelled` con `usage` → `fallida`, con ese consumo en estimado;
-   - cualquier estado final sin consumo informado → el caso de abajo.
+   - la **propuesta** se juzga por su estado y su contenido (§5.3), y el **consumo** por `usage` (abajo). Son dos evaluaciones separadas: ninguna decide la otra;
+   - `failed` o `cancelled` → `fallida`, con el consumo que corresponda según `usage`.
 4. Picasso **no cancela** respuestas en esta fase.
 
 **Plazo propio de Picasso:** si a los **15 minutos** (propuesto) la respuesta sigue en `queued` o `in_progress`, el worker deja de consultar y la operación queda `incierta`, «sin final de OpenAI en 15 minutos». «Comprobar» vuelve a consultar cuando Juan lo pide.
@@ -302,11 +313,18 @@ Nunca se recalcula con una tarifa posterior.
 - marcada fallida, el posible cargo es la reserva estimada del intento;
 - se resuelve a mano con «No hubo cargo» o «Hubo cargo…», mirando el panel de uso de OpenAI.
 
-**Respuesta sin consumo** (estado final sin `usage`, o con `usage` vacío; también `failed` o `cancelled` con todo a cero):
-- el intento queda «terminada sin consumo informado», sin `coste_segun_tarifa`;
-- **no es coste cero:** la documentación no dice que esos estados no se cobren;
-- cuenta como posible cargo igual a la reserva estimada del intento, hasta que Juan lo resuelva con «No hubo cargo» o «Hubo cargo…»;
-- si trae texto, se trata como respuesta incompleta (§5.3): sin Aceptar directo.
+**Consumo: ausente no es lo mismo que cero.** Cada intento guarda `estado_consumo` con uno de tres valores:
+
+| `estado_consumo` | Cuándo | Coste |
+|---|---|---|
+| `valido` | `usage` presente, con `input_tokens`, `output_tokens` y `total_tokens` enteros ≥ 0, y cuadra (§4.3) | Según tarifa, en estimado. **Si los tokens son cero, el coste según tarifa es 0 $**: es un dato del proveedor, no una suposición |
+| `ausente` | `usage` falta, es `null` o le faltan esos campos | **No es coste cero.** Sin `coste_segun_tarifa`; posible cargo = reserva estimada del intento, hasta que Juan lo resuelva con «No hubo cargo» o «Hubo cargo…» |
+| `sin_cuadrar` | `usage` presente pero con valores no enteros, negativos o que no cuadran (§4.3) | Igual que `ausente`, y marcado para revisar |
+
+**La propuesta no depende del consumo.** Una respuesta `completed` con propuesta completa y JSON válido se ofrece con Aceptar **aunque el consumo sea `ausente` o `sin_cuadrar`**:
+- el lateral avisa: «Coste sin informar por OpenAI: posible cargo pendiente de X $ (reserva estimada)»;
+- aceptarla o descartarla **no cambia** el posible cargo, que sigue pendiente en Registro, Mesa y CSV hasta que Juan lo resuelva;
+- al revés, un consumo `valido` no hace aceptable una propuesta incompleta o ilegible (§5.3).
 
 **Nada de lo anterior relanza la petición.** Cada nuevo intento es un clic de Juan (§4.2).
 
@@ -334,15 +352,32 @@ Nunca se recalcula con una tarifa posterior.
   - Si se pierde, se recupera el borrador más reciente de esa carpeta y ese alcance con `GET /api/espacios/{e}/borradores?carpeta_id=…&alcance=…`.
 - **Antes de presupuestar:** la cifra del botón sale de la **revisión guardada y confirmada** por el servidor.
   - Mientras la barra tenga cambios sin guardar, el botón dice «guardando…» y no se puede pulsar.
-  - Con la revisión confirmada, el servidor devuelve estimación y reserva para esa revisión: `GET /api/borradores/{id}/mejorar/presupuesto?revision=N`. Si la revisión ya no es la actual, responde 409 y el botón vuelve a «guardando…».
+  - Con la revisión confirmada, el servidor emite un **presupuesto**: `POST /api/borradores/{id}/mejorar/presupuesto` con `{revision}`. Si la revisión ya no es la actual, responde 409 y el botón vuelve a «guardando…».
+- **El presupuesto** se guarda en el servidor, en la colección `presupuestos_mejorar`, y no se modifica nunca:
+
+| Campo | Qué fija |
+|---|---|
+| `presupuesto_id` | Identificador que viaja con la autorización |
+| `borrador_id`, `revision` | El texto exacto que se va a enviar |
+| `estimacion`, `reserva_estimada` | Los importes que enseña el botón |
+| `tarifa` | La tarifa completa de §4.3 con la que se calcularon |
+| `configuracion` | Modelo, `max_output_tokens`, `reasoning.effort`, `prompt_cache_options`, `background` y `store` |
+| `huella_entrada` | Resumen (SHA-256) de todo lo que se enviará: instrucciones, texto, formato y referencias con sus rasgos ya recortados |
+| `emitido_en`, `usado_por` | Cuándo se emitió y qué operación lo usó, si alguna |
+
+  El botón enseña las cifras **de ese presupuesto**, y solo de él.
 - **Al pulsar Mejorar:**
   1. la barra fuerza el guardado pendiente y espera la confirmación con su número de revisión;
-  2. la petición lleva `borrador_id`, `revision` e `id_peticion`, **sin texto**: el servidor lee el texto de esa revisión guardada;
-  3. el servidor comprueba que la revisión es la actual y que el borrador no está cerrado, recalcula la reserva y crea la operación con esa cifra;
-  4. **si hay conflicto** (409 al guardar, revisión que no es la actual o borrador cerrado): no se crea operación, **no se llama al proveedor** y el texto de la barra se conserva tal cual. La barra explica «el borrador cambió en otra ventana; revisa antes de mejorar» y ofrece recargar la revisión del servidor sin pisar la suya hasta que Juan elija;
-  5. si la reserva recalculada difiere de la mostrada, no se envía: el botón enseña la cifra nueva y hace falta otro clic.
+  2. la petición lleva `presupuesto_id` e `id_peticion`, **sin texto ni importe**: el servidor lee todo del presupuesto;
+  3. **antes de crear la operación o reservar nada**, el servidor recalcula el presupuesto con el estado actual (revisión del borrador, referencias y rasgos, tarifa y configuración del código) y lo compara con el guardado: importes, tarifa, configuración y huella deben coincidir, la revisión debe ser la actual, el borrador no puede estar cerrado y el presupuesto no puede estar ya usado por otra operación;
+  4. **si todo coincide**, crea la operación con esa reserva, apunta `usado_por` y sigue. Un doble clic con el mismo `id_peticion` devuelve la misma operación (PIC-03);
+  5. **si algo cambió** (otra tarifa, otra configuración, otra reserva, una referencia editada): responde 409 con un **presupuesto nuevo**. No se crea operación, no se reserva nada y **no se llama al proveedor**. El botón enseña el precio nuevo y hace falta otro clic;
+  6. **si hay conflicto de revisión** (409 al guardar, revisión que no es la actual o borrador cerrado): lo mismo, y el texto de la barra se conserva tal cual. La barra explica «el borrador cambió en otra ventana; revisa antes de mejorar» y ofrece recargar la revisión del servidor sin pisar la suya hasta que Juan elija.
+
+  Un reintento (§4.2) pide su propio presupuesto, con el mismo flujo.
 
   La operación guarda en su entrada, que es inmutable:
+  - `presupuesto_id`;
   - `borrador_id`;
   - `revision`;
   - `carpeta_id`;
@@ -367,6 +402,8 @@ Nunca se recalcula con una tarifa posterior.
 - los cambios resaltados;
 - la lista «qué cambió y por qué» de 2 a 6 puntos;
 - su coste según tarifa.
+
+**Qué se puede aceptar lo decide solo la propuesta:** Aceptar directo exige estado `completed` y JSON válido con texto y cambios. El estado del consumo (§4.4) no lo habilita ni lo impide; si falta, el lateral enseña el posible cargo pendiente.
 
 **Botones:**
 - **Aceptar:** el texto propuesto, o su copia editada, pasa a la barra como **una revisión nueva** del borrador. «Deshacer» vuelve al texto anterior, que es otra revisión, hasta que se genera.
@@ -438,7 +475,11 @@ Casos añadidos en la revisión 4, con su criterio de aprobado:
     - Pasa si el Registro enseña dos líneas («según tarifa a $» y «en curso · reserva estimada r $»), la Mesa enseña estimado a $ + reservado r $, y el CSV exportado en ese momento trae `coste_segun_tarifa` = a y `reserva_en_curso` = r.
     - Al terminar el intento 2 con b $: estimado a + b, reservado 0, `reserva_en_curso` vacía. Las tres vistas coinciden en cada momento.
 13. **Revisión confirmada antes de presupuestar.** Con cambios sin guardar, el botón dice «guardando…» y no se puede pulsar. Tras guardar, la cifra corresponde a la revisión confirmada.
-    - Pasa si la reserva del botón es la calculada por el servidor para esa revisión y la operación creada guarda esa misma revisión y esa reserva.
+    - Pasa si las cifras del botón son las del presupuesto emitido para esa revisión y la operación creada guarda ese `presupuesto_id`, esa revisión y esa reserva.
+13b. **Presupuesto que cambia antes de crear la operación.** Con un presupuesto emitido, se cambia por separado: la tarifa del código, `max_output_tokens`, `prompt_cache_options` y los rasgos de una referencia. Después se pulsa Mejorar con el presupuesto viejo.
+    - Pasa si en cada caso hay 409 con un presupuesto nuevo, **no se crea operación ni reserva**, el contador del proveedor simulado no sube y el botón enseña el precio nuevo.
+    - Un segundo clic con el presupuesto nuevo crea la operación con esa reserva.
+    - Un presupuesto ya usado por otra operación no crea una segunda; el mismo `id_peticion` devuelve la misma operación.
 14. **Conflicto de revisión al pulsar.** Otra ventana guarda una revisión mayor; la primera pulsa Mejorar.
     - Pasa si hay 409, **no se crea operación**, el contador del proveedor simulado sigue igual y el texto de la barra no cambia.
     - Lo mismo con el borrador cerrado y con una reserva recalculada distinta de la mostrada (esta última exige otro clic, sin llamada).
@@ -453,9 +494,16 @@ Casos añadidos en la revisión 4, con su criterio de aprobado:
     - La petición simulada lleva `background: true` y `store: true`, y el id se guarda en el intento antes de consultar.
     - `sin_final`: a los 15 minutos simulados, `incierta` «sin final de OpenAI», y el worker deja de consultar.
     - `caducada` (404 al consultar): `incierta` «respuesta caducada o no encontrada»; marcada fallida, posible cargo = reserva estimada. **Nunca coste cero.**
-    - `sin_consumo` (estado final sin `usage`, o `failed` con todo a cero): «terminada sin consumo informado», posible cargo = reserva estimada. **Nunca coste cero.**
+    - `sin_consumo` (estado final sin `usage`): consumo `ausente`, posible cargo = reserva estimada. **Nunca coste cero.**
     - Pasa si en los tres casos el contador del proveedor no sube por sí solo, y Registro, Mesa y CSV dan las mismas cifras.
     - «No hubo cargo» deja el coste en 0 solo tras ese clic de Juan, y «Hubo cargo…» lo lleva a informado, como en PIC-02.
+    - La petición de la opción B no se prueba como «sin retención»: ninguna prueba ni texto de la interfaz lo afirma.
+19. **Propuesta válida sin consumo.** `completed` con propuesta completa y JSON válido, sin `usage`.
+    - Pasa si Aceptar está disponible, el lateral avisa del posible cargo pendiente de la reserva, y tras Aceptar (y por separado tras Descartar) Registro, Mesa y CSV siguen enseñando ese posible cargo hasta «No hubo cargo» o «Hubo cargo…».
+    - Con `incomplete` y consumo `valido`, en cambio, no hay Aceptar directo.
+20. **Consumo ausente frente a consumo cero.** Tres respuestas `completed` con la misma propuesta: sin `usage`; con `usage` todo a 0 y cuadrado; con `usage` a `null`.
+    - Pasa si la de ceros queda `valido` con 0 $ según tarifa en estimado y sin posible cargo, y las otras dos quedan `ausente` con posible cargo = reserva estimada.
+    - Un `usage` con un valor negativo o no entero queda `sin_cuadrar`, con posible cargo.
 
 Además, toda la batería: pytest, p1–p17 y las pruebas del frontend.
 
