@@ -598,3 +598,8 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
 - Plazo, intervalo y retención del simulado se leen de `MEJORAR_PLAZO_S` (900), `MEJORAR_INTERVALO_S` (2) y `MEJORAR_RETENIDA_S`.
 
 **Pruebas:** `p18_mejorar` cubre los casos 1 a 20, 13b y D4; `backend/tests/test_mejorar_calculo.py`, el cálculo. Batería completa en verde: pytest y p1–p18.
+
+**Correcciones tras la revisión de `7b16a3a`:**
+- Recarga con alcance de edición: el borrador recupera a la vez texto, alcance y versión seleccionada. Hasta tenerlos, «Generar», «Mejorar» y el autoguardado esperan y el alcance dice «recuperando…». Si la versión ya no está en la carpeta, vuelve a «Nueva imagen» con aviso.
+- Reintento que supera el presupuesto del proyecto: la mejora queda «pendiente de tu confirmación» con su presupuesto ya reclamado. La Mesa ofrece la confirmación también en reintentos y, tras recargar, «Continuar · reserva estimada». Se continúa con el mismo presupuesto, sin intento ni envío hasta autorizar. Si la tarifa cambió mientras esperaba, 409 con precio nuevo y otro clic. Lo mismo vale para la primera mejora pendiente, sin depender del id de petición.
+- Pruebas: caso 21 en `p18_mejorar` y `frontend/pruebas/borrador.test.ts`.

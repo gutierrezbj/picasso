@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { formatoMonedaFino } from "../../lib/formato";
 import { lineasIntentoMejora } from "../motor/comun";
+import { accionReintento } from "../../lib/borrador";
 
 const EN_MARCHA = ["autorizada", "enviada", "en_curso"];
 
@@ -31,6 +32,7 @@ interface Props {
   onBorrarCopia: () => Promise<void>;
   onPedirReintento: (m: any) => void;
   onConfirmarReintento: (m: any) => void;
+  onContinuar: (m: any) => void;
   onComprobar: (m: any) => void;
   onMarcarFallida: (m: any) => void;
   onEntendido: (opId: string) => void;
@@ -45,13 +47,14 @@ function Tarjeta({ m, p }: { m: any; p: Props }) {
   const completa = m.estado === "completada" && r?.calidad === "completa";
   const sinConsumo = r && r.estado_consumo && r.estado_consumo !== "valido";
   const reintento = p.reintentos[m.id];
+  const queReintento = accionReintento(m, reintento);
   const pendientes = (m.coste?.cargos || []).filter((c: any) => c.estado === "pendiente");
   const base = r?.texto || r?.parcial || "";
   return (
     <div data-testid={`mejora-${m.id}`} className="flex flex-col gap-2 rounded-[12px] border border-linea bg-superficie2 p-3 text-[13px] leading-[18px]">
       <div className="flex items-center gap-2">
         <b>Mejora · revisión {m.revision}</b>
-        <span className="text-tinta2">{enMarcha ? "en curso" : m.estado}</span>
+        <span className="text-tinta2">{enMarcha ? "en curso" : m.estado === "presupuestada" ? "pendiente de tu confirmación" : m.estado}</span>
         {m.proveedor === "simulado" && <span className="rounded-[6px] bg-superficie px-1.5 text-[11px] text-tinta2">simulado</span>}
       </div>
       {m.para_texto_anterior && (
@@ -177,16 +180,21 @@ function Tarjeta({ m, p }: { m: any; p: Props }) {
             </button>
           )
         )}
-        {m.estado === "fallida" && !m.bloqueo?.activo &&
-          (reintento ? (
-            <button data-testid="mejora-confirmar-reintento" disabled={p.ocupado} className="h-8 rounded-[8px] bg-acento px-3 font-bold text-sobreAcento disabled:opacity-45" onClick={() => p.onConfirmarReintento(m)}>
-              Volver a pedir · reserva estimada {formatoMonedaFino(reintento.reserva_estimada, "USD")}
-            </button>
-          ) : (
-            <button data-testid="mejora-reintentar" disabled={p.ocupado} className="h-8 rounded-[8px] border border-acento px-3 text-acento disabled:opacity-45" onClick={() => p.onPedirReintento(m)}>
-              Volver a pedir…
-            </button>
-          ))}
+        {queReintento === "continuar" && (
+          <button data-testid="mejora-continuar" disabled={p.ocupado} className="h-8 rounded-[8px] bg-acento px-3 font-bold text-sobreAcento disabled:opacity-45" onClick={() => p.onContinuar(m)}>
+            Continuar · reserva estimada {formatoMonedaFino(m.reserva_estimada, "USD")}
+          </button>
+        )}
+        {queReintento === "confirmar" && (
+          <button data-testid="mejora-confirmar-reintento" disabled={p.ocupado} className="h-8 rounded-[8px] bg-acento px-3 font-bold text-sobreAcento disabled:opacity-45" onClick={() => p.onConfirmarReintento(m)}>
+            Volver a pedir · reserva estimada {formatoMonedaFino(reintento.reserva_estimada, "USD")}
+          </button>
+        )}
+        {queReintento === "pedir" && (
+          <button data-testid="mejora-reintentar" disabled={p.ocupado} className="h-8 rounded-[8px] border border-acento px-3 text-acento disabled:opacity-45" onClick={() => p.onPedirReintento(m)}>
+            Volver a pedir…
+          </button>
+        )}
         {m.estado === "incierta" && (
           <>
             <button data-testid="mejora-comprobar" className="h-8 rounded-[8px] border border-acento px-3 text-acento" onClick={() => p.onComprobar(m)}>

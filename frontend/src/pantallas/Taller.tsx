@@ -16,6 +16,7 @@ import { costeEstimado, textoGasto } from "../componentes/motor/comun";
 import { formatoMoneda, formatoMonedaFino } from "../lib/formato";
 import { colocar, type NodoArbol } from "../lib/mesa";
 import { trasError } from "../lib/peticiones";
+import { restaurarAlcance } from "../lib/borrador";
 import type { ModeloCatalogo } from "../tipos";
 
 const COLOR_NIVEL: Record<string, string> = { verde: "#81B88B", ambar: "#F5A623", rojo: "#E57373" };
@@ -148,6 +149,8 @@ export default function Taller() {
   const alcanceRef = useRef<Record<string, unknown>>({ tipo: "nueva" });
   const [guardando, setGuardando] = useState(false);
   const [conflictoBorrador, setConflictoBorrador] = useState<any | null>(null);
+  const [alcanceListo, setAlcanceListo] = useState(false);
+  const [avisoAlcance, setAvisoAlcance] = useState<string | null>(null);
   const [verMejoras, setVerMejoras] = useState(true);
   const [reintentosMejora, setReintentosMejora] = useState<Record<string, any>>({});
   const [ocupadoMejora, setOcupadoMejora] = useState(false);
@@ -264,11 +267,23 @@ export default function Taller() {
   };
   const normalAlcance = (a: any) => `${a?.tipo || "nueva"}:${a?.toma_id || ""}`;
   const mismoAlcance = (b: any, a: Record<string, unknown>) => normalAlcance(b?.alcance) === normalAlcance(a);
-  const sinGuardar = !!borrador && (texto !== borrador.texto || !mismoAlcance(borrador, alcanceBorrador));
+  const sinGuardar = !!borrador && alcanceListo && (texto !== borrador.texto || !mismoAlcance(borrador, alcanceBorrador));
+
+  useEffect(() => {
+    if (!borrador || alcanceListo) return;
+    const r = restaurarAlcance(borrador.alcance, vista ? tomas : null);
+    if (!r.listo) return;
+    setSeleccion(r.seleccion);
+    setAvisoAlcance(r.aviso);
+    setAlcanceListo(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [borrador?.id, alcanceListo, vista]);
 
   useEffect(() => {
     if (!carpeta) return;
     let vivo = true;
+    setAlcanceListo(false);
+    setAvisoAlcance(null);
     (async () => {
       let b: any = null;
       try {
@@ -302,7 +317,7 @@ export default function Taller() {
     const b = borradorRef.current;
     const t = textoRef.current;
     const a = alcanceRef.current;
-    if (!b) throw new Error("El borrador aún no está listo.");
+    if (!b || !alcanceListo) throw new Error("El borrador aún no está listo.");
     if (t === b.texto && mismoAlcance(b, a)) return b;
     setGuardando(true);
     try {
@@ -345,7 +360,7 @@ export default function Taller() {
   useEffect(() => {
     qc.invalidateQueries({ queryKey: ["taller", espacioId] });
   }, [firmaMejoras, qc, espacioId]);
-  const alcance = editando ? `Editar V${sel.numero}` : "Nueva imagen";
+  const alcance = !alcanceListo ? "recuperando…" : editando ? `Editar V${sel.numero}` : "Nueva imagen";
   const enCurso = abiertas.some((o) => EN_MARCHA.includes(o.estado));
 
   const textoRetardado = useRetardado(texto, 600);
@@ -456,7 +471,7 @@ export default function Taller() {
   }, []);
 
   const accion = async () => {
-    if (!carpeta || !texto.trim() || enviando || pendiente || precio === null) return;
+    if (!alcanceListo || !carpeta || !texto.trim() || enviando || pendiente || precio === null) return;
     const id = crypto.randomUUID();
     await enviar(
       editando
@@ -611,8 +626,8 @@ export default function Taller() {
   const marcadosDir = editando ? (zona ? 1 : 0) : Object.keys(direccion).length;
   const sobranRefs = !editando && refs.length > maxRefs;
   const puedeAccion =
-    !!texto.trim() && !enviando && !pendiente && precio !== null && !!carpeta && !sobranRefs && (editando ? !!modeloEdicion?.elegible : !!modelo?.elegible);
-  const puedePresupuestar = !!borrador && !sinGuardar && !guardando && !conflictoBorrador && !editando && !!texto.trim() && !sobranRefs;
+    alcanceListo && !!texto.trim() && !enviando && !pendiente && precio !== null && !!carpeta && !sobranRefs && (editando ? !!modeloEdicion?.elegible : !!modelo?.elegible);
+  const puedePresupuestar = !!borrador && alcanceListo && !sinGuardar && !guardando && !conflictoBorrador && !editando && !!texto.trim() && !sobranRefs;
   const clavePresu = ["presupuesto-mejorar", borrador?.id, borrador?.revision, refs.join(","), relacion, modelo?.id];
   const { data: presu, error: errorPresu, refetch: refetchPresu } = useQuery({
     queryKey: clavePresu,
@@ -715,6 +730,27 @@ export default function Taller() {
       } catch (e) {
         if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "anterior") setConfirmarAnterior({ m, usarCopia });
         else throw e;
+      }
+    });
+
+  const reintentarMejora = (m: any, presupuestoId: string, confirmado: boolean): Promise<void> =>
+    conMejora(async () => {
+      try {
+        await api.reintentarMejora(m.id, { presupuesto_id: presupuestoId, confirmado_por_encima_del_presupuesto: confirmado });
+        setReintentosMejora((r) => {
+          const { [m.id]: _, ...resto } = r;
+          return resto;
+        });
+      } catch (e) {
+        if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "precio" && e.datos.presupuesto) {
+          setReintentosMejora((r) => ({ ...r, [m.id]: e.datos.presupuesto }));
+          throw e;
+        }
+        if (e instanceof ErrorApi && trasError(e.status, e.message) === "presupuesto" && !e.datos) {
+          setConfirmarPresupuesto({ mensaje: e.message, seguir: () => reintentarMejora(m, presupuestoId, true) });
+          return;
+        }
+        throw e;
       }
     });
 
@@ -823,22 +859,8 @@ export default function Taller() {
                   setReintentosMejora((r) => ({ ...r, [m.id]: p }));
                 })
               }
-              onConfirmarReintento={(m) =>
-                conMejora(async () => {
-                  try {
-                    await api.reintentarMejora(m.id, { presupuesto_id: reintentosMejora[m.id].id, confirmado_por_encima_del_presupuesto: false });
-                    setReintentosMejora((r) => {
-                      const { [m.id]: _, ...resto } = r;
-                      return resto;
-                    });
-                  } catch (e) {
-                    if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "precio" && e.datos.presupuesto) {
-                      setReintentosMejora((r) => ({ ...r, [m.id]: e.datos.presupuesto }));
-                    }
-                    throw e;
-                  }
-                })
-              }
+              onConfirmarReintento={(m) => reintentarMejora(m, reintentosMejora[m.id].id, false)}
+              onContinuar={(m) => reintentarMejora(m, m.presupuesto_id, false)}
               onComprobar={(m) => conMejora(() => api.comprobarOperacion(m.id))}
               onMarcarFallida={(m) => setMarcarFallida({ id: m.id, coste: { estimado: m.reserva_estimada }, precioTexto: formatoMonedaFino(m.reserva_estimada, "USD") })}
               onEntendido={(opId) => conMejora(() => api.entendidoMejora(opId))}
@@ -953,6 +975,11 @@ export default function Taller() {
           >
             Alcance: {alcance}
           </span>
+          {avisoAlcance && (
+            <span data-testid="taller-aviso-alcance" className="text-[12px] text-aviso">
+              {avisoAlcance}
+            </span>
+          )}
           {editando ? (
             <button data-testid="taller-nueva-imagen" onClick={nuevaImagen} className="h-7 rounded-[8px] border border-linea bg-superficie2 px-2.5 text-[12px]">
               Nueva imagen

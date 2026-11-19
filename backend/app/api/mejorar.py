@@ -440,7 +440,7 @@ async def presupuesto_reintento(operacion_id: str, datos: PedirReintento | None 
     op = await db.operaciones.find_one({"_id": operacion_id, "accion": "mejorar_texto"})
     if not op:
         raise HTTPException(404, "Mejora no encontrada")
-    if op["estado"] != EstadoOperacion.fallida.value:
+    if op["estado"] not in (EstadoOperacion.fallida.value, EstadoOperacion.presupuestada.value):
         raise _conflicto("estado", "Solo se vuelve a pedir una mejora fallida o incompleta. Si está incierta, márcala fallida antes.")
     calculado = await _calcular_reintento(op)
     base = {
@@ -478,12 +478,23 @@ async def reintentar(operacion_id: str, datos: PedirMejora):
     op = await db.operaciones.find_one({"_id": operacion_id, "accion": "mejorar_texto"})
     if not op:
         raise HTTPException(404, "Mejora no encontrada")
-    p = await db.presupuestos_mejorar.find_one({"_id": datos.presupuesto_id, "operacion_id": operacion_id, "tipo": "reintento"})
+    p = await db.presupuestos_mejorar.find_one(
+        {"_id": datos.presupuesto_id, "$or": [{"operacion_id": operacion_id, "tipo": "reintento"}, {"usado_por": operacion_id}]}
+    )
     if not p:
         raise HTTPException(404, "Presupuesto no encontrado para esta mejora.")
     p = sin_id(p)
     await _exigir_sin_bloqueo(op["espacio_id"])
-    if op["estado"] != EstadoOperacion.fallida.value:
+    pendiente = op["estado"] == EstadoOperacion.presupuestada.value
+    if pendiente and p.get("usado_por") == operacion_id and op["mejorar"].get("presupuesto_id") == p["id"]:
+        await _comprobar_presupuesto({**p, "usado_por": None, "tipo": "reintento", "operacion_id": operacion_id}, await _calcular_reintento(op))
+        try:
+            return await ops.autorizar(operacion_id, datos.confirmado_por_encima_del_presupuesto)
+        except estados.TransicionNoPermitida as e:
+            raise HTTPException(409, str(e)) from e
+        except PermissionError as e:
+            raise HTTPException(409, str(e)) from e
+    if op["estado"] not in (EstadoOperacion.fallida.value, EstadoOperacion.presupuestada.value):
         raise _conflicto("estado", "Solo se vuelve a pedir una mejora fallida o incompleta.")
     await _comprobar_presupuesto(p, await _calcular_reintento(op))
     await _reclamar(p["id"], operacion_id)
@@ -548,6 +559,7 @@ async def _vista_mejora(op: dict[str, Any], borrador: dict[str, Any], intentos: 
         "reserva_estimada": m.get("reserva_estimada"),
         "tarifa": m.get("tarifa"),
         "aviso_tarifa": m.get("aviso_tarifa"),
+        "presupuesto_id": m.get("presupuesto_id"),
         "para_texto_anterior": anterior,
         "decision": entrada_b.get("estado"),
         "intentos": int(op.get("intentos") or 0),
