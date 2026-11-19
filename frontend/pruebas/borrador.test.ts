@@ -36,3 +36,9 @@ test("reintento: nada con bloqueo, en marcha o terminada", () => {
   assert.equal(accionReintento({ estado: "presupuestada", presupuesto_id: "p1", bloqueo: { activo: true } }, null), null);
   for (const estado of ["autorizada", "enviada", "en_curso", "completada", "incierta"]) assert.equal(accionReintento({ estado }, { id: "p1" }), null, estado);
 });
+
+test("pendiente con presupuesto nuevo por cambio de tarifa: se confirma el nuevo, no el antiguo", () => {
+  const m = { estado: "presupuestada", presupuesto_id: "antiguo" };
+  assert.equal(accionReintento(m, { id: "nuevo", reserva_estimada: 0.0281 }), "confirmar");
+  assert.equal(accionReintento(m, null), "continuar");
+});

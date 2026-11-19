@@ -15,7 +15,8 @@ export type AccionReintento = "continuar" | "confirmar" | "pedir" | null;
 
 export function accionReintento(m: { estado: string; bloqueo?: any; presupuesto_id?: string | null }, presupuestoLocal: any): AccionReintento {
   if (m.bloqueo?.activo) return null;
+  if ((m.estado === "presupuestada" || m.estado === "fallida") && presupuestoLocal) return "confirmar";
   if (m.estado === "presupuestada" && m.presupuesto_id) return "continuar";
-  if (m.estado === "fallida") return presupuestoLocal ? "confirmar" : "pedir";
+  if (m.estado === "fallida") return "pedir";
   return null;
 }

@@ -602,4 +602,5 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
 **Correcciones tras la revisión de `7b16a3a`:**
 - Recarga con alcance de edición: el borrador recupera a la vez texto, alcance y versión seleccionada. Hasta tenerlos, «Generar», «Mejorar» y el autoguardado esperan y el alcance dice «recuperando…». Si la versión ya no está en la carpeta, vuelve a «Nueva imagen» con aviso.
 - Reintento que supera el presupuesto del proyecto: la mejora queda «pendiente de tu confirmación» con su presupuesto ya reclamado. La Mesa ofrece la confirmación también en reintentos y, tras recargar, «Continuar · reserva estimada». Se continúa con el mismo presupuesto, sin intento ni envío hasta autorizar. Si la tarifa cambió mientras esperaba, 409 con precio nuevo y otro clic. Lo mismo vale para la primera mejora pendiente, sin depender del id de petición.
+- Si una mejora pendiente recibe un presupuesto nuevo por cambio de tarifa, la tarjeta muestra ese importe y confirma ese presupuesto; «Continuar» con el antiguo deja de ofrecerse.
 - Pruebas: caso 21 en `p18_mejorar` y `frontend/pruebas/borrador.test.ts`.
