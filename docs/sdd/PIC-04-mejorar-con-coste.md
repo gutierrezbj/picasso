@@ -576,3 +576,25 @@ Leído en §21 y en el SDD PIC-01 el 18-11-2026. Esto no declara nada pendiente:
 1. Comprobar en la interfaz, no solo en el código, cada fila marcada como «Hay» o «Falta comprobar».
 2. Que Juan decida qué hacer con cada fila «No aparece»: entra en el Módulo 1, se aplaza o deja de hacer falta.
 3. Para 19.29: un recorrido de Juan en la Mesa sin ayuda, apuntando dónde se pierde. Se cierra solo si no se pierde, o cuando se corrija lo que apunte.
+
+## 9. Construcción en aislado (19-11-2026, rama `pic-04/mejorar`)
+
+Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
+
+**Dónde está:**
+- `backend/app/mejorar/`: tarifa, configuración, límites y cálculos (`calculo.py`), proveedor real y simulado (`proveedores.py`) y el flujo de segundo plano (`flujo.py`).
+- `backend/app/api/mejorar.py`: borradores, presupuestos, Mejorar, reintento, aceptar, descartar y copia.
+- El motor cambia en tres sitios: el worker deriva `mejorar_texto` a su flujo, `coste_de` calcula por intento y el Registro y el CSV llevan las columnas nuevas.
+- `POST /espacios/{e}/taller/mejorar` (la llamada directa sin tope) desaparece; `asistente_usos` ya no se escribe.
+- Mesa: `PanelMejora` y la barra de `Taller.tsx`.
+
+**Decisiones de implementación para revisar:**
+- El presupuesto se compara por huella, proveedor, tarifa, configuración y reserva estimada. La estimación (≈) no entra: cambia con la media de las últimas mejoras y provocaría un 409 en cada clic.
+- Las referencias y el formato no viven en el borrador: viajan en la petición de presupuesto y quedan fijados en él.
+- Un 4xx con fallo de conexión antes de enviar (`ConnectError`) se trata como rechazo sin cargo: la petición no salió.
+- Una respuesta incompleta o ilegible deja la operación `fallida` para poder volver a pedirla; su consumo sigue contando.
+- El reintento y la autorización genéricos del motor (`/operaciones/{id}/reintentar` y `/autorizar`) devuelven 409 para una mejora: solo se pide desde la Mesa, con su presupuesto.
+- Dos rutas solo de pruebas, que responden 403 fuera de la base de pruebas: `/api/pruebas/mejorar/parametros` (cambiar tarifa o configuración en memoria) y `/api/pruebas/mejorar/envios` (contador del simulado).
+- Plazo, intervalo y retención del simulado se leen de `MEJORAR_PLAZO_S` (900), `MEJORAR_INTERVALO_S` (2) y `MEJORAR_RETENIDA_S`.
+
+**Pruebas:** `p18_mejorar` cubre los casos 1 a 20, 13b y D4; `backend/tests/test_mejorar_calculo.py`, el cálculo. Batería completa en verde: pytest y p1–p18.

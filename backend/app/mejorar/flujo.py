@@ -22,6 +22,10 @@ def intervalo_s() -> float:
     return float(os.environ.get("MEJORAR_INTERVALO_S") or 2)
 
 
+def _coma(valor: float) -> str:
+    return f"{valor:.4f}".replace(".", ",")
+
+
 def _minutos(segundos: float) -> str:
     return f"{segundos / 60:g} minutos" if segundos >= 60 else f"{segundos:g} segundos"
 
@@ -69,7 +73,7 @@ async def procesar(op_id: str) -> None:
         await db.intentos.update_one(
             {"_id": intento["id"]}, {"$set": {"estado": "incierta", "error": str(e), "id_remoto": e.id_remoto}}
         )
-        motivo = str(e) if e.id_remoto else f"{e} No se puede consultar: no llegó el identificador."
+        motivo = str(e) if e.id_remoto or "identificador" in str(e) else f"{e} No se puede consultar: no llegó el identificador."
         await ops.guardar_estado(op_id, EstadoOperacion.incierta.value, {"error": motivo + " No se reenvía nada solo."})
         return
     await db.intentos.update_one({"_id": intento["id"]}, {"$set": {"id_remoto": id_remoto, "estado": "en_curso"}})
@@ -130,13 +134,13 @@ async def finalizar(op_id: str, resp: RespuestaRemota) -> None:
     marcas = list(consumo.get("marcas") or [])
     bloqueo = None
     if consumo["estado_consumo"] == "valido" and coste is not None and coste > reserva:
-        marcas.append(f"superó la reserva estimada ({coste:.4f} $ > {reserva:.4f} $)")
+        marcas.append(f"superó la reserva estimada ({_coma(coste)} $ > {_coma(reserva)} $)")
         bloqueo = marcas[-1]
     if "escritura en caché no esperada" in marcas:
         bloqueo = bloqueo or "escritura en caché no esperada"
     estimacion = float(op["mejorar"].get("estimacion") or 0)
     if coste is not None and coste > estimacion and not bloqueo:
-        marcas.append(f"superó la estimación ({coste:.4f} $ > {estimacion:.4f} $)")
+        marcas.append(f"superó la estimación ({_coma(coste)} $ > {_coma(estimacion)} $)")
     campos = _campos_consumo(consumo)
     campos["marcas"] = marcas
     await db.intentos.update_one(

@@ -322,7 +322,7 @@ async def _comprobar_presupuesto(p: dict[str, Any], calculado: dict[str, Any]) -
     if not _igual(p, calculado):
         base = {k: p.get(k) for k in ("tipo", "espacio_id", "borrador_id", "revision", "carpeta_id", "alcance", "referencias_ids", "formato", "modelo_imagen", "operacion_id")}
         nuevo = await _emitir(base, calculado, p.get("simulacion") or "normal")
-        raise _conflicto("precio", f"El precio cambió: reserva estimada {nuevo['reserva_estimada']:.4f} $. Pulsa otra vez para mejorar con este precio.", presupuesto=nuevo)
+        raise _conflicto("precio", f"El precio cambió: reserva estimada {str(round(nuevo['reserva_estimada'], 4)).replace('.', ',')} $. Pulsa otra vez para mejorar con este precio.", presupuesto=nuevo)
 
 
 async def _reclamar(presupuesto_id: str, op_id: str) -> None:
@@ -362,7 +362,13 @@ async def mejorar(borrador_id: str, datos: PedirMejora, response: Response):
         previa = await ops.por_peticion(espacio_id, datos.id_peticion)
         if previa:
             response.status_code = 200
-            return previa
+            op_previa = previa["operacion"]
+            if op_previa["estado"] != "presupuestada" or int(op_previa.get("intentos") or 0) > 0:
+                return previa
+            try:
+                return {**await ops.autorizar(op_previa["id"], datos.confirmado_por_encima_del_presupuesto), "repetida": True}
+            except PermissionError as e:
+                raise HTTPException(409, str(e)) from e
     p = await db.presupuestos_mejorar.find_one({"_id": datos.presupuesto_id, "borrador_id": borrador_id})
     if not p:
         raise HTTPException(404, "Presupuesto no encontrado para este borrador.")

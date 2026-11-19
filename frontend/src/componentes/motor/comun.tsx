@@ -1,5 +1,5 @@
 import React from "react";
-import { formatoMoneda } from "../../lib/formato";
+import { formatoMoneda, formatoMonedaFino } from "../../lib/formato";
 import type { ModeloCatalogo, CosteOperacion } from "../../tipos";
 
 /** Coste estimado en la interfaz (§9.4.2). `null` = «coste sin verificar»:
@@ -41,8 +41,38 @@ export function textoImporte(c: CosteOperacion | undefined, moneda: string): str
   if (!c) return "—";
   if (c.categoria === "informado" && c.informado !== null) return `${formatoMoneda(c.informado, moneda)} · ${c.etiqueta}`;
   if (c.categoria === "historico_tarifa" && c.contado !== null) return `${formatoMoneda(c.contado, moneda)} · ${c.etiqueta}`;
+  if (c.segun_tarifa != null) return `${formatoMonedaFino(c.segun_tarifa, moneda)} según tarifa · sin importe del proveedor`;
   if (c.categoria === "estimado") return "sin importe del proveedor";
   return "—";
+}
+
+const CONSUMO: Record<string, string> = { ausente: "sin consumo informado", sin_cuadrar: "consumo sin cuadrar" };
+
+export function lineasIntentoMejora(c: CosteOperacion | undefined, moneda: string): string[] {
+  return (c?.intentos_mejora || []).map((it) => {
+    const estado = it.estado === "incierta"
+      ? "incierta"
+      : it.en_curso
+        ? "en curso"
+      : it.estado_respuesta === "incomplete"
+        ? `incompleta${it.motivo ? ` (${it.motivo})` : ""}`
+        : it.estado_respuesta === "completed"
+          ? "completa"
+          : it.estado_respuesta === "rechazada"
+            ? "rechazada"
+            : it.estado;
+    const importe = it.en_curso
+      ? `reserva estimada ${formatoMonedaFino(it.reserva, moneda)}`
+      : it.estado_consumo === "valido"
+        ? `según tarifa ${formatoMonedaFino(it.coste_segun_tarifa, moneda)}`
+        : it.estado_consumo
+          ? CONSUMO[it.estado_consumo]
+          : it.estado === "incierta"
+            ? `reserva estimada ${formatoMonedaFino(it.reserva, moneda)}`
+            : "sin consumo";
+    const tokens = it.tokens && it.estado_consumo === "valido" ? ` · ${it.tokens.entrada} de entrada y ${it.tokens.salida} de salida × tarifa del ${(it.tarifa_aplicada?.verificada_en || "").split("-").reverse().join("-")}` : "";
+    return `Intento ${it.numero}: ${estado} · ${importe}${tokens}${it.marcas.length ? ` · ${it.marcas.join("; ")}` : ""}`;
+  });
 }
 
 export const ETIQUETA_ACCION: Record<string, string> = {
@@ -53,6 +83,7 @@ export const ETIQUETA_ACCION: Record<string, string> = {
   generar_voz: "Generar voz",
   sincronizar_labios: "Sincronizar labios",
   personaje_hablando: "Personaje hablando",
+  mejorar_texto: "Mejorar descripción",
 };
 
 export const ETIQUETA_ESTADO: Record<string, string> = {

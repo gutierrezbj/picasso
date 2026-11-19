@@ -745,8 +745,15 @@ async def editar_operacion(operacion_id: str, datos: EditarOperacion):
         raise HTTPException(422, str(e)) from e
 
 
+async def _exigir_fuera_de_mejorar(operacion_id: str) -> None:
+    doc = await db.operaciones.find_one({"_id": operacion_id}, {"accion": 1})
+    if doc and doc.get("accion") == "mejorar_texto":
+        raise HTTPException(409, "Una mejora se pide desde la Mesa, con su presupuesto delante.")
+
+
 @router.post("/operaciones/{operacion_id}/autorizar")
 async def autorizar_operacion(operacion_id: str, datos: Autorizacion | None = None):
+    await _exigir_fuera_de_mejorar(operacion_id)
     try:
         return await ops.autorizar(
             operacion_id, bool(datos and datos.confirmado_por_encima_del_presupuesto)
@@ -803,6 +810,7 @@ async def resolver_cargo(intento_id: str, datos: ResolverCargo):
 
 @router.post("/operaciones/{operacion_id}/reintentar")
 async def reintentar_operacion(operacion_id: str):
+    await _exigir_fuera_de_mejorar(operacion_id)
     try:
         return await ops.reintentar(operacion_id)
     except LookupError as e:

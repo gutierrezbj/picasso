@@ -7,12 +7,13 @@ import Boton from "../componentes/Boton";
 import Dialogo from "../componentes/Dialogo";
 import Mesa from "../componentes/mesa/Mesa";
 import Lateral, { type Pestana } from "../componentes/mesa/Lateral";
+import PanelMejora from "../componentes/mesa/PanelMejora";
 import ComparadorTomas from "../componentes/lienzo/ComparadorTomas";
 import type { NodoVersionMesa } from "../componentes/mesa/NodoVersion";
 import type { AristaMesa } from "../componentes/mesa/AristaInstruccion";
 import { api, ErrorApi } from "../api/cliente";
 import { costeEstimado, textoGasto } from "../componentes/motor/comun";
-import { formatoMoneda } from "../lib/formato";
+import { formatoMoneda, formatoMonedaFino } from "../lib/formato";
 import { colocar, type NodoArbol } from "../lib/mesa";
 import { trasError } from "../lib/peticiones";
 import type { ModeloCatalogo } from "../tipos";
@@ -49,6 +50,7 @@ interface Pendiente {
   texto: string;
   precio: string;
   noLlego?: boolean;
+  deBarra?: boolean;
 }
 
 const esPresupuesto = (e: unknown) => e instanceof ErrorApi && e.status === 409 && /presupuesto/i.test(e.message);
@@ -125,7 +127,7 @@ export default function Taller() {
   const [direccion, setDireccion] = useState<Record<string, string>>({});
   const [zona, setZona] = useState<string | null>(null);
   const [dirAbierta, setDirAbierta] = useState(false);
-  const [mejora, setMejora] = useState<{ antes: string; cambios: any[]; coste: number } | null>(null);
+  const [mejora, setMejora] = useState<{ antes: string; cambios: any[]; coste: number | null } | null>(null);
   const [editandoTexto, setEditandoTexto] = useState(true);
   const [verPorque, setVerPorque] = useState(false);
   const [mejorando, setMejorando] = useState(false);
@@ -140,6 +142,17 @@ export default function Taller() {
   const [reintento, setReintento] = useState<any | null>(null);
   const [marcarFallida, setMarcarFallida] = useState<any | null>(null);
   const [confirmarPresupuesto, setConfirmarPresupuesto] = useState<{ mensaje: string; seguir: () => Promise<unknown> } | null>(null);
+  const [borrador, setBorradorEstado] = useState<any | null>(null);
+  const borradorRef = useRef<any | null>(null);
+  const textoRef = useRef("");
+  const alcanceRef = useRef<Record<string, unknown>>({ tipo: "nueva" });
+  const [guardando, setGuardando] = useState(false);
+  const [conflictoBorrador, setConflictoBorrador] = useState<any | null>(null);
+  const [verMejoras, setVerMejoras] = useState(true);
+  const [reintentosMejora, setReintentosMejora] = useState<Record<string, any>>({});
+  const [ocupadoMejora, setOcupadoMejora] = useState(false);
+  const [confirmarTarifa, setConfirmarTarifa] = useState<any | null>(null);
+  const [confirmarAnterior, setConfirmarAnterior] = useState<{ m: any; usarCopia: boolean } | null>(null);
   const areaTexto = useRef<HTMLTextAreaElement>(null);
   const [alFinal, setAlFinal] = useState(false);
   const clavePendiente = `picasso.taller.${espacioId}.pendiente`;
@@ -234,6 +247,104 @@ export default function Taller() {
   const editando = !!sel && sel.medio?.clase === "imagen";
   const modeloEdicion = editando ? porId(sel.modelo_edicion) : null;
   const precio = editando ? costeEstimado(modeloEdicion, { variantes: 1 }) : costeEstimado(modelo, { variantes: cuantas });
+  const alcanceBorrador: Record<string, unknown> = editando ? { tipo: "editar", toma_id: sel.id } : { tipo: "nueva" };
+  const claveAlcance = JSON.stringify(alcanceBorrador);
+  textoRef.current = texto;
+  alcanceRef.current = alcanceBorrador;
+  const setBorrador = (b: any | null) => {
+    borradorRef.current = b;
+    setBorradorEstado(b);
+    if (b && carpeta) {
+      try {
+        localStorage.setItem(`picasso.taller.${espacioId}.borrador.${b.carpeta_id}`, b.id);
+      } catch {
+        /* sin almacenamiento local: se recupera por la carpeta */
+      }
+    }
+  };
+  const normalAlcance = (a: any) => `${a?.tipo || "nueva"}:${a?.toma_id || ""}`;
+  const mismoAlcance = (b: any, a: Record<string, unknown>) => normalAlcance(b?.alcance) === normalAlcance(a);
+  const sinGuardar = !!borrador && (texto !== borrador.texto || !mismoAlcance(borrador, alcanceBorrador));
+
+  useEffect(() => {
+    if (!carpeta) return;
+    let vivo = true;
+    (async () => {
+      let b: any = null;
+      try {
+        const id = localStorage.getItem(`picasso.taller.${espacioId}.borrador.${carpeta.id}`);
+        if (id) {
+          const x = await api.verBorrador(id);
+          if (!x.cerrado_en && x.carpeta_id === carpeta.id) b = x;
+        }
+      } catch {
+        b = null;
+      }
+      if (!b) {
+        try {
+          b = await api.borradorAbierto(espacioId, carpeta.id);
+        } catch {
+          b = await api.crearBorrador(espacioId, { carpeta_id: carpeta.id, texto: "" });
+        }
+      }
+      if (!vivo) return;
+      setBorrador(b);
+      setConflictoBorrador(null);
+      setTexto(b.texto || "");
+    })().catch((e) => setError(e instanceof Error ? e.message : "No se ha podido recuperar el borrador."));
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carpeta?.id, espacioId]);
+
+  const guardarAhora = async (): Promise<any> => {
+    const b = borradorRef.current;
+    const t = textoRef.current;
+    const a = alcanceRef.current;
+    if (!b) throw new Error("El borrador aún no está listo.");
+    if (t === b.texto && mismoAlcance(b, a)) return b;
+    setGuardando(true);
+    try {
+      const nuevo = await api.guardarBorrador(b.id, { revision: b.revision, texto: t, alcance: a });
+      setBorrador(nuevo);
+      setConflictoBorrador(null);
+      return nuevo;
+    } catch (e) {
+      if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "cerrado") {
+        const nb = await api.crearBorrador(espacioId, { carpeta_id: b.carpeta_id, texto: t, alcance: a });
+        setBorrador(nb);
+        return nb;
+      }
+      if (e instanceof ErrorApi && e.status === 409) setConflictoBorrador(e.datos?.borrador || null);
+      throw e;
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!sinGuardar || conflictoBorrador) return;
+    const t = setTimeout(() => {
+      guardarAhora().catch((): void => undefined);
+    }, 500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto, claveAlcance, borrador?.revision, conflictoBorrador]);
+
+  const { data: vistaMejoras, refetch: refetchMejoras } = useQuery({
+    queryKey: ["mejoras", borrador?.id],
+    queryFn: () => api.mejorasBorrador(borrador.id),
+    enabled: !!borrador,
+    refetchInterval: (q) => (((q.state.data as any)?.mejoras || []).some((m: any) => EN_MARCHA.includes(m.estado)) ? 1000 : 8000),
+  });
+  const listaMejoras: any[] = vistaMejoras?.mejoras || [];
+  const bloqueoMejora = vistaMejoras?.bloqueo || null;
+  const pendientesMejora = listaMejoras.filter((m) => !m.decision);
+  const firmaMejoras = listaMejoras.map((m) => `${m.id}:${m.estado}:${m.intentos}:${(m.coste?.cargos || []).map((c: any) => c.estado).join(",")}`).join("|");
+  useEffect(() => {
+    qc.invalidateQueries({ queryKey: ["taller", espacioId] });
+  }, [firmaMejoras, qc, espacioId]);
   const alcance = editando ? `Editar V${sel.numero}` : "Nueva imagen";
   const enCurso = abiertas.some((o) => EN_MARCHA.includes(o.estado));
 
@@ -248,6 +359,7 @@ export default function Taller() {
   const faltan: string[] = !editando && textoRetardado.trim() ? delPrompt?.faltan || [] : [];
 
   const refrescar = async () => {
+    await qc.invalidateQueries({ queryKey: ["mejoras"] });
     await qc.invalidateQueries({ queryKey: ["tomas-carpeta", carpeta?.id] });
     await qc.invalidateQueries({ queryKey: ["taller", espacioId] });
   };
@@ -265,21 +377,6 @@ export default function Taller() {
     setEditandoTexto(true);
     setTexto(texto.trimEnd() + (texto.trim() && !/[.!?]$/.test(texto.trimEnd()) ? "." : "") + (AYUDA_PARTE[parte] || " "));
     setAlFinal(true);
-  };
-
-  const mejorar = async () => {
-    setError(null);
-    setMejorando(true);
-    try {
-      const r = await api.mejorarTaller(espacioId, { texto, referencias: refs.map((m) => ({ medio_id: m })), relacion });
-      setMejora({ antes: texto, cambios: r.cambios || [], coste: r.coste });
-      setTexto(r.texto);
-      setEditandoTexto(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se ha podido mejorar.");
-    } finally {
-      setMejorando(false);
-    }
   };
 
   const seleccionar = (id: string) => {
@@ -303,6 +400,15 @@ export default function Taller() {
       );
       guardarPendiente(null);
       setEsperando(r.operacion.id);
+      const b = borradorRef.current;
+      if (p.deBarra && b) {
+        try {
+          await api.cerrarBorrador(b.id);
+          setBorrador(await api.crearBorrador(espacioId, { carpeta_id: b.carpeta_id, texto: "" }));
+        } catch {
+          setError("La imagen salió, pero no se ha podido empezar un borrador nuevo: recarga la Mesa.");
+        }
+      }
       setTexto("");
       setMejora(null);
       setEditandoTexto(true);
@@ -360,6 +466,7 @@ export default function Taller() {
             tomaId: sel.id,
             texto,
             precio: precioTexto(precio),
+            deBarra: true,
             cuerpo: { destino_id: carpeta.id, accion: "editar_imagen", modelo: modeloEdicion?.id, instruccion: texto, zona, id_peticion: id },
           }
         : {
@@ -367,6 +474,7 @@ export default function Taller() {
             tipo: "generar",
             texto,
             precio: precioTexto(precio),
+            deBarra: true,
             cuerpo: {
               carpeta_id: carpeta.id,
               modelo: modelo?.id,
@@ -504,6 +612,112 @@ export default function Taller() {
   const sobranRefs = !editando && refs.length > maxRefs;
   const puedeAccion =
     !!texto.trim() && !enviando && !pendiente && precio !== null && !!carpeta && !sobranRefs && (editando ? !!modeloEdicion?.elegible : !!modelo?.elegible);
+  const puedePresupuestar = !!borrador && !sinGuardar && !guardando && !conflictoBorrador && !editando && !!texto.trim() && !sobranRefs;
+  const clavePresu = ["presupuesto-mejorar", borrador?.id, borrador?.revision, refs.join(","), relacion, modelo?.id];
+  const { data: presu, error: errorPresu, refetch: refetchPresu } = useQuery({
+    queryKey: clavePresu,
+    queryFn: () =>
+      api.presupuestoMejorar(borrador.id, {
+        revision: borrador.revision,
+        referencias: refs.map((m) => ({ medio_id: m })),
+        relacion,
+        modelo_imagen: modelo?.id,
+      }),
+    enabled: puedePresupuestar,
+    retry: false,
+    staleTime: Infinity,
+  });
+  const presuVigente = puedePresupuestar && presu && presu.revision === borrador?.revision ? presu : null;
+  const puedeMejorar = !!presuVigente && !mejorando && !bloqueoMejora && !ocupadoMejora;
+  const fechaTarifa = (f?: string) => (f || "").split("-").reverse().join("-");
+  const textoMejorar = !texto.trim()
+    ? "Mejorar"
+    : conflictoBorrador
+      ? "Mejorar · resuelve antes el borrador"
+      : guardando || sinGuardar
+      ? "Mejorar · guardando…"
+      : bloqueoMejora
+        ? "Mejorar bloqueado"
+        : presuVigente
+          ? `Mejorar · ≈ ${formatoMonedaFino(presuVigente.estimacion, "USD")} · reserva estimada ${formatoMonedaFino(presuVigente.reserva_estimada, "USD")}`
+          : errorPresu
+            ? "Mejorar no disponible"
+            : "Mejorar · calculando…";
+  const ayudaMejorar = presuVigente
+    ? `Estimación y reserva calculadas por Picasso con la tarifa del ${fechaTarifa(presuVigente.tarifa?.verificada_en)}. La salida tiene un tope; la entrada se estima por exceso. Ninguna de las dos es una cifra garantizada por OpenAI.${presuVigente.proveedor === "simulado" ? " Proveedor simulado: no hay gasto real." : ""}`
+    : errorPresu instanceof Error
+      ? errorPresu.message
+      : bloqueoMejora
+        ? `Una mejora ${bloqueoMejora.motivo}: revísala y pulsa «Entendido, seguir».`
+        : "";
+
+  const ejecutarMejora = async (p: any, idPeticion: string, confirmado: boolean): Promise<void> => {
+    setError(null);
+    setMejorando(true);
+    try {
+      const b = await guardarAhora();
+      if (b.revision !== p.revision) {
+        await refetchPresu();
+        setError("El texto cambió: mira el precio nuevo y pulsa otra vez.");
+        return;
+      }
+      await api.mejorar(b.id, { presupuesto_id: p.id, id_peticion: idPeticion, confirmado_por_encima_del_presupuesto: confirmado });
+      setVerMejoras(true);
+    } catch (e) {
+      const d = e instanceof ErrorApi ? e.datos : null;
+      if (e instanceof ErrorApi && e.status === 409 && d?.motivo === "precio" && d.presupuesto) {
+        qc.setQueryData(clavePresu, d.presupuesto);
+        setError(e.message);
+      } else if (e instanceof ErrorApi && e.status === 409 && (d?.motivo === "revision" || d?.motivo === "cerrado")) {
+        if (d?.borrador) setConflictoBorrador(d.borrador);
+        setError(e.message);
+      } else if (e instanceof ErrorApi && e.status === 409 && !d && /presupuesto/i.test(e.message)) {
+        setConfirmarPresupuesto({ mensaje: e.message, seguir: () => ejecutarMejora(p, idPeticion, true) });
+      } else {
+        setError(e instanceof Error ? e.message : "No se ha podido mejorar.");
+      }
+    } finally {
+      setMejorando(false);
+      await refetchMejoras();
+      await refrescar();
+    }
+  };
+
+  const pulsarMejorar = () => {
+    if (!presuVigente || !puedeMejorar) return;
+    if (presuVigente.aviso_tarifa) setConfirmarTarifa(presuVigente);
+    else void ejecutarMejora(presuVigente, crypto.randomUUID(), false);
+  };
+
+  const conMejora = async (fn: () => Promise<unknown>) => {
+    setOcupadoMejora(true);
+    setError(null);
+    try {
+      await fn();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se ha podido.");
+    } finally {
+      setOcupadoMejora(false);
+      await refetchMejoras();
+      await refrescar();
+    }
+  };
+
+  const aceptarMejora = (m: any, usarCopia: boolean, confirmado = false) =>
+    conMejora(async () => {
+      const b = await guardarAhora();
+      try {
+        const r = await api.aceptarMejora(b.id, { operacion_id: m.id, revision: b.revision, usar_copia: usarCopia, confirmado });
+        setBorrador(r.borrador);
+        setTexto(r.borrador.texto);
+        setMejora({ antes: r.anterior, cambios: m.resultado?.cambios || [], coste: m.coste?.segun_tarifa ?? null });
+        setEditandoTexto(false);
+      } catch (e) {
+        if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "anterior") setConfirmarAnterior({ m, usarCopia });
+        else throw e;
+      }
+    });
+
   const tarifa = (m: ModeloCatalogo | null) =>
     !m ? "" : m.coste.verificado ? `tarifa verificada${m.coste.verificado_en ? " el " + m.coste.verificado_en.split("-").reverse().join("-") : ""}` : "precio simulado";
 
@@ -585,6 +799,52 @@ export default function Taller() {
               </div>
             }
           />
+          {verMejoras && (pendientesMejora.length > 0 || bloqueoMejora) && borrador && (
+            <PanelMejora
+              mejoras={listaMejoras}
+              borrador={borrador}
+              bloqueo={bloqueoMejora}
+              ocupado={ocupadoMejora}
+              reintentos={reintentosMejora}
+              onCerrar={() => setVerMejoras(false)}
+              onAceptar={(m, usarCopia) => aceptarMejora(m, usarCopia)}
+              onDescartar={(m) => conMejora(async () => setBorrador(await api.descartarMejora(borrador.id, m.id)))}
+              onGuardarCopia={async (m, t) => {
+                try {
+                  setBorrador(await api.guardarCopiaMejora(borrador.id, { operacion_id: m.id, texto: t }));
+                } catch (e) {
+                  setError(e instanceof Error ? e.message : "No se ha podido guardar la copia.");
+                }
+              }}
+              onBorrarCopia={() => conMejora(async () => setBorrador(await api.borrarCopiaMejora(borrador.id)))}
+              onPedirReintento={(m) =>
+                conMejora(async () => {
+                  const p = await api.presupuestoReintento(m.id);
+                  setReintentosMejora((r) => ({ ...r, [m.id]: p }));
+                })
+              }
+              onConfirmarReintento={(m) =>
+                conMejora(async () => {
+                  try {
+                    await api.reintentarMejora(m.id, { presupuesto_id: reintentosMejora[m.id].id, confirmado_por_encima_del_presupuesto: false });
+                    setReintentosMejora((r) => {
+                      const { [m.id]: _, ...resto } = r;
+                      return resto;
+                    });
+                  } catch (e) {
+                    if (e instanceof ErrorApi && e.status === 409 && e.datos?.motivo === "precio" && e.datos.presupuesto) {
+                      setReintentosMejora((r) => ({ ...r, [m.id]: e.datos.presupuesto }));
+                    }
+                    throw e;
+                  }
+                })
+              }
+              onComprobar={(m) => conMejora(() => api.comprobarOperacion(m.id))}
+              onMarcarFallida={(m) => setMarcarFallida({ id: m.id, coste: { estimado: m.reserva_estimada }, precioTexto: formatoMonedaFino(m.reserva_estimada, "USD") })}
+              onEntendido={(opId) => conMejora(() => api.entendidoMejora(opId))}
+              onResolverCargo={(intentoId, cobrado) => conMejora(() => api.resolverCargo(intentoId, { cobrado }))}
+            />
+          )}
           {dirAbierta && (
             <div
               data-testid="panel-direccion"
@@ -771,12 +1031,20 @@ export default function Taller() {
           {!editando && (
             <button
               data-testid="taller-mejorar"
-              disabled
-              onClick={mejorar}
-              title="Mejorar mi descripción: desactivado hasta que enseñe su coste antes de usarlo"
-              className="flex w-[52px] items-center justify-center rounded-[12px] border-[1.5px] border-linea bg-superficie2 text-acento disabled:opacity-40"
+              disabled={!puedeMejorar}
+              onClick={pulsarMejorar}
+              title={ayudaMejorar}
+              className="flex w-[210px] items-center gap-2 rounded-[12px] border-[1.5px] border-acento bg-superficie2 px-2.5 text-left text-[12px] font-bold leading-[15px] text-acento disabled:border-linea disabled:opacity-60"
             >
-              {mejorando ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              {mejorando ? <Loader2 size={16} className="shrink-0 animate-spin" /> : <Sparkles size={16} className="shrink-0" />}
+              <span className="flex flex-col">
+                <span data-testid="taller-mejorar-precio">{textoMejorar}</span>
+                {presuVigente?.aviso_tarifa && (
+                  <span data-testid="taller-mejorar-aviso-tarifa" className="font-normal text-aviso">
+                    {presuVigente.aviso_tarifa.replace("Tarifa", "tarifa")}
+                  </span>
+                )}
+              </span>
             </button>
           )}
           <button
@@ -822,13 +1090,51 @@ export default function Taller() {
               )}
             </span>
           )}
+          {conflictoBorrador && (
+            <span className="flex flex-wrap items-center gap-2 text-aviso" data-testid="borrador-conflicto">
+              El borrador cambió en otra ventana (revisión {conflictoBorrador.revision}). Tu texto se conserva.
+              <button
+                data-testid="borrador-usar-servidor"
+                className="text-acento underline"
+                onClick={() => {
+                  setBorrador(conflictoBorrador);
+                  setTexto(conflictoBorrador.texto);
+                  setConflictoBorrador(null);
+                  setError(null);
+                }}
+              >
+                Usar el del servidor
+              </button>
+              <button
+                data-testid="borrador-mantener"
+                className="text-acento underline"
+                onClick={() => {
+                  setBorrador(conflictoBorrador);
+                  setConflictoBorrador(null);
+                  setError(null);
+                }}
+              >
+                Mantener el mío
+              </button>
+            </span>
+          )}
+          {!editando && !presuVigente && errorPresu instanceof Error && texto.trim() && !sinGuardar && (
+            <span className="text-aviso" data-testid="mejorar-aviso">
+              Mejorar: {errorPresu.message}
+            </span>
+          )}
+          {!verMejoras && (pendientesMejora.length > 0 || bloqueoMejora) && (
+            <button data-testid="ver-mejoras" className="text-acento underline" onClick={() => setVerMejoras(true)}>
+              Propuestas de Mejorar · {pendientesMejora.length}
+            </button>
+          )}
           {error || sobranRefs ? (
             <span className="text-error" data-testid="taller-error">
               {error || (maxRefs ? `Este modelo admite ${maxRefs} referencias: quita ${refs.length - maxRefs}.` : "Este modelo no admite referencias: quítalas o elige otro modelo.")}
             </span>
           ) : mejora && !editando ? (
             <>
-              <span className="text-acentoTinta">Mejorada · lo nuevo, resaltado · {formatoMoneda(mejora.coste, "USD")}</span>
+              <span className="text-acentoTinta">Mejorada · lo nuevo, resaltado · {mejora.coste === null ? "coste sin informar por OpenAI: posible cargo pendiente" : `${formatoMonedaFino(mejora.coste, "USD")} según tarifa`}</span>
               <button className="text-acento underline" onClick={() => { setTexto(mejora.antes); setMejora(null); setEditandoTexto(true); }}>
                 Deshacer
               </button>
@@ -912,9 +1218,45 @@ export default function Taller() {
         </div>
       </Dialogo>
 
+      <Dialogo abierto={!!confirmarTarifa} onCerrar={() => setConfirmarTarifa(null)} titulo="Tarifa sin verificar" data-testid="dialogo-tarifa">
+        <p className="text-[14px] leading-[20px] text-tinta2">
+          {confirmarTarifa?.aviso_tarifa}. Mejorar sigue disponible, pero la reserva estimada ({formatoMonedaFino(confirmarTarifa?.reserva_estimada, "USD")}) se calcula con esa tarifa.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Boton variante="secundario" onClick={() => setConfirmarTarifa(null)}>Cancelar</Boton>
+          <Boton
+            data-testid="confirmar-tarifa"
+            onClick={async () => {
+              const p = confirmarTarifa;
+              setConfirmarTarifa(null);
+              if (p) await ejecutarMejora(p, crypto.randomUUID(), false);
+            }}
+          >
+            Mejorar · reserva estimada {formatoMonedaFino(confirmarTarifa?.reserva_estimada, "USD")}
+          </Boton>
+        </div>
+      </Dialogo>
+
+      <Dialogo abierto={!!confirmarAnterior} onCerrar={() => setConfirmarAnterior(null)} titulo="Propuesta para un texto anterior" data-testid="dialogo-anterior">
+        <p className="text-[14px] leading-[20px] text-tinta2">Sustituirá lo que tienes ahora en la barra.</p>
+        <div className="mt-5 flex justify-end gap-2">
+          <Boton variante="secundario" onClick={() => setConfirmarAnterior(null)}>Cancelar</Boton>
+          <Boton
+            data-testid="confirmar-anterior"
+            onClick={async () => {
+              const c = confirmarAnterior;
+              setConfirmarAnterior(null);
+              if (c) await aceptarMejora(c.m, c.usarCopia, true);
+            }}
+          >
+            Sustituir
+          </Boton>
+        </div>
+      </Dialogo>
+
       <Dialogo abierto={!!marcarFallida} onCerrar={() => setMarcarFallida(null)} titulo="Marcar como fallida" data-testid="dialogo-marcar-fallida">
         <p className="text-[14px] leading-[20px] text-tinta2">
-          Se envió y no hubo respuesta: el proveedor pudo cobrar. Quedará como posible cargo sin confirmar ({marcarFallida ? precioDe(marcarFallida) : ""}) hasta que lo revises en el Registro.
+          Se envió y no hubo respuesta: el proveedor pudo cobrar. Quedará como posible cargo sin confirmar ({marcarFallida ? marcarFallida.precioTexto || precioDe(marcarFallida) : ""}) hasta que lo revises en el Registro.
         </p>
         <div className="mt-5 flex justify-end gap-2">
           <Boton variante="secundario" onClick={() => setMarcarFallida(null)}>Cancelar</Boton>

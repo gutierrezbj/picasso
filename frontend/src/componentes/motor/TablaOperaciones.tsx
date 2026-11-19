@@ -3,7 +3,8 @@ import { AlertTriangle, Search, RefreshCw } from "lucide-react";
 import Boton from "../Boton";
 import Dialogo from "../Dialogo";
 import { Campo, Entrada } from "../Campo";
-import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, textoCoste, textoImporte } from "./comun";
+import { ETIQUETA_ACCION, ETIQUETA_ESTADO, colorEstado, lineasIntentoMejora, textoCoste, textoImporte } from "./comun";
+import { formatoMonedaFino } from "../../lib/formato";
 import type { Operacion } from "../../tipos";
 
 interface Props {
@@ -179,10 +180,15 @@ export default function TablaOperaciones({
               </td>
               <td className="py-2 pr-3 text-tinta2">{op.proveedor}</td>
               <td className="py-2 pr-3 tabular text-tinta2">
-                {textoCoste(op.coste_estimado, moneda)}
+                {op.accion === "mejorar_texto" ? `${formatoMonedaFino(op.coste_estimado, moneda)} reserva estimada` : textoCoste(op.coste_estimado, moneda)}
               </td>
               <td className="py-2 pr-3 tabular text-tinta">
                 {textoImporte(op.coste, moneda)}
+                {lineasIntentoMejora(op.coste, moneda).map((linea, i) => (
+                  <span key={i} data-testid={`intento-mejora-${op.id}-${i + 1}`} className="mt-1 block text-[12px] leading-[16px] text-tinta2">
+                    {linea}
+                  </span>
+                ))}
                 {(op.coste?.cargos || []).map((cargo) => (
                   <span
                     key={cargo.intento_id}
@@ -191,7 +197,7 @@ export default function TablaOperaciones({
                   >
                     Intento {cargo.numero}:{" "}
                     {cargo.estado === "pendiente"
-                      ? `posible cargo sin confirmar · ${textoCoste(cargo.estimado, moneda)}`
+                      ? `posible cargo sin confirmar · ${op.accion === "mejorar_texto" ? formatoMonedaFino(cargo.estimado, moneda) : textoCoste(cargo.estimado, moneda)}`
                       : cargo.estado === "sin_cargo"
                         ? "sin cargo"
                         : `cobrado ${textoCoste(cargo.importe, moneda)}, apuntado a mano`}
@@ -253,7 +259,7 @@ export default function TablaOperaciones({
                       Marcar como fallida
                     </Boton>
                   )}
-                  {op.estado === "fallida" && onReintentar && (
+                  {op.estado === "fallida" && onReintentar && op.accion !== "mejorar_texto" && (
                     <Boton
                       pequeno
                       variante="secundario"

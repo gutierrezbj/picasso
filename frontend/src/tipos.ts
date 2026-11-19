@@ -394,7 +394,8 @@ export type Accion =
   | "generar_video"
   | "generar_voz"
   | "sincronizar_labios"
-  | "personaje_hablando";
+  | "personaje_hablando"
+  | "mejorar_texto";
 
 export type SimulacionPrueba = "normal" | "fallo" | "incierto" | "timeout";
 
@@ -460,6 +461,26 @@ export interface CosteOperacion {
   cargos: CargoIntento[];
   posible_cargo: number;
   informado_cargos: number;
+  estimado_adicional?: number;
+  segun_tarifa?: number | null;
+  reserva_en_curso?: number | null;
+  intentos_con_consumo?: number;
+  intentos_mejora?: IntentoMejora[];
+}
+
+export interface IntentoMejora {
+  intento_id: string;
+  numero: number;
+  estado: string;
+  estado_respuesta: string | null;
+  motivo: string | null;
+  estado_consumo: "valido" | "ausente" | "sin_cuadrar" | null;
+  coste_segun_tarifa: number | null;
+  reserva: number | null;
+  tokens: Record<string, number> | null;
+  tarifa_aplicada: Record<string, string> | null;
+  marcas: string[];
+  en_curso: boolean;
 }
 
 export interface CargoIntento {

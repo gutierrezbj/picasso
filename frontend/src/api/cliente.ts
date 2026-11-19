@@ -38,10 +38,12 @@ const BASE = `${import.meta.env.REACT_APP_BACKEND_URL}/api`;
 
 class ErrorApi extends Error {
   status: number;
+  datos: any;
 
-  constructor(mensaje: string, status: number) {
+  constructor(mensaje: string, status: number, datos: any = null) {
     super(mensaje);
     this.status = status;
+    this.datos = datos;
   }
 }
 
@@ -62,6 +64,8 @@ async function peticion<T = any>(ruta: string, opciones: RequestInit = {}): Prom
   }
   if (!resp.ok) {
     const detalle = (cuerpo && cuerpo.detail) || `Error ${resp.status}`;
+    if (detalle && typeof detalle === "object" && !Array.isArray(detalle))
+      throw new ErrorApi(detalle.mensaje || `Error ${resp.status}`, resp.status, detalle);
     throw new ErrorApi(detalle, resp.status);
   }
   return cuerpo as T;
@@ -342,8 +346,32 @@ export const api = {
   tomasCarpeta: (carpetaId: string) => peticion<any>(`/carpetas/${carpetaId}/tomas`),
   ingredientesTaller: (espacioId: string, datos: Record<string, unknown>) =>
     peticion<any>(`/espacios/${espacioId}/taller/ingredientes`, { method: "POST", body: JSON.stringify(datos) }),
-  mejorarTaller: (espacioId: string, datos: Record<string, unknown>) =>
-    peticion<any>(`/espacios/${espacioId}/taller/mejorar`, { method: "POST", body: JSON.stringify(datos) }),
+  borradorAbierto: (espacioId: string, carpetaId: string) =>
+    peticion<any>(`/espacios/${espacioId}/borradores?carpeta_id=${encodeURIComponent(carpetaId)}`),
+  verBorrador: (borradorId: string) => peticion<any>(`/borradores/${borradorId}`),
+  crearBorrador: (espacioId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/espacios/${espacioId}/borradores`, { method: "POST", body: JSON.stringify(datos) }),
+  guardarBorrador: (borradorId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/borradores/${borradorId}`, { method: "PUT", body: JSON.stringify(datos) }),
+  cerrarBorrador: (borradorId: string) => peticion<any>(`/borradores/${borradorId}/cerrar`, { method: "POST" }),
+  presupuestoMejorar: (borradorId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/borradores/${borradorId}/mejorar/presupuesto`, { method: "POST", body: JSON.stringify(datos) }),
+  mejorar: (borradorId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/borradores/${borradorId}/mejorar`, { method: "POST", body: JSON.stringify(datos) }),
+  mejorasBorrador: (borradorId: string) => peticion<any>(`/borradores/${borradorId}/mejoras`),
+  estadoMejorar: (espacioId: string) => peticion<any>(`/espacios/${espacioId}/mejorar/estado`),
+  presupuestoReintento: (operacionId: string) =>
+    peticion<any>(`/operaciones/${operacionId}/mejorar/presupuesto`, { method: "POST", body: "{}" }),
+  reintentarMejora: (operacionId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/operaciones/${operacionId}/mejorar/reintentar`, { method: "POST", body: JSON.stringify(datos) }),
+  entendidoMejora: (operacionId: string) => peticion<any>(`/operaciones/${operacionId}/mejorar/entendido`, { method: "POST" }),
+  aceptarMejora: (borradorId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/borradores/${borradorId}/aceptar`, { method: "POST", body: JSON.stringify(datos) }),
+  descartarMejora: (borradorId: string, operacionId: string) =>
+    peticion<any>(`/borradores/${borradorId}/descartar`, { method: "POST", body: JSON.stringify({ operacion_id: operacionId }) }),
+  guardarCopiaMejora: (borradorId: string, datos: Record<string, unknown>) =>
+    peticion<any>(`/borradores/${borradorId}/copia`, { method: "PUT", body: JSON.stringify(datos) }),
+  borrarCopiaMejora: (borradorId: string) => peticion<any>(`/borradores/${borradorId}/copia`, { method: "DELETE" }),
   generarTaller: (espacioId: string, datos: Record<string, unknown>) =>
     peticion<any>(`/espacios/${espacioId}/taller/generar`, { method: "POST", body: JSON.stringify(datos) }),
   peticionTaller: (espacioId: string, idPeticion: string) =>

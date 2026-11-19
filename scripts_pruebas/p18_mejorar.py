@@ -207,6 +207,9 @@ s, e = llamar("POST", f"/api/borradores/{b['id']}/aceptar", {"operacion_id": op,
 ok(s == 409, "sin Aceptar directo")
 time.sleep(1.5)
 ok(envios() == n and mejora(b, op)["intentos"] == 1, "ninguna llamada nueva")
+s1, _ = llamar("POST", f"/api/operaciones/{op}/reintentar")
+s2, _ = llamar("POST", f"/api/operaciones/{op}/autorizar")
+ok(s1 == 409 and s2 == 409 and envios() == n, "el reintento y la autorización genéricos del motor no valen para una mejora: sin presupuesto, no hay llamada")
 
 print("\n— 5 · rechazada (4xx)")
 b, p, op = lanzar("c5", "rechazada")
