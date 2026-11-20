@@ -640,3 +640,20 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
 5. Vuelta atrás:
    - Imágenes: `docker tag picasso-backend:antes-pic04 picasso-backend:latest`, lo mismo para el frontend, y `docker compose up -d --no-build`. `main` en `origin` vuelve con `git revert` del rango, sin reescribir la historia.
    - Base: PIC-04 solo añade colecciones (`presupuestos_mejorar`, `borradores_mesa`, `intentos` de mejora) y no modifica documentos existentes. Volver a las imágenes anteriores basta. `mongorestore --drop` del respaldo solo hace falta si algo dañó los datos, y en ese caso se perdería lo hecho después del despliegue.
+
+**Despliegue en la instalación de Juan (20-11-2026), autorizado sobre `f98509a`:**
+- Antes de fusionar se comprobó:
+  - `main` local y `origin/main` seguían en `9d2b07f` y no había cambios locales;
+  - avance directo posible.
+- Respaldo en `~/dev/picasso-respaldos/`. Legibilidad comprobada:
+  - base: `picasso-antes-pic04-20261120-2056.gz`; `mongorestore --dryRun` lee las 22 colecciones.
+  - medios: `medios-antes-pic04-20261120-2056.tgz`; 42 de 42 ficheros.
+- Imágenes de vuelta atrás: `picasso-backend:antes-pic04` (`f405e6b9d784`) y `picasso-frontend:antes-pic04` (`dc05eb3ae3da`), las que estaban en ejecución.
+- `main` avanzó a `f98509a` sin commit de fusión y se subió a `origin`. Backend y frontend se reconstruyeron y arrancaron.
+- Comprobaciones sin gasto, sin pulsar «Mejorar» ni generar:
+  - salud correcta, base `picasso`;
+  - las 22 colecciones conservan su recuento, y aparecen `presupuestos_mejorar` y `borradores_mesa` con sus índices;
+  - el Taller de JRGB enseña V1–V4 y 0,60 $ estimados;
+  - en «Pruebas del constructor», «Mejorar» enseña ≈0,0105 $ y una reserva de 0,0238 $, sin crear operaciones ni intentos;
+  - el Registro da 5,62 $ en 16 operaciones (1,03 informado, 4,59 estimado), el mismo total que calcula el código anterior.
+- El importe facturado por OpenAI de la validación real (0,0081 $ según tarifa) sigue sin conciliar.
