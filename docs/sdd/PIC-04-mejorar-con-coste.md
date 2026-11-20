@@ -609,3 +609,34 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
 - El gasto del proyecto se redondeaba a dos decimales por capa, en el total y en el restante. Una mejora de 0,0032 $ aparecía como «0,00 $» y no contaba para el presupuesto. Ahora las capas, el total y el restante conservan cuatro decimales.
 - Los importes se muestran con dos decimales si son céntimos exactos, y con hasta cuatro si no: «0,0032 $», nunca «0,00 $».
 - Pruebas: `presupuesto_fino` en `p16_medios_costes` comprueba que, con un límite de 0,20 $, un gasto de 0,0032 $ y una reserva nueva de 0,198 $, se exige confirmación (el restante es 0,1968 $). `frontend/pruebas/formato.test.ts` cubre el formato.
+
+**Validación real (19 y 20-11-2026), cerrada por el revisor:**
+- Instancia aislada con base, contenedores, imágenes y volumen propios (`picasso_pic04_real`, puertos 3013 y 8013), con la clave de OpenAI y presupuesto de proyecto de 0,20 $. Antes de cada clic se comprobó que el gasto, las reservas y los posibles cargos, más la reserva nueva, cabían en 0,20 $.
+- 19-11, con `9e58100`: mejora normal (`resp_09f974…c79cc`): 335 tokens de entrada y 252 de salida, 0,0032 $ según tarifa, reserva de 0,0238 $. Aceptada desde la Mesa.
+- 20-11, con `cb1c47b`: el límite de salida se bajó a 100 solo en memoria, con la ruta de parámetros de prueba. Para abrirla, la instancia arrancó marcada como de pruebas.
+  - Intento 1 (`resp_0c374a…720e3e`): incompleta por `max_output_tokens`, con 339 tokens de entrada y 100 de salida. Coste según tarifa 0,0017 $, reserva 0,0048 $. La mejora queda fallida con su consumo contado.
+  - Con el límite ya restaurado a 2000, el reintento se pidió desde la Mesa con precio nuevo (reserva 0,0238 $).
+  - Intento 2 (`resp_0264ff…390ff4a3`): completa, con 339 tokens de entrada y 254 de salida. Coste según tarifa 0,0032 $.
+- La base, el Taller y el CSV coinciden: 0,0081 $ de coste calculado según tarifa, sin reservas ni posibles cargos pendientes.
+- El importe facturado por OpenAI no se ha conciliado. Se comprueba en su panel por los identificadores (Logs) y por día y modelo (Usage). Hasta entonces no se habla de gasto real confirmado.
+- Observado, sin bloquear:
+  - La estimación (≈) promedia también los intentos incompletos, de ahí la marca «superó la estimación (0,0032 $ > 0,0025 $)».
+  - El botón «Mejorar» conserva el precio anterior tras un cambio de configuración en memoria. El servidor exige aceptar el presupuesto nuevo.
+- Evidencias en `~/dev/picasso-evidencias/pic04-validacion-real-2026-11-19/` y `…-2026-11-20/`. Las instancias `pic04real-*` y `pic04real2-*` quedan paradas y conservadas.
+
+**Fusión y actualización de la instalación (preparadas; pendientes de autorización de Juan):**
+1. Respaldo:
+   - `mongodump` de la base `picasso` a `~/dev/picasso-respaldos/picasso-antes-pic04-<fecha>.gz`;
+   - copia del volumen `picasso_datos_medios`;
+   - etiquetas `picasso-backend:antes-pic04` y `picasso-frontend:antes-pic04` sobre las imágenes actuales (`f405e6b9d784`, `dc05eb3ae3da`);
+   - recuento de documentos por colección.
+2. Fusión: `main` avanza a `cb1c47b` sin commit de fusión (la rama contiene `main`) y se sube a `origin`.
+3. Actualización: `docker compose build backend frontend` y `docker compose up -d`. La salud responde, el recuento de las colecciones existentes no cambia y aparecen dos índices nuevos (`presupuestos_mejorar`, `borradores_mesa`).
+4. Comprobación sin gasto:
+   - el Taller abre con sus carpetas y tomas;
+   - «Mejorar» enseña precio y reserva sin enviar nada;
+   - el Registro y el gasto siguen iguales.
+   No se pulsa «Mejorar»: la instalación tiene la clave de OpenAI y cada clic es una llamada real.
+5. Vuelta atrás:
+   - Imágenes: `docker tag picasso-backend:antes-pic04 picasso-backend:latest`, lo mismo para el frontend, y `docker compose up -d --no-build`. `main` en `origin` vuelve con `git revert` del rango, sin reescribir la historia.
+   - Base: PIC-04 solo añade colecciones (`presupuestos_mejorar`, `borradores_mesa`, `intentos` de mejora) y no modifica documentos existentes. Volver a las imágenes anteriores basta. `mongorestore --drop` del respaldo solo hace falta si algo dañó los datos, y en ese caso se perdería lo hecho después del despliegue.
