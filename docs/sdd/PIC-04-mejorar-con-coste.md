@@ -630,7 +630,7 @@ Sin claves reales, sin gasto, sin fusión ni despliegue. Pendiente de revisión.
    - copia del volumen `picasso_datos_medios`;
    - etiquetas `picasso-backend:antes-pic04` y `picasso-frontend:antes-pic04` sobre las imágenes actuales (`f405e6b9d784`, `dc05eb3ae3da`);
    - recuento de documentos por colección.
-2. Fusión: `main` avanza a `cb1c47b` sin commit de fusión (la rama contiene `main`) y se sube a `origin`.
+2. Fusión: `main` avanza a la cabeza de `pic-04/mejorar` (código de `cb1c47b` más este registro) sin commit de fusión, porque la rama contiene `main`, y se sube a `origin`.
 3. Actualización: `docker compose build backend frontend` y `docker compose up -d`. La salud responde, el recuento de las colecciones existentes no cambia y aparecen dos índices nuevos (`presupuestos_mejorar`, `borradores_mesa`).
 4. Comprobación sin gasto:
    - el Taller abre con sus carpetas y tomas;
