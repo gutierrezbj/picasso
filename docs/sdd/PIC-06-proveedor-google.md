@@ -1,6 +1,6 @@
 # PIC-06 · Proveedor Google directo para imagen (Nano Banana 2.1)
 
-**Estado:** revisión 1, diseño (21-11-2026). Solo documentación. Sin código, gasto, fusión ni despliegue. La instalación de Juan no se toca.
+**Estado:** **aprobado por Juan el 21-11-2026** («apruebo PIC-06»). Con esa aprobación se toman como decididas las recomendaciones de D1–D7 (§8); si alguna no le vale, se cambia antes de construir. El encargo de construcción está en §10. Todavía sin código, gasto, fusión ni despliegue: la construcción empieza cuando Juan cumpla la condición de §10. La instalación de Juan no se toca.
 
 **Origen:**
 - §9.7 del maestro: imagen en KIE o en Google directo, lo más barato en preproducción y la calidad después. Es propuesta y no está construida.
@@ -14,11 +14,11 @@
 | SDD-01 Problema | §1 | Escrito |
 | SDD-02 Alcance | §2 | Escrito |
 | SDD-03 Arquitectura | §3 (qué existe), §4 (diseño) | Escrito |
-| SDD-04 Decisiones | §8, D1–D7 | **Abiertas: las decide Juan** |
+| SDD-04 Decisiones | §8, D1–D7 | Tomadas con la aprobación del 21-11-2026 (recomendaciones) |
 | SDD-05 Historias y criterios | §5 | Escrito |
 | SDD-06 Reglas | §6 | Escrito |
 | SDD-07 Pruebas | §7 | Escrito |
-| SDD-08 Despliegue | §9 | Escrito; **pendiente de autorizar** |
+| SDD-08 Despliegue | §9 y §10 (encargo) | Encargo preparado; fusión y despliegue, pendientes de autorizar |
 
 ---
 
@@ -194,3 +194,57 @@ Lo que se sabe el 21-11-2026. Nada se ha verificado en la página oficial de cad
 - Construcción, cuando Juan la autorice: rama `pic-06/proveedor-google`, desde esta, en una instancia aislada (`picasso_pic06`). Los puertos los asigna Juan. Proveedor `simulado` más el simulador de Google, sin clave.
 - La prueba real (§7, punto 4) y la fusión y el despliegue van cada uno con su autorización. El despliegue lleva respaldo, etiqueta `antes-pic06` y vuelta atrás, como en PIC-04.
 - Orden propuesto: **PIC-06 → (PIC-07, traer una toma) → PIC-05.** La prueba real de PIC-05 bajaría de ~0,75 $ a ~0,25 $.
+
+
+## 10. Encargo de construcción
+
+**Condición para empezar.** La construcción empieza con estas dos cosas:
+1. **La clave (D1).** Juan crea en Google AI Studio una clave con facturación y un límite de gasto, y la escribe él en el `.env` de la instancia aislada como `GEMINI_API_KEY`. Code no la ve, no la copia y no la escribe en ningún archivo del repositorio. Sin la clave se construye igual, con el simulador; la clave solo hace falta para la prueba real.
+2. **Los puertos** de la instancia aislada, que asigna Juan. En PIC-04 se usaron 3013 y 8013.
+
+**Dónde.**
+- Rama `pic-06/proveedor-google`, creada desde `pic-06/sdd-proveedor-google`. No hace falta fusionar nada en `main` para empezar.
+- Instancia aislada, como en PIC-04:
+  - proyecto de compose propio;
+  - base `picasso_pic06`, con `DB_NAME_PRUEBAS=picasso_pic06`;
+  - imágenes y volumen de medios propios.
+- La instalación de Juan no se toca.
+
+**Fases.** Cada una se cierra con sus pruebas en verde antes de pasar a la siguiente.
+
+| Fase | Qué | Lo que la cierra |
+|---|---|---|
+| B0 · Comprobar la documentación (sin coste) | Volver a leer en `aistudio.google.com/docs`, anotando la fecha: el precio del 2.1, la llamada (`interactions`, cuerpo y respuesta), `response_format` (`aspect_ratio`, `image_size`), el límite de referencias, si devuelve el consumo (D4) y si admite editar con imagen de entrada (D6). Si algo ha cambiado respecto al §4.1, **se para y se avisa a Juan** antes de seguir | Nota fechada en el §4.1 con lo confirmado y lo que cambió |
+| B1 · Catálogo | Entrada `google-nano-banana-2-1` (§4.4), con `uso: exploracion`, 0,0504 $ a 2K y la opción de borrador a 1K (0,0336 $), con `fuente` y `verificado_en`. Nano Banana Pro en fal pasa a `uso: final`. Sin clave, el modelo aparece como «no configurado» (G6) | pytest del catálogo; G1 y G6 |
+| B2 · Proveedor | `motor/proveedores/google.py`, con el patrón de ElevenLabs (§4.3): guardar antes de llamar, llamada síncrona, imagen a disco, `consultar` y `descargar` locales, errores (4xx fallida; 429, 5xx y tiempo agotado incierta), nunca reenviar. Referencias en base64, en orden, con su línea de qué conservar | pytest con un **simulador de la respuesta de Google**: JSON grabado con la forma real, sin red. G2, G4, G5 y G7 |
+| B3 · Taller | El selector enseña el uso y el precio («exploración · 0,05 $»), con el 2.1 por defecto. Botón «Generar · 0,05 $». Interruptor de borrador a 1K (D2). Aviso cuando se pasa de 4 referencias, sin recortar en silencio | `node --test` del selector y del aviso; G1, G2 y G3 |
+| B4 · Batería | `scripts_pruebas/p20_proveedor_google.py` (G1–G6 con el simulador) y `scripts_pruebas/en_docker.sh` completo en verde. p15, p16, p17 y p18 sin cambios | Batería completa en verde |
+| B5 · Recorrido de Juan | En la instancia aislada, con `simulado` y el simulador: elegir modelo, ver el precio, generar, y ver el fallo y el estado incierto | Validación de Juan en la interfaz |
+
+**Entrega de la construcción:**
+- commits de la rama;
+- batería en verde (`en_docker.sh`, pytest y `node --test`);
+- la nota de B0;
+- evidencias en `~/dev/picasso-evidencias/pic06-…`;
+- la lista de lo que queda sin validar.
+
+Sin fusión ni despliegue.
+
+**Fuera de la construcción:**
+- Nano Banana Pro por Google (D3, hasta verificar su precio palabra por palabra);
+- el modo batch (D5);
+- KIE;
+- OpenAI imagen;
+- «Traer una toma» (D7, que es PIC-07);
+- cualquier cambio en PIC-05.
+
+**Prueba real (aparte, cuando B5 esté cerrado y la clave puesta).**
+- Florencia, con su semilla como referencia de personaje y el prompt de la skill Modelo de Bugonia.
+- Una imagen con Nano Banana 2.1 a 2K (0,0504 $) y otra con Nano Banana Pro en fal (0,15 $). Total: **unos 0,20 $**, más los tokens de la referencia.
+- Antes de cada envío se enseña el precio, y lo autoriza Juan.
+- Se mide:
+  - los tokens reales de la referencia y el coste real frente al estimado;
+  - si el 2.1 conserva la identidad: pecas, ojos avellana con el anillo ámbar, la línea del pelo con la raya descentrada y la edad.
+- Con el resultado se confirma D2 y se responde a la D12 de PIC-05.
+
+**Después.** La fusión en `main` y el despliegue en la instalación de Juan, cada uno con su autorización, con respaldo de base y medios, etiquetas `antes-pic06` y vuelta atrás, como en PIC-04.

@@ -1106,7 +1106,7 @@ Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-202
 | F7: voces, montaje y paquete para DaVinci | Aprobada | Sí | p10, p12, p13 | Pendiente (el play en DaVinci) | Aplazado |
 | F9: fal (Nano Banana Pro, OmniHuman, Kling Avatar), ElevenLabs, OpenAI (Mejorar) | Aprobada (04-10-2026) | Parcial | p8, p10, p15, pytest | Parcial: imagen sí; personaje hablando, «pobre» | 1 (Nano Banana Pro) |
 | §9.7: imagen en KIE o en Google directo (Nano Banana Pro a 0,09 $ en KIE; Nano Banana 2.1 para explorar) | Propuesta (21-11-2026), sin aprobar | No | — | — | 1 |
-| PIC-06: proveedor Google directo para imagen (Nano Banana 2.1, 0,0504 $ a 2K, verificado literal el 21-11-2026) | SDD redactado (21-11-2026), sin aprobar; antes de PIC-05; D1–D7 abiertas (D7: traer tomas hechas en suscripciones, PIC-07) | No | — | — | 1 |
+| PIC-06: proveedor Google directo para imagen (Nano Banana 2.1, 0,0504 $ a 2K, verificado literal el 21-11-2026) | Aprobado por Juan (21-11-2026), con las recomendaciones de D1–D7; encargo de construcción preparado (SDD §10), construcción pendiente de la clave de Google y los puertos; antes de PIC-05 (D7: traer tomas hechas en suscripciones, PIC-07) | No | — | — | 1 |
 | 18.29: el Taller (versión guiada) | Aprobada (15-10 y 22-10-2026) | Sí | p15 | Pendiente (19.29) | **1** |
 | 18.22: qué conservar de cada referencia | Aprobada (08-10-2026) | Sí | pytest (`test_fal_y_referencias`) | Pendiente | **1** |
 | 18.20: cláusula de persona real | Aprobada (07-10-2026) | Sí | pytest (`test_fal_y_referencias`), p15 | Pendiente | **1** |
