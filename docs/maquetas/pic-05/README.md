@@ -4,6 +4,21 @@ Versión navegable: https://claude.ai/artifact/SLbhDsi6bGatVStBdHkpku (privada; 
 
 Datos simulados: nada se genera ni se cobra. El precio que enseña es el de Nano Banana Pro en fal del catálogo (0,15 $, verificado el 14-11-2026). El presupuesto de 5,00 $ es de ejemplo. Paleta oscura aprobada en PIC-01 (D11).
 
+## Revisión 5 (21-11-2026): corte ajustable, selección reversible y D13 provisional
+
+- **Vista previa del recorte con líneas ajustables:**
+  - un control deslizante por línea entre paneles;
+  - un margen arriba y abajo;
+  - la resolución de cada panel, que se actualiza al momento;
+  - «Restablecer columnas iguales».
+
+  Las líneas no se cruzan y ningún panel baja del 10 % del ancho. «Generar estas vistas por separado» queda como salida secundaria. Una hoja ya recortada se puede ajustar de nuevo con «Ajustar el recorte»; los recortes anteriores se conservan.
+- **Selección reversible.** Aprobar otra imagen para la misma vista y expresión la deja seleccionada en el borrador. La anterior se conserva en la Mesa con su historial («No seleccionada · la sustituye Tn») y vuelve con «Seleccionar para el borrador». La vista independiente se puede revisar aunque el recorte esté aprobado.
+- **D13:** la hoja aparece como «Recomendada · provisional hasta la prueba real».
+- **Comprobado:**
+  - 66 comprobaciones de lógica en Node (8 nuevas): líneas que se mueven, límites, margen, restablecer, cajas aplicadas al recorte, selección reversible en los dos sentidos y vista independiente revisable.
+  - En Chrome, sobre la versión publicada: «Ajustar el recorte» y la vista previa. Al mover la línea 2 y el margen, la resolución pasó a 683 / 1 079 / 287 × 1 060 px.
+
 ## Revisión 4 (21-11-2026): recorte, hoja original y vista independiente
 
 - **«Recortar en vistas»** abre una vista previa con las líneas de corte, la resolución de cada panel y dos botones:

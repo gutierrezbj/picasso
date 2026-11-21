@@ -1,6 +1,14 @@
 # PIC-05 · Director de Studio: hoja de personaje
 
-**Estado:** revisión 4, cierre de la revisión técnica. Revisión 1: `0467afb`. Revisión 2: `848f754`. Revisión 3: `15cc213`. **Ni el SDD ni la maqueta están aprobados.** El encargo de construcción está en §11 y no empieza sin la autorización de Juan.
+**Estado:** revisión 5, para revisión completa antes de autorizar la construcción aislada. Revisiones anteriores: 1 `0467afb`, 2 `848f754`, 3 `15cc213`, 4 `efbffaa`. **Ni el SDD ni la maqueta están aprobados.** El encargo de construcción está en §11.
+
+**Revisión 5 (21-11-2026), ajustes del revisor a la revisión 4:**
+1. **D13 no se aprueba por silencio.** El recorrido híbrido queda como **provisional en simulado**; se construyen las dos formas y la elección definitiva sale de la comparación real, que decide Juan de forma explícita (§11, D13).
+2. **No hace falta fusionar en `main` para empezar.** La rama de construcción parte de esta rama de documentos; la fusión queda para después (§11, SDD-08).
+3. **Ajuste manual del corte.** En la vista previa se mueven las líneas de corte antes de recortar; pasar a vistas sueltas queda como último recurso (§4.14a, D16).
+4. **Sustituir un recorte por una vista independiente conserva el recorte y su historial.** Solo cambia qué imagen está seleccionada en el borrador, y se puede volver a seleccionar el recorte (§4.14c, H25).
+
+D17–D20 se mantienen como recomendaciones. El ayudante de prompts sigue como siguiente prioridad (§12).
 
 **Revisión 4 (21-11-2026), pedida por el revisor antes de construir:**
 - El recorte es local y sin coste (§4.14a).
@@ -32,9 +40,9 @@
 - Lote y presupuesto: cómo se reserva lo autorizado, qué pasa con un lote a medias y qué pasa si se recarga (§4.9).
 - Modelo: el más económico que admita las referencias y la edición necesarias, con su calidad validada para este trabajo (D12).
 
-Sin luz verde al código: falta la revisión del SDD y el recorrido visual de la maqueta.
+Sin luz verde al código: falta la revisión completa del SDD, el recorrido de la maqueta y la autorización explícita de §11.
 
-**Diseño:** Autorizados el SDD y la maqueta navegable (21-11-2026). **No** están autorizados el código funcional, las generaciones de pago, la fusión ni el despliegue. La instalación de Juan no se toca. La maqueta enseña el recorrido; no valida la continuidad del personaje, que solo se demuestra con imágenes reales.
+**Diseño:** Autorizado redactar el SDD y la maqueta navegable (21-11-2026); ninguno de los dos está aprobado. **No** están autorizados el código funcional, las generaciones de pago, la fusión ni el despliegue. La instalación de Juan no se toca. La maqueta enseña el recorrido; no valida la continuidad del personaje, que solo se demuestra con imágenes reales.
 
 **Origen:** 18.66 (propuesta del 21-11-2026), primer incremento: la receta «Hoja de personaje». Encaja en el lateral único de PIC-01 (D12–D14) y en la regla «en preproducción, lo más barato» del §9.7.
 
@@ -47,13 +55,13 @@ Sin luz verde al código: falta la revisión del SDD y el recorrido visual de la
 | SDD-01 Problema | §1 | Escrito |
 | SDD-02 Alcance y límites | §2 | Escrito |
 | SDD-03 Arquitectura | §3 (qué existe), §4 (diseño), §5 (cambios mínimos) | Escrito |
-| SDD-04 Decisiones (ADR) | §9, D1–D12, cada una con recomendación | **Abiertas: las decide Juan** |
+| SDD-04 Decisiones (ADR) | SDD-04 (tras SDD-07), D1–D20, cada una con recomendación; D13 abierta hasta la prueba real | **Abiertas: las decide Juan** |
 | SDD-05 Backlog con criterios | §6 | Escrito |
 | SDD-06 Reglas de desarrollo | §7 | Escrito |
 | SDD-07 Plan de pruebas | §8 | Escrito |
-| SDD-08 Despliegue | §10 | Escrito; **pendiente de autorizar** |
+| SDD-08 Despliegue | SDD-08 y §11 (encargo) | Escrito; **pendiente de autorizar** |
 
-**Pasos pendientes, en orden:** 1) Juan recorre la maqueta y decide D1–D12. 2) Revisión del SDD con sus decisiones. 3) Autorización del código en rama propia e instancia aislada, con el proveedor `simulado`. 4) Validación real con presupuesto aparte, autorizado viendo la cifra. 5) Fusión y despliegue, cada uno con su autorización.
+**Pasos pendientes, en orden:** 1) Juan recorre la maqueta y decide D1–D20, salvo D13, que se decide tras la prueba real (§11). 2) Revisión del SDD con sus decisiones. 3) Autorización del código en rama propia e instancia aislada, con el proveedor `simulado`. 4) Validación real con presupuesto aparte, autorizado viendo la cifra. 5) Fusión y despliegue, cada uno con su autorización.
 
 ---
 
@@ -75,13 +83,13 @@ Juan quiere preparar un personaje y sus vistas con coherencia sin redactar promp
 3. Identidad, apariencia y vestuario, separando lo que se conserva de lo que puede variar. Resumen «Rasgos y referencias que se deben conservar», redactado por reglas con el método de la 18.53.
 3b. Dirección visual básica de la hoja, guardada: fondo, luz, encuadre por tipo de vista y acabado (§4.4).
 4. Preguntas solo por lo que falta, y vistas propuestas según el uso: retrato, cuerpo completo, perfil, tres cuartos y expresiones. Ninguna es obligatoria salvo la referencia principal.
-5. Dirección de las vistas de referencia: encuadre, ángulo, objetivo, luz y fondo, con una línea de por qué y controles editables.
+5. Dirección de las vistas de referencia: encuadre, ángulo y objetivo por vista; fondo, luz y acabado de la hoja. Cada control con una línea de por qué y editable.
 6. Vista previa por generación: texto enviado, imágenes que viajan con su número y su para qué, precio de cada una y total.
 7. «Preparar»: deja todo listo y guardado. No genera ni gasta.
 8. Generar (con el motor actual, autorizado viendo la cifra), comparar, aprobar y vincular a la ficha con su vista. Historial por resultado.
 9. Volver a abrir y recuperar decisiones y trabajo pendiente.
 
-**Fuera:** vídeo; escenas completas; cámara 3D (18.55); extracción automática desde Pinterest u otros enlaces; análisis general de estilos y análisis de estilo desde referencias (18.21, 18.49, 18.58); proveedores nuevos (§9.7 KIE y Google); ficha de dirección visual del proyecto (18.66, segunda receta), aunque la dirección básica de esta hoja sí se guarda; el agente especializado que interpreta la necesidad (§4.6); «Proponer rasgos desde la foto» con visión (18.27, de pago: se presupuesta aparte); hoja compuesta en un solo lienzo (18.41, ver D3); refuerzo de objeto y de compañero; ficha de voz. Quedan vinculadas en el backlog y conservan su estado.
+**Fuera:** vídeo; escenas completas; cámara 3D (18.55); extracción automática desde Pinterest u otros enlaces; análisis general de estilos y análisis de estilo desde referencias (18.21, 18.49, 18.58); proveedores nuevos (§9.7 KIE y Google); ficha de dirección visual del proyecto (18.66, segunda receta), aunque la dirección básica de esta hoja sí se guarda; el agente especializado que interpreta la necesidad (§4.6); «Proponer rasgos desde la foto» con visión (18.27, de pago: se presupuesta aparte); la hoja compuesta de la 18.41 como lámina para imprimir (la hoja compuesta para generar vistas sí entra: §4.11 y D13); refuerzo de objeto y de compañero; ficha de voz. Quedan vinculadas en el backlog y conservan su estado.
 
 **Límites que no se negocian:**
 - Nada se genera ni se gasta al abrir, preguntar, elegir vistas o pulsar «Preparar».
@@ -95,11 +103,11 @@ Juan quiere preparar un personaje y sus vistas con coherencia sin redactar promp
 
 | Pieza | Existe | Dónde | Falta para PIC-05 |
 |---|---|---|---|
-| Elemento y ficha versionada (rasgos fijos y variables, referencias con rol, persona real, estado borrador/aprobada) | Sí | `backend/app/dominio/modelos.py` (`Elemento` 237, `FichaVersion` 270, `RolReferencia` 56); `api/elementos.py`; `FichaElemento.tsx` | Roles `tres_cuartos` y `cuerpo_entero` (hoy: frontal, perfil, espalda, detalle, entorno, otra). Campo `expresion` aparte del rol. Marca de ancla. Dirección de la hoja guardada |
+| Elemento y ficha versionada (rasgos fijos y variables, referencias con rol, persona real, estado borrador/aprobada) | Sí | `backend/app/dominio/modelos.py` (`Elemento` 237, `FichaVersion` 270, `RolReferencia` 56); `api/elementos.py`; `FichaElemento.tsx` | Roles `tres_cuartos`, `cuerpo_entero` y `hoja` (hoy: frontal, perfil, espalda, detalle, entorno, otra). Campo `expresion` aparte del rol. Marca de ancla. Dirección de la hoja guardada |
 | Nueva versión de ficha (copia la anterior; 409 si ya hay borrador) y aprobar (exige descripción y una referencia) | Sí | `api/elementos.py:113`, `:166` | Nada |
-| Hoja de personaje del paso de elementos | Parcial | `api/motor.py:332` (`VISTAS_POR_CLASE`: frente, perfil, tres cuartos, cuerpo entero), `:506` (`preparar-referencias`); `motor/PanelReferencias.tsx` | Exige `proyecto_id`; texto genérico; no usa `_referencias` (18.22) ni la cláusula de persona real; siempre 1:1; sin expresiones; sin pruebas. **No se reutiliza su texto; sí su destino `ficha`** (D1) |
+| Hoja de personaje del paso de elementos | Parcial | `api/motor.py:332` (`VISTAS_POR_CLASE`: frente, perfil, tres cuartos, cuerpo entero), `:506` (`preparar-referencias`); `motor/PanelReferencias.tsx` | Exige `proyecto_id`; texto genérico; no usa `_referencias` (18.22) ni la cláusula de persona real; siempre 1:1; sin expresiones; sin pruebas. **No se reutilizan ni su texto ni su destino:** las tomas caen en la carpeta del personaje en el Taller (D1) |
 | Pasar una toma a la ficha | Sí | `api/motor.py:537` | Envía siempre rol «otra» (`PanelReferencias.tsx:252`) y marca `valoracion=buena`. Hay que separar favorita y aprobada (§4.5) y aceptar tomas de carpeta |
-| Qué conservar de cada referencia (18.22) y persona real (18.20) | Sí | `dominio/prompt.py:30` (`USO_REFERENCIA` por clase), `:46` (`_referencias`) | Uso por **rol** dentro de la clase personaje (ancla, perfil, expresión) |
+| Qué conservar de cada referencia (18.22) y persona real (18.20) | Sí | `dominio/prompt.py:30` (`USO_REFERENCIA` por clase), `:46` (`_referencias`) | Uso por **rol** (vista), por marca de ancla y por expresión (campo aparte) dentro de la clase personaje |
 | Taller y Mesa: carpetas, tomas, árbol de versiones, ★, descartar, nota, comparar, «Cómo se hizo» | Sí | `api/taller.py`; `componentes/mesa/*`; `lienzo/ComparadorTomas.tsx`; `PATCH /tomas/{id}` (`motor.py:955`) | Nada |
 | Lateral único con pestaña «Director de Studio» | Esqueleto | `componentes/mesa/Lateral.tsx:145-155` | El contenido de la receta |
 | Controles de Dirección del Taller (encuadre, ángulo, luz, óptica; 60 caracteres por valor) | Sí | `Taller.tsx:32-37`; `taller.py:35` (`DIRECCION_NUEVA`) | Fondo. Valores por defecto para vistas de referencia |
@@ -119,8 +127,8 @@ Juan quiere preparar un personaje y sus vistas con coherencia sin redactar promp
 
 | Nivel | Qué guarda | Dónde vive | Quién lo cambia | Alcance |
 |---|---|---|---|---|
-| **Ficha del personaje** | Identidad: descripción, rasgos fijos (cara, pelo, piel, complexión, señas con su LADO, «SIEMPRE lleva»), rasgos variables (vestuario, peinado de ocasión), vestuario base, persona real, resumen de rasgos y referencias que se deben conservar, referencias aprobadas con su vista y su expresión | `FichaVersion` (existente) | Juan, en el Director o en la ficha. Aprobada = inmutable; cambiarla crea vN+1 | Todo el espacio |
-| **Dirección visual** | *De la hoja (en PIC-05):* fondo, luz, encuadre por tipo de vista y acabado, iguales en todas las vistas del personaje. *Del proyecto (fuera de PIC-05):* paleta, contraste, textura y composición reutilizables (segunda receta de la 18.66) | La de la hoja: en la sesión mientras se trabaja, y en `FichaVersion.direccion_hoja` al aprobar la versión, para que las vistas que se pidan después salgan iguales | Juan, en el paso de Dirección | Todas las vistas de ese personaje |
+| **Ficha del personaje** | Identidad: descripción, rasgos fijos (cara, pelo, piel, complexión, señas con su LADO, «SIEMPRE lleva»), rasgos variables (vestuario, peinado de ocasión), vestuario base, persona real, resumen de rasgos y referencias que se deben conservar, referencias aprobadas con su vista y su expresión | `FichaVersion` (existente) | Juan, en el Director o en la ficha. Publicada (`estado: aprobada` en el código) = inmutable; cambiarla crea vN+1 | Todo el espacio |
+| **Dirección visual** | *De la hoja (en PIC-05):* fondo, luz, encuadre por tipo de vista y acabado, iguales en todas las vistas del personaje. *Del proyecto (fuera de PIC-05):* paleta, contraste, textura y composición reutilizables (segunda receta de la 18.66) | La de la hoja: en la sesión mientras se trabaja, y en `FichaVersion.direccion_hoja` al publicar la versión, para que las vistas que se pidan después salgan iguales | Juan, en el paso de Dirección | Todas las vistas de ese personaje |
 | **Ajustes de la toma** | Ángulo y objetivo de una vista concreta, y excepciones a la dirección de la hoja (por ejemplo, otra luz solo en esa vista) | La sesión de receta, por vista (`vistas[].direccion`, `vistas[].excepciones`) | Juan, por vista, sin tocar la hoja ni la ficha | Esa generación |
 
 Regla: una excepción en una vista no sube a la hoja ni a la ficha. Para cambiar la ficha hay que decirlo («Guardar en la ficha»), y eso abre o usa el borrador vN+1.
@@ -136,7 +144,7 @@ En la interfaz se dice **«referencia principal»**. En el código y en este doc
    - *Persona real (18.20):* su foto es la referencia principal y no se genera un retrato inventado. El texto lo explica así: «Su foto es la referencia de la cara. Los modelos pueden alterarla: revisa cada resultado».
 3. **Identidad, apariencia y vestuario.** Campos estructurados (§4.2a). Cada uno se marca «Se conserva» o «Puede variar». Debajo va el resumen «Rasgos y referencias que se deben conservar», compuesto desde los campos. Si no hay nada, dice «Se completará con lo que rellenes», nunca «Preparado por el Director» sobre un campo vacío.
 4. **Lo que falta.** Solo pregunta por campos *obligatorios* vacíos: edad aparente, procedencia, cara, pelo y vestuario base. Nunca pregunta un dato que ya tiene. Lo opcional se puede omitir.
-5. **Uso, vistas y forma de generarlas.** El uso propone vistas, y Juan las marca o desmarca. Además elige la forma de generarlas: hoja compuesta o vistas sueltas (§4.11; la forma por defecto está pendiente, D13).
+5. **Uso, vistas y forma de generarlas.** El uso propone vistas, y Juan las marca o desmarca. Además elige la forma de generarlas: hoja compuesta o vistas sueltas (§4.11). D13 sigue abierta: la híbrida es la opción por defecto provisional, solo en simulado.
 6. **Dirección.** Dirección de la hoja (se guarda) y ajustes por vista (§4.4). Cada control trae una línea de ayuda, escrita como indicación y no como promesa.
 7. **Qué se enviará.** Un resumen legible por generación: vista, expresión, encuadre, imágenes que viajan y precio. El texto completo y los identificadores van en «Ver el texto completo».
 8. **Preparar.** El panel pasa a **«Listo para generar»** y su acción principal es la misma que la de la barra: «Generar 3 vistas · 0,45 $», o «Generar hoja · 0,15 $». «Editar preparación» queda como acción secundaria (§4.12).
@@ -178,7 +186,7 @@ La receta no interpreta texto libre. Guarda cada dato en su campo y lo coloca en
   - en todos los casos: «no copies la pose, el encuadre ni el fondo».
 
   Comprobación obligatoria (pytest y maqueta): con el pescador de vestuario conservado, **ninguna** de las vistas lleva «no copies la ropa» ni «no copies […] la ropa», y todas nombran «jersey verde oscuro» y «camisa de cuadros».
-- **Crear completo, adjuntar lo mínimo** (VDLT): con la referencia principal basta para perfil, tres cuartos y cuerpo entero. Las expresiones llevan la principal y, si existe, el cuerpo entero aprobado. Nunca más de tres imágenes por generación.
+- **Crear completo, adjuntar lo mínimo** (VDLT): la referencia principal suele bastar para perfil, tres cuartos y cuerpo entero (según VDLT; se comprueba en la prueba real). Las expresiones llevan la principal y, si existe, el cuerpo entero aprobado. Nunca más de tres imágenes por generación.
 - **Una vista por imagen** en las vistas sueltas. La hoja compuesta junta varias vistas en una generación (§4.11).
 - **Vista y expresión por separado:** la vista dice desde dónde se ve; la expresión, qué gesto hace.
 - **Conservar no es garantizar.** El texto pide conservar; si se ha conservado se ve al comparar (§4.7). Guardar la dirección permite reutilizar decisiones, pero no asegura que las imágenes salgan iguales.
@@ -209,7 +217,7 @@ Se guarda en la sesión y en `FichaVersion.direccion_hoja` al publicar la versi�
 | | Favorita (★) | Aprobada para el borrador | Publicada en la ficha |
 |---|---|---|---|
 | Qué significa | «Me gusta» | «Esta imagen debe ser referencia de esta vista» | La versión de la ficha que usan las generaciones |
-| Dónde se guarda | `Toma.valoracion = "buena"` | `Referencia` en la `FichaVersion` en estado `borrador` | La `FichaVersion` pasa a `aprobada` y es la vigente |
+| Dónde se guarda | `Toma.valoracion = "buena"` | `Referencia` en la `FichaVersion` en estado `borrador` | La `FichaVersion` pasa a publicada (`estado: aprobada` en el código) y es la vigente |
 | Etiqueta en la toma | ★ | «Aprobada · borrador v2» | «En la ficha v2» |
 | Cabecera | — | «Ficha de Ramón: borrador v1 sin publicar» o «v1 publicada · borrador v2» | «Ficha de Ramón: v2 publicada» |
 | Se deshace | Quitando la ★ | «Quitar del borrador» | No: se crea otra versión |
@@ -227,17 +235,19 @@ Se guarda en la sesión y en `FichaVersion.direccion_hoja` al publicar la versi�
 | Entrada | Pasos fijos, opciones cerradas y campos | Lo que Juan cuente con sus palabras, imágenes incluidas |
 | Qué entiende | Lo que encaja en sus tablas (usos, vistas, rasgos que faltan, «más íntimo» y una decena de intenciones más) | La necesidad: para qué es, qué no le convence, qué se parece a qué |
 | Qué orienta | Propone vistas y dirección según el uso, explica cada control en una línea y pregunta solo los campos vacíos | Propone enfoques que no están en las tablas, discute alternativas y explica el porqué con el contexto de Juan |
-| Resultados | Lista de comprobación fija para comparar con el ancla | Lee la toma y señala qué se ha perdido y por qué (18.3) |
+| Resultados | Lista de comprobación fija para comparar con la referencia principal | Lee la toma y señala qué se ha perdido y por qué (18.3) |
 | Coste | Ninguno | Cada llamada, presupuestada y autorizada aparte |
 | Riesgo | Rígida: lo que no está en la tabla no lo entiende, y lo dice («Esto no lo sé interpretar todavía») | Puede equivocarse con seguridad: sus propuestas se revisan una a una |
 
 La receta deja hecho lo que el agente reutilizará después: la sesión, las fichas, la dirección de la hoja, las propuestas aceptables una a una y la marca «Preparado por el Director». El agente necesita su propio SDD, con modelo, coste, contexto y pruebas. Queda en el backlog (18.66 y 18.52) y no se da por cubierto con PIC-05.
 
+**Para el agente (pendiente, no en PIC-05).** De esta lista, la receta ya usa la tabla cerrada de intenciones, los campos obligatorios y la marca «Preparado por el Director». Lo demás es para el agente:
+
 - **Contexto que recibe:** el elemento y su ficha (versión vigente y borrador), las referencias con su rol y su ancla, la marca de persona real, la sesión de receta, el catálogo (modelo elegido, máximo de referencias y precio con su fecha) y el gasto del Taller. Nunca material de otros espacios.
-- **Lista cerrada de lo que pregunta si falta:** edad aparente, origen, complexión, forma de la cara (3–4 palabras), pelo, ojos, vello facial, 1–2 señas con su LADO, accesorio fijo, vestuario base, uso previsto.
+- **Lo que pregunta si falta:** en la receta, los campos obligatorios de §4.2a (edad aparente, procedencia, cara, pelo y vestuario base). El agente podrá ampliar la lista (vello facial, uso previsto) en su propio SDD.
 - **Propuestas que puede preparar:** campos de la ficha, el resumen de lo que se debe conservar, la dirección de la hoja, las vistas y su dirección, y los textos por vista. Llegan marcadas «Preparado por el Director» y se aceptan, editan o descartan una a una. Traduce intenciones con una tabla cerrada (por ejemplo, «más íntimo» → plano más cerrado, 85 mm, luz lateral suave) y explica el efecto en una línea.
 - **Lo que necesita autorización aparte:** generar (cada lote, viendo su precio), y cualquier asistencia de pago futura (18.27, extraer rasgos de la foto; una propuesta con modelo de texto). Cada una con su presupuesto previo, como Mejorar en PIC-04.
-- **Lo que no hace nunca:** generar al preparar, aprobar en nombre de Juan, cambiar una ficha aprobada o reintentar una generación.
+- **Lo que no hace nunca:** generar al preparar, aprobar en nombre de Juan, cambiar una ficha publicada o reintentar una generación.
 
 #### 4.7 Resultados que no mantienen la identidad
 
@@ -261,7 +271,7 @@ La receta deja hecho lo que el agente reutilizará después: la sesión, las fic
 
 #### 4.9 Lote, reserva, resultados parciales y recarga
 
-Un lote es lo que se autoriza con un clic: varias vistas, una operación por vista.
+Un lote es lo que se autoriza con un clic: una operación por vista suelta, o una sola operación para la hoja compuesta (`id_peticion = sesion:{id}:hoja:{revision}`).
 
 1. **Antes de autorizar.** La barra enseña el precio de cada vista y el total. El servidor vuelve a calcular el total con la tarifa del catálogo y lo compara con el presupuesto restante (gasto + reservado). Si lo supera, pide la confirmación de siempre (`confirmado_por_encima_del_presupuesto`). Esa confirmación vale para ese lote y ese total, no para otro.
 2. **Creación en dos fases, sin gasto a medias.**
@@ -315,18 +325,18 @@ El trabajo creativo va delante. La contabilidad está a un clic, pero no ocupa l
 | Criterio | Vistas sueltas (3) | Hoja compuesta (3 paneles) |
 |---|---|---|
 | Coste previsto | 3 × 0,15 = **0,45 $** | **0,15 $** (más un recorte local, gratis) |
-| Resolución por vista | Imagen 4:5 de ~1 638 × 2 048 (≈3,4 MP) | Panel de ~682 × 1 152 (≈0,8 MP, una cuarta parte), menos márgenes. En cuerpo entero, la cara queda en unos 100–150 px de alto |
+| Resolución por vista | Imagen 4:5 de ~1 638 × 2 048 (≈3,4 MP) | Panel de ~683 × 1 152 (≈0,8 MP, una cuarta parte) antes del margen; con el margen del 1 %, ~670 × 1 129. En cuerpo entero, la cara queda en unos 100–150 px de alto |
 | Continuidad entre vistas | Cada vista se genera aparte, con la misma referencia principal: puede variar de una a otra | Las vistas comparten una sola generación: *puede* que salgan más coherentes entre sí, pero **no está demostrado** con nuestro modelo, y tampoco garantiza parecerse a la referencia principal |
 | Corregir una vista | Se edita o regenera solo esa (0,15 $) | Regenerar la hoja cambia también los paneles buenos. Lo práctico es «Crear vista independiente» de esa vista (0,15 $, §4.14c) |
 | Uso como referencia posterior | Directo: una vista, una cara | La hoja entera **no** debe viajar como referencia: varias caras en una imagen tienden a promediarse (VDLT). Viajan sus recortes, de menor resolución |
 | Riesgos propios | Coste y deriva entre vistas | El modelo puede no respetar los paneles (tamaños distintos, texto, una persona de más); los recortes iguales fallan si la composición no es regular |
 
-**Cómo se elige la referencia principal en la hoja compuesta:** igual que en las sueltas. Desde cero, lo primero es un **retrato individual**, que se elige como referencia principal antes de la hoja, porque necesita resolución completa para viajar como imagen 1 y para comparar. Se puede elegir un recorte de la hoja como principal, pero con aviso de baja resolución y la propuesta de ampliarlo antes.
+**Cómo se elige la referencia principal en la hoja compuesta:** igual que en las sueltas. Desde cero, lo primero es un **retrato individual**, que se elige como referencia principal antes de la hoja, porque necesita resolución completa para viajar como imagen 1 y para comparar. Se puede elegir un recorte de la hoja como principal, pero con aviso de baja resolución y la propuesta de crear antes una vista independiente de ese retrato.
 
 **Cómo se vincula la hoja a la ficha:**
 - La hoja completa se guarda como referencia con rol nuevo `hoja`. Se ve en la ficha, pero **no viaja** a las generaciones.
 - «Recortar en vistas» es una acción local, sin coste, con la librería de imágenes que ya usa el backend (PIL). Crea un `Medio` nuevo por panel (`origen: recorte`, `medio_origen_id`, `caja`). Cada recorte es una toma con su vista y se aprueba para el borrador como cualquier otra, con su resolución a la vista.
-- Si los paneles no son regulares, la maqueta lo avisa («La hoja no tiene paneles iguales») y propone vistas sueltas. El ajuste manual del recorte queda fuera de PIC-05.
+- Si los paneles no son regulares, se ajustan las líneas de corte en la vista previa (§4.14a). Solo si el ajuste no basta se pasa a vistas sueltas.
 - Las vistas sueltas siguen como **vista independiente**: una imagen nueva de esa vista, a resolución completa, para corregir o para tener más detalle. Aumentar la resolución del mismo recorte es otra cosa (§4.14c).
 
 **Recomendación (pendiente de decidir, D13):** recorrido por defecto **híbrido**:
@@ -337,7 +347,7 @@ El trabajo creativo va delante. La contabilidad está a un clic, pero no ocupa l
 
 Desde cero son 0,30 $ en vez de 0,60 $, y el gasto adicional solo va donde hace falta.
 
-La decisión final necesita una prueba corta de pago, que se autoriza aparte. El mismo personaje con la misma referencia principal, generado de las dos formas (retrato, hoja y 3 vistas sueltas: 5 imágenes, unos 0,75 $; §11), y comparado con la lista de §4.7, más la comprobación del vestuario de §4.3. Hasta entonces, la maqueta ofrece las dos formas y marca la recomendada como «recomendada, pendiente de prueba».
+La decisión final necesita una prueba corta de pago, que se autoriza aparte. El mismo personaje con la misma referencia principal, generado de las dos formas (retrato, hoja y 3 vistas sueltas: 5 imágenes, unos 0,75 $; §11), y comparado con la lista de §4.7, más la comprobación del vestuario de §4.3. Hasta entonces, la maqueta ofrece las dos formas y marca la recomendada como «Recomendada · provisional hasta la prueba real».
 
 #### 4.12 Siguiente acción evidente
 
@@ -385,9 +395,16 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 - **Endpoint:** `POST /api/tomas/{id}/recortar`.
   - Solo acepta una toma de tipo hoja.
   - Recibe `{cajas?: [[x,y,ancho,alto], …]}`. Sin cajas, divide la imagen en tantas columnas iguales como paneles pidió la hoja (`paneles` de la operación), con un margen interior del 1 % por lado.
-- **Antes de cortar, vista previa.** El panel enseña la hoja con las líneas de corte, y Juan confirma con «Recortar (sin coste)» o pulsa «Los paneles no son iguales».
-  - En el segundo caso se propone pasar a vistas sueltas (D16).
-  - Picasso **no** detecta solo si los paneles son regulares: lo decide Juan viendo las líneas. El ajuste manual de las cajas queda fuera de PIC-05.
+- **Antes de cortar, vista previa con ajuste manual.**
+  - El panel enseña la hoja con las líneas de corte.
+  - Cada línea entre paneles se puede mover a izquierda y derecha, con un control deslizante, el ratón o las flechas del teclado.
+  - Un margen superior e inferior común recorta el borde vacío.
+  - Debajo se ve la resolución resultante de cada panel.
+  - «Restablecer» vuelve a columnas iguales.
+  - Límites: las líneas no se cruzan, y ningún panel baja del 10 % del ancho.
+  - Se confirma con «Recortar (sin coste)». Las cajas elegidas viajan en `cajas` y se guardan en cada recorte.
+  - Picasso **no** detecta solo si los paneles son regulares: lo decide Juan viendo las líneas.
+  - Si un panel no se puede separar con cortes verticales (personas solapadas, paneles en dos filas), queda la salida secundaria «Generar estas vistas por separado» (D16).
 - **Píxeles intactos.** Se corta sin reescalar ni comprimir: PNG sin pérdida, con los píxeles del original. La resolución real (ancho × alto) se guarda y se enseña.
 - **Lo que deja:**
   - por cada panel, un `Medio` nuevo, con `origen: recorte`, `medio_origen_id` (la hoja), `caja`, `ancho` y `alto`;
@@ -404,7 +421,7 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
   Mientras tenga cualquiera de los dos, `DELETE /api/medios/{id}` devuelve 409, como con los demás usos.
 - **Trazabilidad en la ficha.** Al aprobar el primer recorte de una hoja para el borrador, la hoja entra en esa versión como referencia con rol `hoja`. Se ve en la ficha y **no viaja** a las generaciones. Así, la versión publicada dice de qué hoja sale cada recorte.
 - **Descartar la hoja** la atenúa en la Mesa. No borra su medio ni sus recortes, y los recortes aprobados siguen en el borrador.
-- **Recortes en la ficha:** su línea muestra la resolución («recorte de 683 × 1 152 px») y la hoja de origen.
+- **Recortes en la ficha:** su línea muestra la resolución (por ejemplo, «recorte de 670 × 1 129 px» con el margen por defecto) y la hoja de origen.
 
 ##### c) «Crear vista independiente» frente a «Aumentar resolución»
 
@@ -412,7 +429,7 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 |---|---|---|
 | Qué hace | Una **imagen nueva** de esa vista y expresión, a resolución completa | **La misma imagen** con más píxeles |
 | Cómo | `imagen_con_referencias`, con la referencia principal como imagen 1 y la dirección de la vista. El recorte **no** viaja, para no meter una cara de más | Acción `escalar` de la 18.13 (aprobada y aplazada), con un modelo de escalado |
-| Resultado | Puede salir distinta del recorte (pose, gesto, detalle). Se revisa y se aprueba aparte; si se aprueba, sustituye al recorte en el borrador | Se parece al recorte por construcción, pero puede inventar detalle al escalar. También se revisa |
+| Resultado | Puede salir distinta del recorte (pose, gesto, detalle). Se revisa y se aprueba aparte. Si se aprueba, pasa a ser la **seleccionada** en el borrador para esa vista y expresión. El recorte **se conserva**, con su medio, su toma y su historial («Ya no está seleccionado en el borrador: lo sustituye T6»). Se puede volver a seleccionar con «Seleccionar para el borrador» | Suele parecerse al recorte, pero puede inventar detalle al escalar. También se revisa |
 | Coste | Una imagen: 0,15 $ con el catálogo actual | El del modelo de escalado: **sin catálogo ni precio verificado** |
 | En PIC-05 | **Sí** | **No.** El botón no aparece en la construcción. La maqueta lo enseña desactivado («Próximamente»), con su explicación |
 
@@ -424,18 +441,18 @@ Textos de la interfaz:
 
 **Datos:**
 - `RolReferencia` gana `tres_cuartos`, `cuerpo_entero` y `hoja` (la hoja compuesta: se ve en la ficha y no viaja). El rol sigue siendo la vista.
-- `Medio` gana `origen: recorte`, `medio_origen_id` y `caja` para los recortes de una hoja (§4.11). El recorte es local, con PIL, y no tiene coste.
+- `Medio` gana `origen: recorte`, `medio_origen_id` y `caja` para los recortes de una hoja (§4.14a). El recorte es local, con PIL, y no tiene coste.
 - Campos del personaje (§4.2a) en la sesión mientras se trabaja y en la `FichaVersion` al publicar: `nombre` (en `Elemento`), `edad_aparente`, `procedencia`, `complexion`, `cara`, `pelo`, `ojos`, `senas`, `vestuario_base`, `accesorio_fijo`, cada uno con `conservar: bool`.
 - `Referencia` gana `ancla: bool = False` y `expresion?`, una lista cerrada que va aparte del rol: neutra, sonrisa_amplia, risa, sorpresa, seria y pensativa.
 - `FichaVersion` gana `direccion_hoja?` `{fondo, luz, acabado, encuadres_por_vista}`.
 - `Toma` gana `motivo_descarte?` (`identidad` | null).
 - Colección nueva `sesiones_director`.
-- Operación: `origen_receta?` `{sesion_id, vista}` fuera de `entradas`, para no cambiar la clave de idempotencia.
+- Operación: `origen_receta?` `{sesion_id, vista, expresion?}`; en la hoja, `{sesion_id, vista: "hoja", paneles: [{vista, expresion}]}` fuera de `entradas`, para no cambiar la clave de idempotencia.
 
 **Motor:**
-- Ninguno en el ciclo. Las vistas se generan con `imagen_con_referencias`, una operación por vista, con `id_peticion = sesion:{id}:{vista}:{expresion}:{revision}`. Un doble clic no duplica.
+- Ninguno en el ciclo. Las vistas se generan con `imagen_con_referencias`, una operación por vista suelta (o una para la hoja), con `id_peticion = sesion:{id}:{vista}:{expresion}:{revision}`. Un doble clic no duplica.
 - El lote sigue §4.9: total comprobado en el servidor, creación en dos fases (preparar todas, autorizar una a una) y reserva por operación al autorizarse. Para eso se usan `crear_operacion` y `autorizar`, que ya existen; el `generar` del Taller hace las dos cosas en una sola llamada y no sirve para un lote.
-- `USO_REFERENCIA` del personaje distingue el ancla y las expresiones por rol (§4.3). Lo prueba pytest.
+- `USO_REFERENCIA` del personaje distingue por rol (vista), por `ancla` y por `expresion` (§4.3). Lo prueba pytest.
 
 **API:**
 - `GET/POST /api/espacios/{e}/director/sesiones`, `GET/PUT /api/director/sesiones/{id}`.
@@ -443,12 +460,13 @@ Textos de la interfaz:
 - `POST /api/director/sesiones/{id}/lotes` `{vistas, total_visto, confirmado_por_encima}`: comprueba el total, guarda el lote y hace las dos fases (§4.9). Si el total del servidor no coincide con el visto, devuelve 409 y no autoriza nada.
 - `GET /api/director/sesiones/{id}/lotes/{lote}`: estado por vista, con la reserva y el gasto de cada una.
 - `POST /api/tomas/{id}/pasar-a-ficha` acepta tomas de carpeta y recibe `rol`, `ancla` y `expresion`. Ya no toca `valoracion`.
+- `POST /api/fichas/{id}/seleccion` `{vista, expresion, medio_id}`: cambia la imagen seleccionada en el borrador para esa vista y expresión, sin borrar la anterior ni su toma (§4.14c). Publicar usa el aprobar que ya existe (`api/elementos.py:166`).
 
 **Interfaz:**
 - Contenido de la pestaña Director (`Lateral.tsx`): lista de recetas, marcada como «Receta guiada», y la tarjeta del agente como «Próximamente».
 - Controles «Fondo» y «Acabado» en Dirección. Bloque «Dirección de la hoja» guardado.
 - Estado del lote en la barra y en la sesión: completada, fallida, sin confirmar y preparada sin autorizar.
-- En la tarjeta de la toma: «En la ficha · vN · vista», «Comparar con el ancla», «No mantiene la identidad».
+- En la tarjeta de la toma: «Aprobada · borrador vN» (o «En la ficha vN» tras publicar), «Comparar con la referencia principal», «No mantiene la identidad», «Seleccionar para el borrador».
 - Paleta oscura aprobada (PIC-01 D11). Sin dependencias nuevas.
 
 **No cambia:** el ciclo del motor, el Registro, los costes por intento, el borrado protegido, el comparador, el árbol de versiones ni la hoja del paso de elementos (se deja como está; D1 propone su retirada más adelante).
@@ -458,20 +476,21 @@ Textos de la interfaz:
 | # | Historia | Criterio verificable |
 |---|---|---|
 | H1 | Abrir el Director y elegir la receta | Con la Mesa abierta, la pestaña Director lista «Hoja de personaje». Abrirla no crea operaciones (el Registro no cambia) |
-| H2 | Partir de referencias o de una descripción | Desde referencias, la frontal de la ficha aprobada aparece como candidata a ancla. Desde descripción, la primera vista propuesta es «Retrato ancla». Con persona real no se ofrece generar la cara |
+| H2 | Partir de referencias o de una descripción | Desde referencias, la referencia principal marcada en la ficha publicada aparece como tal. Desde descripción, lo primero que se propone es el retrato para elegir la referencia principal. Con persona real no se ofrece generar la cara |
 | H3 | Conservar y variar | Cada rasgo está en una sola columna; moverlo cambia el resumen «Rasgos y referencias que se deben conservar», que nombra también las referencias que viajan. Ningún texto de la interfaz promete que la identidad se mantenga |
-| H3b | Dirección de la hoja guardada | Fondo, luz, encuadre por vista y acabado se guardan en la sesión, se recuperan al reabrir y pasan a `direccion_hoja` al aprobar la ficha. Una excepción en una vista no cambia la hoja |
+| H3b | Dirección de la hoja guardada | Fondo, luz, encuadre por vista y acabado se guardan en la sesión, se recuperan al reabrir y pasan a `direccion_hoja` al publicar la ficha. Una excepción en una vista no cambia la hoja |
 | H4 | Preguntar solo lo que falta | Con la ficha completa, no hay preguntas. Con tres campos vacíos, pregunta esos tres y nada más. «Omitir» lo deja «sin decidir» |
 | H5 | Vistas según el uso | Cada uso marca un conjunto distinto; desmarcar una vista la quita del total. El ancla no se puede desmarcar si no existe |
-| H6 | Dirección explicada y editable | Cada vista enseña sus cinco controles con una línea de por qué. Cambiar uno cambia el texto de esa vista y no la ficha |
+| H6 | Dirección explicada y editable | Cada vista enseña encuadre, ángulo y objetivo con una línea de por qué, y permite una excepción de luz y fondo. Cambiar uno cambia el texto de esa vista y no la hoja ni la ficha |
 | H7 | Qué se envía y cuánto cuesta | Cada tarjeta muestra texto exacto, imágenes numeradas con su para qué, modelo y precio; el total es la suma. Con más referencias que el máximo del modelo, la tarjeta se bloquea con aviso |
 | H8 | Preparar no gasta | Tras «Preparar», cero operaciones nuevas y la sesión guardada |
-| H9 | Generar con una autorización | Un clic crea una operación por vista marcada, todas con `id_peticion` distinto y estable. Un doble clic no crea más. Por encima del presupuesto pide confirmación. Cada operación reserva su estimación al autorizarse |
+| H9 | Generar con una autorización | Un clic crea una operación por vista suelta marcada (o una sola para la hoja), todas con `id_peticion` distinto y estable. Un doble clic no crea más. Por encima del presupuesto pide confirmación. Cada operación reserva su estimación al autorizarse |
 | H9b | Lote a medias y recarga | Con una vista fallida, su reserva se libera y la barra ofrece «Generar las que faltan» con su precio. Una incierta mantiene la reserva y no se reofrece. Si se recarga entre fases, las `preparada` no se autorizan solas. Repetir el lote no crea operaciones nuevas |
-| H10 | Comparar y aprobar | «Aprobar para la ficha» añade la referencia con su rol al borrador; no marca ★; la ★ no vincula. La toma muestra «En la ficha · vN · vista» |
+| H10 | Comparar y aprobar | «Aprobar para el borrador» añade la referencia con su vista y su expresión al borrador; no marca ★; la ★ no vincula. La toma muestra «Aprobada · borrador vN» |
 | H11 | Identidad perdida | «No mantiene la identidad» descarta sin borrar y ofrece corregir editando, revisar la dirección o regenerar, cada una con precio y sin ejecutarse |
 | H12 | Reabrir | Cerrar y volver recupera paso, vistas y su estado. Una generación en curso al cerrar se reconcilia sin duplicarse |
 | H13 | Recorrido de aceptación de la 18.66, en su versión básica | Crear un personaje, aprobar su ancla y la dirección de la hoja, y preparar tres vistas distintas sin volver a escribir sus rasgos ni perder lo decidido. La estética del proyecto completa queda para la segunda receta |
+| H14 | Vista y expresión por separado | Una referencia «frontal + sonrisa amplia» y otra «perfil + neutra» se distinguen en la ficha y en la barra; el texto de «cuerpo entero» pide de pies a cabeza y una sola persona; en la imagen se comprueba en la prueba real |
 | H15 | Siguiente acción | En cada fila de §4.12 hay una sola acción principal, igual en el panel y en la barra. Nunca se queda solo un botón desactivado. Con vistas esperando la referencia principal no aparece «No queda ninguna vista por generar» |
 | H16 | Referencia principal desde cero | El primer retrato ofrece «Elegir como referencia principal», «Generar otro» y «Descartar», sin «Comparar». Tras elegir, la acción es «Continuar con las vistas pendientes» |
 | H17 | Borrador y publicación | Una imagen aprobada dice «Aprobada · borrador v2» hasta publicar. Solo después dice «En la ficha v2». La cabecera nunca contradice a la toma |
@@ -479,11 +498,10 @@ Textos de la interfaz:
 | H19 | Coherencia del vestuario | Pescador con «jersey verde oscuro y camisa de cuadros» marcado «Se conserva»: todas las vistas lo nombran, y ninguna dice «no copies la ropa» |
 | H20 | Costes discretos | El precio solo está en el botón y en cada tarjeta. El detalle se abre desde la pastilla de gasto. Solo se destacan: supera el presupuesto, cambio de precio y petición sin confirmar |
 | H21 | Distribución | A 1 280 px, panel al lado; a ~900 px, panel superpuesto; a 390 px, panel a pantalla completa. El inspector deja ver las acciones sin desplazarse |
-| H23 | Recorte sin coste | Recortar no crea operaciones ni cambia el gasto. Los recortes son PNG con los píxeles del original y su resolución real. Recortar dos veces con las mismas cajas no duplica |
-| H24 | Hoja conservada | Después de recortar, el hash del medio de la hoja no cambia. Borrar la hoja con recortes devuelve 409. Al aprobar un recorte, la hoja entra en el borrador con rol `hoja` y no viaja en la siguiente generación |
-| H25 | Vista independiente | «Crear vista independiente» genera con la referencia principal y sin el recorte. Si se aprueba, el recorte sale del borrador y entra la vista nueva. «Aumentar resolución» no aparece en la construcción |
 | H22 | Hoja compuesta | «Generar hoja · 0,15 $» → «Recortar en vistas» (vista previa de los cortes, sin coste) → tres recortes con su vista y resolución → aprobar o «Crear vista independiente · 0,15 $». La hoja sigue intacta |
-| H14 | Vista y expresión por separado | Una referencia «frontal + sonrisa amplia» y otra «perfil + neutra» se distinguen en la ficha y en la barra; «cuerpo entero» es una vista de pies a cabeza con una sola persona |
+| H23 | Recorte sin coste y ajustable | Recortar no crea operaciones ni cambia el gasto. Las líneas de corte se mueven en la vista previa, sin cruzarse y sin bajar del 10 % del ancho. La resolución mostrada coincide con la de cada recorte. Los recortes son PNG con los píxeles del original. Recortar dos veces con las mismas cajas no duplica |
+| H24 | Hoja conservada | Después de recortar, el hash del medio de la hoja no cambia. Borrar la hoja con recortes devuelve 409. Al aprobar un recorte, la hoja entra en el borrador con rol `hoja` y no viaja en la siguiente generación |
+| H25 | Vista independiente | «Crear vista independiente» genera con la referencia principal y sin el recorte. Si se aprueba, pasa a ser la seleccionada en el borrador. El recorte sigue en la Mesa, con su medio, su toma y su historial, y se puede volver a seleccionar. «Aumentar resolución» no aparece en la construcción |
 
 ## SDD-06 · Reglas de desarrollo
 
@@ -505,6 +523,9 @@ Textos de la interfaz:
    - H10: favorita y aprobada separadas; 409 si la ficha está aprobada.
    - H11 y H12.
    - H3b: `direccion_hoja` guardada y recuperada.
+   - H23: recortar no crea operaciones; las líneas no se cruzan ni bajan del 10 %; PNG sin reescalar; las mismas cajas no duplican.
+   - H24: el hash de la hoja no cambia; borrarla devuelve 409; el rol `hoja` no viaja.
+   - H25: la vista independiente sale sin el recorte; la selección en el borrador es reversible y no borra nada.
    - H17: aprobar no publica; publicar crea la versión vigente.
    - H22: la hoja se guarda con rol `hoja`, que no viaja, y el recorte crea medios `recorte` sin coste.
 2. **pytest:**
@@ -519,10 +540,11 @@ Textos de la interfaz:
    - Vista y expresión: se generan como campos separados.
    - H19: pescador con el vestuario conservado; ninguna línea dice «no copies la ropa».
    - H18: las preguntas salen de los campos obligatorios vacíos, nunca de los rellenos.
-3. **Frontend (`node --test`):** preguntas que faltan, vistas por uso, total previsto, recuperación de la sesión, y la siguiente acción para cada fila de §4.12 (H15).
+   - H14: vista y expresión se guardan en campos separados.
+3. **Frontend (`node --test`):** preguntas que faltan, vistas por uso, total previsto, recuperación de la sesión, la siguiente acción para cada fila de §4.12 (H15), el primer retrato sin «Comparar» (H16) y las líneas de corte de la vista previa (H23).
 3b. **Recorrido visual** a 1 280, ~900 y 390 px (H21).
 4. **Validación de Juan en la interfaz:** el recorrido H13 en una instancia aislada, primero con `simulado`.
-5. **Validación real (aparte y autorizada):** tres vistas de un personaje inventado con su ancla. Presupuesto = vistas × precio verificado ese día. Es la única prueba que dice algo de la continuidad.
+5. **Validación real (aparte y autorizada):** la prueba de D13 de §11: el mismo personaje inventado y la misma referencia principal, con retrato, hoja de 3 paneles y 3 vistas sueltas (5 imágenes, unos 0,75 $ al precio verificado ese día). Decide D13 y D12. Es la única prueba que dice algo de la continuidad.
 
 ## SDD-04 · Decisiones pendientes (cada una con recomendación)
 
@@ -530,7 +552,7 @@ Textos de la interfaz:
 |---|---|---|
 | D1 | ¿Dónde caen las tomas: carpeta del Taller o destino `ficha`? | **Carpeta del personaje en el Taller** («Personaje · Marta»). Así se reutilizan Mesa, versiones, comparar, ★ y Ajustar. La ficha recibe solo lo aprobado. La hoja del paso de elementos se deja como está y se retira cuando PIC-05 esté validado |
 | D2 | ¿Relación con la 18.53 (modo personaje, aprobada y aplazada)? | **PIC-05 toma su método** (preguntas de dos en dos, la cara al final, rasgos que se conservan con su LADO) en versión por reglas. La 18.53 sigue aplazada para la entrevista de carácter y mundo |
-| D3 | ¿Vistas sueltas o hoja compuesta de la 18.41? | **Sustituida por D13.** Las vistas sueltas dejan de ser el recorrido por defecto aprobado; se mantienen para ampliar y corregir |
+| D3 | ¿Vistas sueltas o hoja compuesta de la 18.41? | **Sustituida por D13, que sigue abierta.** Se construyen las dos formas; las vistas sueltas siguen disponibles y además sirven como vista independiente para corregir o tener más detalle |
 | D4 | Fondo y luz por defecto (EVA: blanco y estudio; VDLT: gris claro y ventana lateral) | **Gris claro y ventana lateral suave**, editables. Es lo que proponen las guías VDLT; se revisa en los resultados de la prueba de D13 |
 | D5 | ¿El Director usa un modelo de texto en PIC-05? | **No en este incremento, y se dice claro:** PIC-05 entrega una *receta guiada por reglas* y no el agente que interpreta la necesidad (§4.6). El agente especializado sigue pendiente, con su propio SDD (modelo, coste por llamada, contexto y pruebas). Recomiendo abrirlo justo después de validar PIC-05, para que use la sesión y las fichas que deja hechas |
 | D6 | ¿Colección nueva o reutilizar `borradores_mesa`? | **Colección nueva `sesiones_director`.** El borrador guarda un texto; la receta guarda un recorrido |
@@ -539,28 +561,28 @@ Textos de la interfaz:
 | D9 | ¿Presupuesto del Taller y del lote? | **El global, como hoy, con el lote de §4.9:** el servidor comprueba el total, se crea en dos fases y cada operación reserva al autorizarse. Lo que falla con rechazo se libera, lo incierto queda como posible cargo y nada se reautoriza solo. Un presupuesto por espacio queda propuesto aparte |
 | D10 | ¿Vincular a la ficha marca favorita? | **No.** Se separan; las tomas ya vinculadas con ★ la conservan |
 | D11 | ¿Aprobar una vista exige comparar antes? | **No obliga, pero lo propone:** «Aprobar para el borrador» abre la comparación con la referencia principal. No aplica al primer retrato, que todavía no tiene con qué compararse |
-| D13 | ¿Recorrido por defecto: hoja compuesta, vistas sueltas o híbrido? | **Recomendación: híbrido** (§4.11). Retrato individual para la referencia principal; después, una hoja compuesta con las vistas; luego recortar, aprobar y ampliar solo lo necesario. **Pendiente de decidir** tras una prueba de pago autorizada aparte (unos 0,75 $, §11), con la misma referencia principal en las dos formas |
+| D12 | ¿Modelo para la hoja? | **El más económico que cumpla tres condiciones:** 1) admite las referencias que necesita la vista (hasta 3); 2) admite edición, para «corregir editando» (§4.7); 3) su calidad está **validada para este trabajo**, con una prueba corta autorizada (el mismo ancla y las mismas tres vistas, comparadas con la lista de §4.7). El precio solo decide entre los que cumplen las tres. Hoy solo cumple las dos primeras Nano Banana Pro en fal (6 referencias, con edición), y su calidad para hojas está sin validar. Los candidatos baratos del §9.7 pasan por la misma prueba antes de ser el modelo por defecto |
+| D13 | ¿Recorrido por defecto: hoja compuesta, vistas sueltas o híbrido? | **Sin decidir, y no se decide por silencio.** Recomendación: híbrido (§4.11). En la construcción se hacen **las dos formas**, con la híbrida como opción por defecto **provisional y solo en simulado**. La elección definitiva la toma Juan, de forma explícita, después de la prueba real de §11 (unos 0,75 $). Hasta entonces, la interfaz marca la opción como «provisional» |
 | D14 | ¿Se conserva el término «ancla»? | **En la interfaz no: «referencia principal»,** con su ayuda la primera vez. «Ancla» queda en el código y en este documento |
 | D15 | ¿Dónde está el gasto? | **Una pastilla discreta en la cabecera con «Detalle de costes».** El precio se ve en el botón; los avisos solo aparecen cuando hay que decidir (§4.10) |
-| D16 | ¿Qué pasa si la hoja no sale en paneles iguales? | **Lo decide Juan en la vista previa del recorte** («Los paneles no son iguales»), y se propone pasar a vistas sueltas. Ni detección automática ni ajuste manual de las cajas en PIC-05 |
+| D16 | ¿Qué pasa si la hoja no sale en paneles iguales? | **Ajustar las líneas de corte en la vista previa** (§4.14a): mover cada línea y el margen superior e inferior, viendo la resolución resultante. Generar por separado solo si los paneles no se pueden separar con cortes verticales. Sin detección automática |
 | D17 | ¿El recorte es una operación del motor? | **No:** es una acción local, sin coste, con su traza en `Medio` y `Toma` (§4.14a) |
 | D18 | ¿La hoja entra en la ficha? | **Sí, con rol `hoja`, que no viaja,** al aprobar el primer recorte. Queda protegida contra el borrado mientras tenga recortes o esté en una ficha (§4.14b) |
 | D19 | ¿Viaja el recorte al crear una vista independiente? | **No.** Solo la referencia principal y la dirección; el recorte añadiría una cara más |
 | D20 | ¿«Aumentar resolución» en PIC-05? | **No.** Queda para la 18.13, con un modelo y un precio verificados. En la maqueta aparece desactivado |
-| D12 | ¿Modelo para la hoja? | **El más económico que cumpla tres condiciones:** 1) admite las referencias que necesita la vista (hasta 3); 2) admite edición, para «corregir editando» (§4.7); 3) su calidad está **validada para este trabajo**, con una prueba corta autorizada (el mismo ancla y las mismas tres vistas, comparadas con la lista de §4.7). El precio solo decide entre los que cumplen las tres. Hoy solo cumple las dos primeras Nano Banana Pro en fal (6 referencias, con edición), y su calidad para hojas está sin validar. Los candidatos baratos del §9.7 pasan por la misma prueba antes de ser el modelo por defecto |
 
 ## SDD-08 · Despliegue
 
 - Rama `pic-05/sdd-hoja-personaje`: solo documentación y maqueta. Sin fusionar.
-- El código, cuando se autorice, va en una rama `pic-05/director-hoja` e instancia aislada (`picasso_pic05`, `simulado`), igual que PIC-04.
+- El código, cuando se autorice, va en `pic-05/director-hoja`, creada desde esa rama sin pasar por `main`, y en una instancia aislada (`picasso_pic05`, `simulado`), igual que PIC-04.
 - Fusión y despliegue con respaldo de base y medios, etiquetas `antes-pic05` y vuelta atrás, cada paso con autorización de Juan.
 
 ## 11. Encargo de construcción (preparado; no empieza sin la autorización de Juan)
 
-**Puerta para empezar.** Juan aprueba esta revisión del SDD y la maqueta, o cambia las recomendaciones de D1–D20. Si no dice nada sobre D13, se construyen **las dos formas** (hoja y vistas sueltas), con la híbrida por defecto y un ajuste para cambiarla. La decisión final de D13 se toma con la prueba real.
+**Puerta para empezar.** Juan revisa el SDD completo y la maqueta, y autoriza de forma explícita la construcción aislada, con las recomendaciones de D1–D20 o con sus cambios. **D13 queda abierta:** se construyen las dos formas (hoja y vistas sueltas), con la híbrida como opción por defecto provisional, solo en simulado. Nada de esto vale como aprobación de D13. Se decide después de la prueba real.
 
 **Dónde.**
-- Rama `pic-05/director-hoja`, desde `main`, con los documentos de `pic-05/sdd-hoja-personaje`. Llevar esos documentos a `main` es una fusión de documentación que también autoriza Juan.
+- Rama `pic-05/director-hoja`, creada desde `pic-05/sdd-hoja-personaje`, que ya contiene el `main` actual y los documentos revisados. **No hace falta fusionar nada en `main` para empezar.** La fusión de documentos y de código se hará al final, con la autorización de Juan.
 - Instancia aislada, como en PIC-04:
   - proyecto de compose propio, con base `picasso_pic05` y `DB_NAME_PRUEBAS=picasso_pic05`;
   - imágenes y volumen de medios propios;
@@ -575,7 +597,7 @@ Textos de la interfaz:
 | B1 · Datos | Roles `tres_cuartos`, `cuerpo_entero` y `hoja`; `ancla`; `expresion`; `direccion_hoja`; campos del personaje (§4.2a); `Medio.origen=recorte`, `medio_origen_id`, `caja`; `Toma.motivo_descarte`; colección `sesiones_director` | pytest de modelos; las fichas existentes se leen igual (compatibilidad) |
 | B2 · Textos | Plantillas de retrato, vista y hoja; línea de la referencia principal según lo conservado; resumen de lo que se conserva; persona real | pytest, incluida la comprobación del pescador (H19) |
 | B3 · Lote | Total comprobado en el servidor, dos fases, reserva por operación, `id_peticion` por vista, repetir sin duplicar, reconciliar | `p19_director_hoja.py`: H8, H9, H9b |
-| B4 · Recorte y ficha | `recortar`, idempotencia, PIL sin reescalar, usos nuevos en R1, hoja con rol `hoja`, `pasar-a-ficha` con rol, ancla y expresión y sin tocar ★, publicar | p19: H10, H17, H23, H24, H25; p16 sigue en verde |
+| B4 · Recorte y ficha | Vista previa con líneas ajustables y `cajas`; `recortar`, idempotencia, PIL sin reescalar; selección en el borrador que conserva lo sustituido; usos nuevos en R1, hoja con rol `hoja`, `pasar-a-ficha` con rol, ancla y expresión y sin tocar ★, publicar | p19: H10, H17, H23, H24, H25; p16 sigue en verde |
 | B5 · Interfaz | Panel del Director con la receta; barra con la siguiente acción (§4.12); inspector compacto; costes discretos (§4.10); distribución por anchos (§4.13) | `node --test` de la siguiente acción y de las preguntas; batería completa |
 | B6 · Recorrido | Juan recorre la instancia aislada con `simulado`: desde cero hasta publicar, más recarga, fallo y sin confirmar | Validación de Juan en la interfaz (H13, H15, H16, H18, H21) |
 
@@ -594,7 +616,6 @@ Sin fusión ni despliegue.
 - extracción desde Pinterest;
 - análisis de estilos;
 - proveedores nuevos (§9.7);
-- ajuste manual del recorte;
 - la hoja compuesta de la 18.41 como lámina para imprimir.
 
 **Prueba real (aparte, con su presupuesto).** Cuando B6 esté cerrado, Picasso prepara la prueba de D13: el mismo personaje inventado y la misma referencia principal, con una hoja de 3 paneles y 3 vistas sueltas. Son 4 imágenes más el retrato, unos 0,75 $ al precio verificado ese día. Antes de cada envío se enseña el precio, y lo autoriza Juan. Sirve para decidir D13 y la calidad del modelo para hojas (D12). Es la única prueba que dice algo de la continuidad.
@@ -620,7 +641,7 @@ Se apoya en la 18.52 (prompt verificado, revisión con severidad) y en la 18.66 
 | Referencias | Biblioteca, `SubidorMedios`, `_referencias` (18.22, 18.20), protección de medios (R1) | Uso por rol |
 | Generar | `crear_operacion` y `autorizar`, `id_peticion`, catálogo | Lote de vistas en dos fases (§4.9) |
 | Coste | Tres capas, reserva al autorizar, costes por intento, posible cargo, presupuesto, `PermissionError` | Total del lote en el servidor y estado por vista |
-| Revisar | Comparador, ★, descartar, nota, «Cómo se hizo», Ajustar | «Comparar con el ancla», motivo `identidad` |
+| Revisar | Comparador, ★, descartar, nota, «Cómo se hizo», Ajustar | «Comparar con la referencia principal», motivo `identidad`, «Seleccionar para el borrador» |
 | Vincular | `pasar-a-ficha` | Acepta carpeta, rol y ancla; deja de marcar ★ |
 | Dirección | Controles del Taller | «Fondo» y «Acabado», dirección de la hoja guardada, excepciones por vista |
 | Reabrir | `?carpeta=`, `id_peticion`, patrón de `borradores_mesa` | `sesiones_director` |
