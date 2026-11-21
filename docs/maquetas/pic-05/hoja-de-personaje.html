@@ -114,21 +114,24 @@ select{width:100%;height:30px;background:var(--fondo);border:1px solid var(--bor
 (function(){
 const PRECIO = 0.15;
 const MODELO = "Nano Banana Pro (fal)";
+const MODELO_NOTA = "admite 6 referencias y edición · calidad para hojas de personaje: sin validar";
 const TARIFA = "tarifa verificada el 14-11-2026";
 const PRESUPUESTO = 5.00;
 const MAX_REFS = 6;
-const CLAVE = "picasso.pic05.maqueta";
+const CLAVE = "picasso.pic05.maqueta.r2";
 
 const $ = s => document.querySelector(s);
 const euro = n => n.toFixed(2).replace(".", ",") + " $";
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const redondo = n => Math.max(0, Math.round(n*100)/100);
 
-const DIR_OPC = {
-  encuadre:["Primer plano, cabeza y pelo enteros","Plano medio corto, cabeza y hombros","De pies a cabeza","Plano medio"],
-  angulo:["Frontal, a la altura de los ojos","Tres cuartos, hacia su lado derecho","Perfil, lado derecho","Ligeramente picado"],
-  objetivo:["85 mm","50 mm","35 mm"],
+const OPC = {
+  fondo:["Gris claro liso","Blanco liso","Gris medio liso"],
   luz:["Ventana lateral suave","Luz de estudio suave y pareja","Contraluz suave"],
-  fondo:["Gris claro liso","Blanco liso","Gris medio liso"]
+  acabado:["Foto natural, colores sin editar, grano fino","Estudio limpio, colores neutros","Ilustración (solo si no es fotorrealista)"],
+  encuadre:["Primer plano, cabeza y pelo enteros","Plano medio corto, cabeza y hombros","De pies a cabeza","Plano medio"],
+  angulo:["Frontal, a la altura de los ojos","Tres cuartos, hacia su lado derecho","Perfil, lado derecho","De espaldas","Ligeramente picado"],
+  objetivo:["85 mm","50 mm","35 mm"]
 };
 const PORQUE = {
   "85 mm":"No deforma la nariz y se leen bien los rasgos.",
@@ -140,6 +143,9 @@ const PORQUE = {
   "Gris claro liso":"El blanco quema los bordes del pelo; el gris no.",
   "Blanco liso":"Limpio, pero se pierden los bordes claros.",
   "Gris medio liso":"Bueno para pelo muy claro.",
+  "Foto natural, colores sin editar, grano fino":"Parece una foto real; evita la piel de plástico.",
+  "Estudio limpio, colores neutros":"Más comercial; algo menos de textura.",
+  "Ilustración (solo si no es fotorrealista)":"Para personajes dibujados.",
   "Primer plano, cabeza y pelo enteros":"La cara grande y centrada: es el ancla.",
   "Plano medio corto, cabeza y hombros":"Nunca primer plano de lado: es donde más se inventa.",
   "De pies a cabeza":"Proporciones y vestuario base.",
@@ -147,14 +153,15 @@ const PORQUE = {
   "Frontal, a la altura de los ojos":"Sin deformar ni dar intención.",
   "Tres cuartos, hacia su lado derecho":"Gira hacia la seña para fijarla.",
   "Perfil, lado derecho":"El mismo lado que la seña.",
+  "De espaldas":"Pelo y vestuario por detrás.",
   "Ligeramente picado":"Suaviza; no conviene en una referencia."
 };
 const VISTAS = {
-  ancla:{nombre:"Retrato ancla", dir:["Primer plano, cabeza y pelo enteros","Frontal, a la altura de los ojos","85 mm","Ventana lateral suave","Gris claro liso"]},
-  tres_cuartos:{nombre:"Tres cuartos", dir:["Plano medio corto, cabeza y hombros","Tres cuartos, hacia su lado derecho","85 mm","Ventana lateral suave","Gris claro liso"]},
-  perfil:{nombre:"Perfil", dir:["Plano medio corto, cabeza y hombros","Perfil, lado derecho","85 mm","Ventana lateral suave","Gris claro liso"]},
-  cuerpo_entero:{nombre:"Cuerpo entero", dir:["De pies a cabeza","Frontal, a la altura de los ojos","50 mm","Ventana lateral suave","Gris claro liso"]},
-  expresion:{nombre:"Expresión", dir:["Plano medio corto, cabeza y hombros","Frontal, a la altura de los ojos","85 mm","Ventana lateral suave","Gris claro liso"]}
+  ancla:{nombre:"Retrato ancla", vista:"frontal", enc:"Primer plano, cabeza y pelo enteros", ang:"Frontal, a la altura de los ojos", obj:"85 mm"},
+  tres_cuartos:{nombre:"Tres cuartos", vista:"tres cuartos", enc:"Plano medio corto, cabeza y hombros", ang:"Tres cuartos, hacia su lado derecho", obj:"85 mm"},
+  perfil:{nombre:"Perfil", vista:"perfil", enc:"Plano medio corto, cabeza y hombros", ang:"Perfil, lado derecho", obj:"85 mm"},
+  cuerpo_entero:{nombre:"Cuerpo entero", vista:"cuerpo entero", enc:"De pies a cabeza", ang:"Frontal, a la altura de los ojos", obj:"50 mm"},
+  expresion:{nombre:"Expresiones", vista:"frontal", enc:"Plano medio corto, cabeza y hombros", ang:"Frontal, a la altura de los ojos", obj:"85 mm"}
 };
 const EXPRESIONES = ["Neutra","Sonrisa amplia","Risa","Sorpresa","Seria","Pensativa"];
 const USOS = [
@@ -180,7 +187,7 @@ function preguntasMarta(){
   return [
     {id:"q1",q:"¿Tiene alguna seña en la piel? Dime de qué lado.",o:["Lunar pequeño junto a la ceja DERECHA","Pecas en la nariz","Ninguna"],r:null,campo:"fijo"},
     {id:"q2",q:"¿Lleva algo siempre?",o:["SIEMPRE lleva un colgante de plata fino","Gafas de pasta","Nada fijo"],r:null,campo:"fijo"},
-    {id:"q3",q:"¿Vello facial o maquillaje que se note?",o:["Sin maquillaje visible","Maquillaje natural"],r:null,campo:"fijo"}
+    {id:"q3",q:"¿Maquillaje que se note?",o:["Sin maquillaje visible","Maquillaje natural"],r:null,campo:"fijo"}
   ];
 }
 function preguntasNuevo(){
@@ -196,124 +203,130 @@ function preguntasNuevo(){
 function nuevoEstado(){
   return {
     tab:"director", paso:0, origen:null, nombre:"", real:false,
-    rasgos:[], bloqueoManual:null, preguntas:[], uso:null, vistas:[], expr:["Sonrisa amplia"], vistaDir:null,
-    preparado:false, revision:1, tomas:[], sel:null, armarDrift:false, gastoEst:0, gastoRes:0, ops:0,
-    ficha:{vigente:2, borrador:null, refs:[]}, modal:null, accionBarra:null, nTomas:0
+    rasgos:[], resumenManual:null, preguntas:[], uso:null, vistas:[], expr:["Sonrisa amplia"], vistaDir:null,
+    hoja:{fondo:OPC.fondo[0], luz:OPC.luz[0], acabado:OPC.acabado[0]}, hojaGuardada:false,
+    preparado:false, revision:1, tomas:[], lotes:[], sel:null,
+    armar:{drift:false, fallo:false, incierta:false, corte:false},
+    gastoEst:0, gastoRes:0, ops:0,
+    ficha:{vigente:2, borrador:null, refs:[], direccionHoja:null}, modal:null, accionBarra:null, nTomas:0
   };
 }
 let S = nuevoEstado();
-
 function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){} }
 
-function bloqueo(){
-  if (S.bloqueoManual!==null) return S.bloqueoManual;
+function anclaLista(){ return S.origen==="refs" || S.ficha.refs.some(r=>r.ancla); }
+function refsAprobadas(){
+  const l = [];
+  if (S.origen==="refs") l.push("Ancla (frontal, ficha v2)");
+  S.ficha.refs.forEach(r=>l.push((r.ancla?"Ancla":"T"+r.n)+" ("+r.vista+(r.expresion?" · "+r.expresion:"")+", v"+r.v+")"));
+  return l;
+}
+function resumen(){
+  if (S.resumenManual!==null) return S.resumenManual;
   const fijos = S.rasgos.filter(r=>r.c==="fijo").map(r=>r.t);
   if (!fijos.length) return "";
-  const nombre = S.nombre || "El personaje";
-  let t = nombre + ". " + fijos.join(". ") + ".";
-  if (!S.rasgos.some(r=>/lunar|cicatriz|pecas|seña/i.test(r.t))) t += " Piel limpia, sin tatuajes.";
-  t += " Piel real, con poros y pequeñas imperfecciones; sin retocar.";
-  return t;
+  let t = (S.nombre||"El personaje") + ". " + fijos.join(". ") + ".";
+  if (!S.rasgos.some(r=>/lunar|cicatriz|pecas/i.test(r.t))) t += " Piel limpia, sin tatuajes.";
+  return t + " Piel real, con poros y pequeñas imperfecciones; sin retocar.";
 }
-const palabras = t => (t.trim().match(/\S+/g)||[]).length;
 
 function vistasPara(uso){
   const u = USOS.find(x=>x.id===uso);
-  const tieneAncla = S.ficha.refs.some(r=>r.ancla) || S.origen==="refs";
   const lista = [];
-  if (!tieneAncla) lista.push({clave:"ancla",marcada:true,fija:true});
-  ["tres_cuartos","perfil","cuerpo_entero","expresion"].forEach(k=>{
-    lista.push({clave:k, marcada: u ? u.v.includes(k) : false});
-  });
-  return lista.map(v=>({...v, dir:[...VISTAS[v.clave].dir], estado:"pendiente", hechaCon:null}));
+  if (!anclaLista()) lista.push({clave:"ancla",marcada:true,fija:true});
+  ["tres_cuartos","perfil","cuerpo_entero","expresion"].forEach(k=>lista.push({clave:k, marcada:u?u.v.includes(k):false}));
+  return lista.map(v=>({...v, enc:VISTAS[v.clave].enc, ang:VISTAS[v.clave].ang, obj:VISTAS[v.clave].obj, exc:false, luz:S.hoja.luz, fondo:S.hoja.fondo}));
 }
-
-function anclaLista(){ return S.origen==="refs" || S.ficha.refs.some(r=>r.ancla); }
-
 function unidades(){
   const out=[];
-  S.vistas.filter(v=>v.marcada).forEach(v=>{
-    if (v.clave==="expresion") S.expr.forEach(e=>out.push({v, etiqueta:e}));
-    else out.push({v, etiqueta:null});
+  S.vistas.filter(v=>v.marcada && (v.clave==="ancla"||anclaLista())).forEach(v=>{
+    if (v.clave==="expresion") S.expr.forEach(e=>out.push({v, expresion:e.toLowerCase()}));
+    else out.push({v, expresion:null});
   });
   return out;
 }
-function nombreUnidad(u){ return u.etiqueta ? "Expresión · "+u.etiqueta.toLowerCase() : VISTAS[u.v.clave].nombre; }
+const claveU = u => u.v.clave+":"+(u.expresion||"-");
+function nombreU(u){ return u.expresion ? "Vista frontal · expresión: "+u.expresion : VISTAS[u.v.clave].nombre+(u.v.clave==="ancla"?"":" · expresión: neutra"); }
+function estadoU(u){
+  const ts = S.tomas.filter(t=>t.clave===claveU(u) && !t.reemplazada);
+  if (ts.some(t=>t.enFicha)) return "aprobada";
+  if (ts.some(t=>["generando","incierta","preparada"].includes(t.estado))) return "en_curso";
+  if (ts.some(t=>t.estado==="lista" && !t.desc)) return "por_revisar";
+  return "pendiente";
+}
 
 function refsDe(u){
   if (u.v.clave==="ancla") return [];
-  const refs=[{n:1, que:"Ancla de "+(S.nombre||"el personaje"), para:"identidad: conserva exactamente su cara, pelo, tono de piel y complexión; no copies la pose, la ropa, el encuadre ni el fondo"}];
-  if (u.v.clave==="expresion" && S.ficha.refs.some(r=>r.vista==="cuerpo_entero"))
-    refs.push({n:2, que:"Cuerpo entero aprobado", para:"vestuario: conserva la ropa; no copies la pose ni la cara"});
-  return refs;
+  const r=[{n:1, que:"Ancla de "+(S.nombre||"el personaje"), para:"identidad: conserva su cara, pelo, tono de piel y complexión; no copies la pose, la ropa, el encuadre ni el fondo"}];
+  if (u.expresion && S.ficha.refs.some(x=>x.vista==="cuerpo entero"))
+    r.push({n:2, que:"Cuerpo entero aprobado", para:"vestuario: conserva la ropa; no copies la pose ni la cara"});
+  return r;
 }
-
+function luzDe(v){ return v.exc ? v.luz : S.hoja.luz; }
+function fondoDe(v){ return v.exc ? v.fondo : S.hoja.fondo; }
 function texto(u){
-  const d = u.v.dir;
-  const n = S.nombre || "El personaje";
-  const desc = u.v.clave==="ancla" ? "Retrato fotográfico de una sola persona, expresión neutra, mirando a cámara."
-    : u.v.clave==="expresion" ? "Foto de una sola persona con expresión: "+u.etiqueta.toLowerCase()+"."
-    : VISTAS[u.v.clave].nombre+" de una sola persona.";
-  const lineas = [desc, S.real ? n+" (persona real; la cara sale de la imagen 1, no del texto). Rasgo firma: "+(S.rasgos[0]?S.rasgos[0].t:"") : bloqueo(),
-    "Encuadre: "+d[0]+". Ángulo: "+d[1]+". Objetivo: "+d[2]+". Luz: "+d[3]+". Fondo: "+d[4]+".",
-    "Una sola persona en la imagen. Sin: piel de plástico, cara retocada, rasgos simétricos perfectos.",
-    "Sin texto ni rótulos en la imagen."];
-  refsDe(u).forEach(r=>lineas.push("Imagen "+r.n+": "+r.para+"."));
-  if (S.real) lineas.push(n+" es una persona real: mantén su identidad facial exacta, con sus rasgos, edad y proporciones, tal como aparece en la imagen 1.");
-  return lineas.join("\n");
+  const v = u.v, n = S.nombre || "El personaje";
+  const desc = v.clave==="ancla" ? "Retrato fotográfico de una sola persona, expresión neutra, mirando a cámara."
+    : "Una sola persona. Vista: "+VISTAS[v.clave].vista+". Expresión: "+(u.expresion||"neutra")+".";
+  const l = [desc,
+    S.real ? n+" es una persona real; su cara sale de la imagen 1, no de este texto." : "Rasgos que se deben conservar: "+resumen(),
+    "Encuadre: "+v.enc+". Ángulo: "+v.ang+". Objetivo: "+v.obj+". Luz: "+luzDe(v)+". Fondo: "+fondoDe(v)+". Acabado: "+S.hoja.acabado+".",
+    "Sin: piel de plástico, cara retocada, rasgos simétricos perfectos.", "Sin texto ni rótulos en la imagen."];
+  refsDe(u).forEach(r=>l.push("Imagen "+r.n+": "+r.para+"."));
+  if (S.real) l.push(n+" es una persona real: mantén su identidad facial exacta, con sus rasgos, edad y proporciones, tal como aparece en la imagen 1.");
+  return l.join("\n");
 }
 
-function retrato(vista, variante, drift, expr){
-  const piel = drift ? "#B98C70" : "#C9A184";
-  const pelo = drift ? "#7A5A3A" : "#3B2A22";
-  let cabeza, cuerpo, boca;
-  const sonrisa = expr && /sonrisa|risa/i.test(expr);
-  const sorpresa = expr && /sorpresa/i.test(expr);
-  boca = sorpresa ? '<ellipse cx="0" cy="22" rx="5" ry="7" fill="#7a3d33"/>' : sonrisa ? '<path d="M-11 18 Q0 30 11 18" stroke="#7a3d33" stroke-width="3" fill="none"/>' : '<path d="M-9 21 L9 21" stroke="#7a3d33" stroke-width="3"/>';
-  if (vista==="perfil"){
-    cabeza = '<g transform="translate(150 150)"><path d="M-40 -60 Q20 -95 48 -40 Q60 0 40 50 L-30 55 Z" fill="'+pelo+'"/><path d="M-20 -55 Q45 -65 50 0 Q58 10 52 18 Q48 40 30 55 L-25 60 Q-35 0 -20 -55Z" fill="'+piel+'"/><circle cx="28" cy="-8" r="3.5" fill="#2c3b2a"/></g>';
+function retrato(clave, variante, drift, expr){
+  const piel = drift ? "#B98C70" : "#C9A184", pelo = drift ? "#7A5A3A" : "#3B2A22";
+  const son = expr && /sonrisa|risa/.test(expr), sor = expr && /sorpresa/.test(expr);
+  const boca = sor ? '<ellipse cx="0" cy="22" rx="5" ry="7" fill="#7a3d33"/>' : son ? '<path d="M-11 18 Q0 30 11 18" stroke="#7a3d33" stroke-width="3" fill="none"/>' : '<path d="M-9 21 L9 21" stroke="#7a3d33" stroke-width="3"/>';
+  let cab, cue;
+  if (clave==="perfil"){
+    cab = '<g transform="translate(150 150)"><path d="M-40 -60 Q20 -95 48 -40 Q60 0 40 50 L-30 55 Z" fill="'+pelo+'"/><path d="M-20 -55 Q45 -65 50 0 Q58 10 52 18 Q48 40 30 55 L-25 60 Q-35 0 -20 -55Z" fill="'+piel+'"/><circle cx="28" cy="-8" r="3.5" fill="#2c3b2a"/></g>';
   } else {
-    const giro = vista==="tres_cuartos" ? 12 : 0;
-    cabeza = '<g transform="translate('+(150+giro)+' '+(vista==="cuerpo_entero"?95:150)+') scale('+(vista==="cuerpo_entero"?0.45:1)+')"><ellipse cx="0" cy="-8" rx="62" ry="78" fill="'+pelo+'"/><ellipse cx="'+giro/2+'" cy="4" rx="46" ry="60" fill="'+piel+'"/><circle cx="'+(-16+giro)+'" cy="-6" r="4" fill="#2c3b2a"/><circle cx="'+(16+giro)+'" cy="-6" r="4" fill="#2c3b2a"/>'+(drift?'':'<circle cx="'+(26+giro)+'" cy="-22" r="2" fill="#5a3a2a"/>')+'<g transform="translate('+giro+' 0)">'+boca+'</g></g>';
+    const g = clave==="tres_cuartos" ? 12 : 0, ce = clave==="cuerpo_entero";
+    cab = '<g transform="translate('+(150+g)+' '+(ce?72:150)+') scale('+(ce?0.38:1)+')"><ellipse cx="0" cy="-8" rx="62" ry="78" fill="'+pelo+'"/><ellipse cx="'+g/2+'" cy="4" rx="46" ry="60" fill="'+piel+'"/><circle cx="'+(-16+g)+'" cy="-6" r="4" fill="#2c3b2a"/><circle cx="'+(16+g)+'" cy="-6" r="4" fill="#2c3b2a"/>'+(drift?'':'<circle cx="'+(26+g)+'" cy="-22" r="2" fill="#5a3a2a"/>')+'<g transform="translate('+g+' 0)">'+boca+'</g></g>';
   }
-  if (vista==="cuerpo_entero") cuerpo = '<rect x="122" y="128" width="56" height="120" rx="18" fill="#7d8790"/><rect x="128" y="240" width="18" height="120" rx="8" fill="#3d4652"/><rect x="154" y="240" width="18" height="120" rx="8" fill="#3d4652"/>';
-  else cuerpo = '<path d="M60 400 Q70 250 150 240 Q230 250 240 400Z" fill="#7d8790"/>';
-  return '<svg viewBox="0 0 300 400" role="img" aria-label="Imagen simulada"><rect width="300" height="400" fill="#A7A39E"/>'+cuerpo+cabeza+'<text x="12" y="388" font-size="13" fill="#3a3a3a" font-family="Mulish,sans-serif">simulada · '+esc(variante)+'</text></svg>';
+  cue = clave==="cuerpo_entero" ? '<rect x="126" y="100" width="48" height="130" rx="16" fill="#7d8790"/><rect x="130" y="224" width="17" height="150" rx="8" fill="#3d4652"/><rect x="153" y="224" width="17" height="150" rx="8" fill="#3d4652"/>' : '<path d="M60 400 Q70 250 150 240 Q230 250 240 400Z" fill="#7d8790"/>';
+  return '<svg viewBox="0 0 300 400" role="img" aria-label="Imagen simulada"><rect width="300" height="400" fill="#A7A39E"/>'+cue+cab+'<text x="12" y="390" font-size="13" fill="#3a3a3a" font-family="Mulish,sans-serif">simulada · '+esc(variante)+'</text></svg>';
 }
-
-function gastoTxt(){ return 'Gasto: <b>'+euro(S.gastoEst)+'</b> estimado · <b>'+euro(S.gastoRes)+'</b> reservado'; }
 
 function render(){
-  const app = $("#app");
-  app.innerHTML = cabecera() + proto() + '<div class="cuerpo">' + mesa() + lateral() + '</div>' + barra() + modal();
+  $("#app").innerHTML = cabecera() + proto() + '<div class="cuerpo">' + mesa() + lateral() + '</div>' + barra() + modal();
   guardar();
 }
-
 function cabecera(){
-  const fichaBtn = S.nombre ? '<button class="btn chico" data-a="verFicha">Ficha de '+esc(S.nombre)+' · v'+S.ficha.vigente+(S.ficha.borrador?' (borrador v'+S.ficha.borrador+')':'')+'</button>' : '';
-  return '<header class="top"><b>Picasso Studio</b><span class="ruta">JRGB / Taller</span><div class="carpetas"><span class="pest">General</span><span class="pest">Marca JRGB</span>'+(S.nombre?'<span class="pest on">Personaje · '+esc(S.nombre)+'</span>':'')+'</div><span class="gasto">'+gastoTxt()+'</span>'+fichaBtn+'</header>';
+  const fb = S.nombre ? '<button class="btn chico" data-a="verFicha">Ficha de '+esc(S.nombre)+' · v'+S.ficha.vigente+(S.ficha.borrador?' (borrador v'+S.ficha.borrador+')':'')+'</button>' : '';
+  return '<header class="top"><b>Picasso Studio</b><span class="ruta">JRGB / Taller</span><div class="carpetas"><span class="pest">General</span><span class="pest">Marca JRGB</span>'+(S.nombre?'<span class="pest on">Personaje · '+esc(S.nombre)+'</span>':'')+'</div><span class="gasto">Gasto: <b>'+euro(S.gastoEst)+'</b> estimado · <b>'+euro(S.gastoRes)+'</b> reservado</span>'+fb+'</header>';
 }
 function proto(){
-  return '<div class="proto"><b>Prototipo</b><span>Nada se genera ni se cobra. Simular:</span><button class="btn'+(S.armarDrift?' armado':'')+'" data-a="armarDrift">'+(S.armarDrift?'la próxima pierde la identidad ✓':'la próxima pierde la identidad')+'</button><button class="btn" data-a="cerrarVolver">cerrar y volver a abrir</button><button class="btn" data-a="cero" style="margin-left:auto">empezar de cero</button></div>';
+  const b = (k,t)=>'<button class="btn'+(S.armar[k]?' armado':'')+'" data-a="armar" data-v="'+k+'">'+t+(S.armar[k]?' ✓':'')+'</button>';
+  return '<div class="proto"><b>Prototipo</b><span>Nada se genera ni se cobra. En el próximo lote:</span>'+b("drift","una pierde la identidad")+b("fallo","una falla")+b("incierta","una queda sin confirmar")+b("corte","se recarga entre fases")+'<button class="btn" data-a="cerrarVolver">cerrar y volver a abrir</button><button class="btn" data-a="cero" style="margin-left:auto">empezar de cero</button></div>';
 }
 
+function chipToma(t){
+  if (t.estado==="generando") return '<span class="chip gen">Generando… '+euro(PRECIO)+' reservado</span>';
+  if (t.estado==="preparada") return '<span class="chip">Preparada, sin autorizar · sin coste</span>';
+  if (t.estado==="incierta") return '<span class="chip gen">Sin confirmar · posible cargo '+euro(PRECIO)+'</span>';
+  if (t.estado==="fallida") return '<span class="chip err">Falló · reserva liberada</span>';
+  if (t.enFicha) return '<span class="chip ficha">En la ficha · v'+t.enFicha+'</span>';
+  if (t.desc) return '<span class="chip err">'+(t.motivo==="identidad"?'No mantiene la identidad':'Descartada')+'</span>';
+  return '<span class="chip">Por revisar</span>';
+}
 function mesa(){
   let h = '<main class="mesa" aria-label="Mesa">';
-  if (!S.nombre){
-    h += '<h2>Mesa</h2><div class="vacio">La Mesa está vacía. Abre el <b>Director de Studio</b> en el lateral y elige «Hoja de personaje» para preparar las vistas de un personaje sin escribir prompts.</div>';
-  } else {
-    const pend = S.tomas.filter(t=>t.estado==="lista"&&!t.enFicha&&!t.desc).length;
-    h += '<div><h2>Personaje · '+esc(S.nombre)+'</h2><p class="sub">'+S.tomas.length+' tomas · '+pend+' por revisar · ancla '+(anclaLista()?'aprobada':'pendiente')+'</p></div>';
-    if (!S.tomas.length) h += '<div class="vacio">Todavía no hay tomas. Lo preparado en el Director aparece aquí al generar.</div>';
-    h += '<div class="rejilla">';
-    if (S.origen==="refs") h += '<div class="toma"><div class="marco">'+retrato("ancla","ancla v2",false)+'</div><div class="cab"><b>Ancla</b><span class="chip ficha">En la ficha · v2 · frontal</span></div></div>';
-    S.tomas.forEach(t=>{
-      h += '<button class="toma'+(S.sel===t.id?' sel':'')+(t.desc?' desc':'')+(t.estado==="generando"?' generando':'')+'" data-a="sel" data-id="'+t.id+'"><div class="marco">'+(t.estado==="generando"?'':retrato(t.vista,"T"+t.n,t.drift,t.etiqueta))+'</div><div class="cab"><b>T'+t.n+'</b><span>'+esc(t.nombre)+'</span>'+(t.fav?'<span class="estrella" aria-label="favorita">★</span>':'')+'</div>'+
-        (t.estado==="generando"?'<span class="chip gen">Generando… '+euro(PRECIO)+' reservado</span>':t.enFicha?'<span class="chip ficha">En la ficha · v'+t.enFicha+' · '+esc(t.rol)+'</span>':t.desc?'<span class="chip err">'+(t.motivo==="identidad"?'No mantiene la identidad':'Descartada')+'</span>':'<span class="chip">Por revisar</span>')+'</button>';
-    });
-    h += '</div>';
-  }
-  return h + '</main>';
+  if (!S.nombre) return h + '<h2>Mesa</h2><div class="vacio">La Mesa está vacía. Abre el <b>Director de Studio</b> en el lateral y elige «Hoja de personaje» para preparar las vistas de un personaje sin escribir prompts.</div></main>';
+  const pend = S.tomas.filter(t=>t.estado==="lista"&&!t.enFicha&&!t.desc).length;
+  h += '<div><h2>Personaje · '+esc(S.nombre)+'</h2><p class="sub">'+S.tomas.length+' tomas · '+pend+' por revisar · ancla '+(anclaLista()?'aprobada':'pendiente')+'</p></div>';
+  if (!S.tomas.length) h += '<div class="vacio">Todavía no hay tomas. Lo preparado en el Director aparece aquí al generar.</div>';
+  h += '<div class="rejilla">';
+  if (S.origen==="refs") h += '<div class="toma"><div class="marco">'+retrato("ancla","ancla v2",false)+'</div><div class="cab"><b>Ancla</b></div><span class="chip">Vista: frontal · Expresión: neutra</span><span class="chip ficha">En la ficha · v2</span></div>';
+  S.tomas.forEach(t=>{
+    const lista = t.estado==="lista";
+    h += '<button class="toma'+(S.sel===t.id?' sel':'')+(t.desc||t.estado==="fallida"?' desc':'')+(t.estado==="generando"?' generando':'')+'" data-a="sel" data-id="'+t.id+'"><div class="marco">'+(lista?retrato(t.vclave,"T"+t.n,t.drift,t.expresion):'')+'</div><div class="cab"><b>T'+t.n+'</b>'+(t.fav?'<span class="estrella" aria-label="favorita">★</span>':'')+'</div><span class="chip">Vista: '+esc(t.vista)+' · Expresión: '+esc(t.expresion||"neutra")+'</span>'+chipToma(t)+'</button>';
+  });
+  return h + '</div></main>';
 }
 
 function lateral(){
@@ -322,132 +335,134 @@ function lateral(){
   h += S.tab==="imagen" && t ? panelImagen(t) : panelDirector();
   return h + '</div></aside>';
 }
-
-function pasosNav(){
-  return '<div class="pasos">'+PASOS.map((p,i)=>'<button class="paso'+(i===S.paso?' on':i<S.paso?' hecho':'')+'" data-a="ir" data-p="'+i+'"'+(i>maxPaso()?' disabled':'')+'>'+(i+1)+' · '+p+'</button>').join("")+'</div>';
-}
-function maxPaso(){
-  if (!S.origen) return S.paso===0?1:0;
-  if (!S.uso) return 4;
-  return 6;
-}
-
+function maxPaso(){ return !S.origen ? (S.paso===0?1:0) : !S.uso ? 4 : 6; }
 function panelDirector(){
-  let h = '<div class="contexto">Trabajando sobre: <b>'+(S.nombre?'Personaje: '+esc(S.nombre)+' · ficha v'+S.ficha.vigente+(S.ficha.borrador?' + borrador v'+S.ficha.borrador:''):'Nueva receta')+'</b></div>';
-  if (S.paso>0) h += pasosNav();
-  const f = [pReceta,pOrigen,pIdentidad,pFalta,pUso,pDir,pEnvio][S.paso];
-  return h + f();
+  let h = '<div class="contexto"><span class="chip">Receta guiada · sin agente</span> Trabajando sobre: <b>'+(S.nombre?'Personaje: '+esc(S.nombre)+' · ficha v'+S.ficha.vigente+(S.ficha.borrador?' + borrador v'+S.ficha.borrador:''):'Nueva receta')+'</b></div>';
+  if (S.paso>0) h += '<div class="pasos">'+PASOS.map((p,i)=>'<button class="paso'+(i===S.paso?' on':i<S.paso?' hecho':'')+'" data-a="ir" data-p="'+i+'"'+(i>maxPaso()?' disabled':'')+'>'+(i+1)+' · '+p+'</button>').join("")+'</div>';
+  return h + [pReceta,pOrigen,pIdentidad,pFalta,pUso,pDir,pEnvio][S.paso]();
 }
-
 function pReceta(){
-  return '<h3>¿Qué quieres preparar?</h3><p class="ayuda">El Director prepara texto, referencias y dirección para que los revises. No genera ni gasta: eso lo hace el botón de la barra, con su precio.</p>'+
-  '<button class="opcion" data-a="receta"><div><b>Hoja de personaje</b><small>Desde una referencia o una descripción hasta las vistas y expresiones que necesites.</small></div></button>'+
-  '<button class="opcion" disabled><div><b>Fotografía de producto</b><small>Más adelante (18.66).</small></div></button>'+
-  '<button class="opcion" disabled><div><b>Dirección visual del proyecto</b><small>Más adelante (18.66).</small></div></button>';
+  return '<h3>¿Qué quieres preparar?</h3><p class="ayuda">Estas recetas te guían por pasos con opciones cerradas y reglas fijas. Preparan texto, referencias y dirección para que los revises. No generan ni gastan: eso lo hace el botón de la barra, con su precio.</p>'+
+  '<button class="opcion" data-a="receta"><div><b>Hoja de personaje</b><small>Receta guiada: desde una referencia o una descripción hasta las vistas y expresiones que necesites.</small></div></button>'+
+  '<button class="opcion" disabled><div><b>Hablar con el Director</b><small>Próximamente. El agente que entiende lo que cuentas con tus palabras y te orienta. Cada consulta tendrá su precio y su autorización.</small></div></button>'+
+  '<button class="opcion" disabled><div><b>Fotografía de producto · Dirección visual del proyecto</b><small>Más recetas, más adelante (18.66).</small></div></button>';
 }
 function pOrigen(){
   return '<h3>¿De dónde partimos?</h3>'+
-  '<button class="opcion'+(S.origen==="refs"?' on':'')+'" data-a="origen" data-v="refs"><div><b>De referencias existentes</b><small>Marta · ficha v2 aprobada, con retrato frontal. El frontal será el ancla.</small></div></button>'+
-  '<button class="opcion'+(S.origen==="desc"?' on':'')+'" data-a="origen" data-v="desc"><div><b>Describir un personaje nuevo</b><small>Sin foto. La primera vista será el retrato ancla, que apruebas antes de las demás.</small></div></button>'+
+  '<button class="opcion'+(S.origen==="refs"?' on':'')+'" data-a="origen" data-v="refs"><div><b>De referencias existentes</b><small>Marta · ficha v2 aprobada, con retrato frontal marcado como ancla.</small></div></button>'+
+  '<button class="opcion'+(S.origen==="desc"?' on':'')+'" data-a="origen" data-v="desc"><div><b>Describir un personaje nuevo</b><small>Sin foto. La primera vista es el retrato ancla, que apruebas antes de las demás.</small></div></button>'+
   '<label class="fila" style="font-size:12.5px;color:var(--tinta2)"><input type="checkbox" id="real" data-a="real"'+(S.real?' checked':'')+(S.origen==="refs"?'':' disabled')+'> Es una persona real: la cara sale de su foto y no se genera</label>';
 }
 function pIdentidad(){
-  const fijos = S.rasgos.filter(r=>r.c==="fijo"), vars = S.rasgos.filter(r=>r.c==="var");
-  const fila = (r,flecha)=>'<div class="rasgo"><span>'+esc(r.t)+'</span><button data-a="mover" data-id="'+r.id+'" aria-label="mover">'+flecha+'</button></div>';
-  const b = bloqueo(), np = palabras(b);
-  return '<h3>Identidad, apariencia y vestuario</h3><p class="ayuda">Lo de la izquierda viaja en cada imagen y no cambia. Lo de la derecha puede cambiar según la toma.</p>'+
+  const fila = (r,f)=>'<div class="rasgo"><span>'+esc(r.t)+'</span><button data-a="mover" data-id="'+r.id+'" aria-label="mover">'+f+'</button></div>';
+  const fijos=S.rasgos.filter(r=>r.c==="fijo"), vars=S.rasgos.filter(r=>r.c==="var"), refs=refsAprobadas();
+  return '<h3>Identidad, apariencia y vestuario</h3><p class="ayuda">Lo de la izquierda se pide en cada imagen. Lo de la derecha puede cambiar según la toma.</p>'+
   '<div class="cols"><div class="col"><h4>Se conserva</h4>'+(fijos.map(r=>fila(r,"→")).join("")||'<p class="ayuda">Nada todavía.</p>')+'</div><div class="col"><h4>Puede variar</h4>'+(vars.map(r=>fila(r,"←")).join("")||'<p class="ayuda">Nada todavía.</p>')+'</div></div>'+
-  '<div class="bloque"><div class="fila"><b style="font-size:13px">Bloqueo de identidad</b><span class="director">'+(S.bloqueoManual!==null?'Editado por ti':'Preparado por el Director')+'</span><span class="precio" style="font-weight:600;font-size:12px;color:'+(np>=60&&np<=100?'var(--exito)':'var(--tinta2)')+'">'+np+' palabras</span></div><textarea id="bloqueo" data-a="bloqueo" aria-label="Bloqueo de identidad">'+esc(b)+'</textarea>'+(np<60?'<p class="ayuda">Con menos de 60 palabras la cara se sujeta peor. Responde lo que falta en el paso 4.</p>':'')+'</div>'+
+  '<div class="bloque"><div class="fila"><b style="font-size:13px">Rasgos y referencias que se deben conservar</b><span class="director">'+(S.resumenManual!==null?'Editado por ti':'Preparado por el Director')+'</span></div><textarea id="resumen" data-a="resumen" aria-label="Rasgos que se deben conservar">'+esc(resumen())+'</textarea>'+
+  '<div class="imgs"><span><b style="color:var(--tinta)">Referencias que viajan:</b> '+(refs.length?esc(refs.join(" · ")):'ninguna todavía; la primera será el retrato ancla')+'</span></div>'+
+  '<div class="aviso">Esto se pide en cada imagen, pero no garantiza nada: si se ha conservado se comprueba al comparar cada resultado con el ancla.</div></div>'+
   '<button class="btn amb" data-a="ir" data-p="3">Seguir</button>';
 }
 function pFalta(){
   const pend = S.preguntas.filter(q=>q.r===null).slice(0,2);
-  let h = '<h3>Lo que falta</h3><p class="ayuda">Solo pregunto lo que la ficha no dice. Lo que omitas queda «sin decidir»; no me lo invento.</p>';
+  let h = '<h3>Lo que falta</h3><p class="ayuda">Solo pregunto los campos que la ficha no tiene. Lo que omitas queda «sin decidir»; no me lo invento.</p>';
   if (!pend.length) h += '<div class="aviso ok">No falta nada para preparar las vistas.</div>';
-  pend.forEach(q=>{
-    h += '<div class="bloque"><b style="font-size:13px">'+esc(q.q)+'</b><div class="fila">'+q.o.map((o,i)=>'<button class="btn chico" data-a="resp" data-id="'+q.id+'" data-i="'+i+'">'+esc(o)+'</button>').join("")+'<button class="btn txt chico" data-a="resp" data-id="'+q.id+'" data-i="-1">Omitir</button></div></div>';
-  });
-  const omit = S.preguntas.filter(q=>q.r==="omit");
-  if (omit.length) h += '<p class="ayuda">Sin decidir: '+omit.map(q=>esc(q.q)).join(" · ")+'</p>';
+  pend.forEach(q=>{ h += '<div class="bloque"><b style="font-size:13px">'+esc(q.q)+'</b><div class="fila">'+q.o.map((o,i)=>'<button class="btn chico" data-a="resp" data-id="'+q.id+'" data-i="'+i+'">'+esc(o)+'</button>').join("")+'<button class="btn txt chico" data-a="resp" data-id="'+q.id+'" data-i="-1">Omitir</button></div></div>'; });
+  const om = S.preguntas.filter(q=>q.r==="omit");
+  if (om.length) h += '<p class="ayuda">Sin decidir: '+om.map(q=>esc(q.q)).join(" · ")+'</p>';
   return h + '<button class="btn amb" data-a="ir" data-p="4">Seguir</button>';
 }
 function pUso(){
-  let h = '<h3>¿Para qué lo vas a usar?</h3><p class="ayuda">Según el uso propongo vistas. Marca solo las que necesites; no hace falta generarlas todas.</p>';
+  let h = '<h3>¿Para qué lo vas a usar?</h3><p class="ayuda">Según el uso propongo vistas. Marca solo las que necesites. Cada imagen es una vista; las expresiones se piden aparte.</p>';
   h += USOS.map(u=>'<button class="opcion'+(S.uso===u.id?' on':'')+'" data-a="uso" data-v="'+u.id+'"><div><b>'+u.t+'</b><small>'+u.d+'</small></div></button>').join("");
-  if (S.uso){
-    h += '<div class="bloque"><b style="font-size:13px">Vistas</b>';
-    S.vistas.forEach((v,i)=>{
-      const bloqueada = v.clave!=="ancla" && !anclaLista();
-      h += '<label class="fila" style="font-size:13px"><input type="checkbox" data-a="marcar" data-i="'+i+'"'+(v.marcada?' checked':'')+(v.fija||bloqueada?' disabled':'')+'> '+VISTAS[v.clave].nombre+(v.fija?' <span class="chip">obligatoria: aún no hay ancla</span>':'')+(bloqueada?' <span class="chip">cuando apruebes el ancla</span>':'')+(v.estado==="aprobada"?' <span class="chip ficha">aprobada</span>':'')+'</label>';
-    });
-    const ex = S.vistas.find(v=>v.clave==="expresion");
-    if (ex && ex.marcada && anclaLista()){
-      h += '<div class="fila" style="font-size:12px;color:var(--tinta2)">Expresiones (de 1 a 3):</div><div class="fila">'+EXPRESIONES.map(e=>'<button class="btn chico" style="'+(S.expr.includes(e)?'border-color:var(--ambar);color:var(--ambar)':'')+'" data-a="expr" data-v="'+e+'">'+e+'</button>').join("")+'</div>';
-    }
-    h += '</div><button class="btn amb" data-a="ir" data-p="5">Seguir</button>';
-  }
-  return h;
-}
-function pDir(){
-  const marcadas = S.vistas.filter(v=>v.marcada && (v.clave==="ancla"||anclaLista()));
-  if (!marcadas.length) return '<p class="ayuda">Marca alguna vista en el paso 5.</p>';
-  if (!S.vistaDir || !marcadas.some(v=>v.clave===S.vistaDir)) S.vistaDir = marcadas[0].clave;
-  const v = S.vistas.find(x=>x.clave===S.vistaDir);
-  const nombres = ["Encuadre","Ángulo","Objetivo","Luz","Fondo"], claves = ["encuadre","angulo","objetivo","luz","fondo"];
-  let h = '<h3>Dirección de cada vista</h3><p class="ayuda">Para una referencia manda que se lean bien los rasgos. Lo que cambies aquí vale para esta vista y no toca la ficha.</p><div class="fila">'+marcadas.map(m=>'<button class="btn chico" style="'+(m.clave===S.vistaDir?'border-color:var(--ambar);color:var(--ambar)':'')+'" data-a="vdir" data-v="'+m.clave+'">'+VISTAS[m.clave].nombre+'</button>').join("")+'</div><div class="bloque"><span class="director">Preparado por el Director · editable</span><div class="dirfila">';
-  claves.forEach((k,i)=>{
-    h += '<label for="d'+k+'">'+nombres[i]+'</label><select id="d'+k+'" data-a="dir" data-k="'+i+'">'+DIR_OPC[k].map(o=>'<option'+(o===v.dir[i]?' selected':'')+'>'+esc(o)+'</option>').join("")+'</select>';
-    if (PORQUE[v.dir[i]]) h += '<span class="porque">'+esc(PORQUE[v.dir[i]])+'</span>';
+  if (!S.uso) return h;
+  h += '<div class="bloque"><b style="font-size:13px">Vistas (una por imagen)</b>';
+  S.vistas.forEach((v,i)=>{
+    const bloq = v.clave!=="ancla" && !anclaLista();
+    h += '<label class="fila" style="font-size:13px"><input type="checkbox" data-a="marcar" data-i="'+i+'"'+(v.marcada?' checked':'')+(v.fija||bloq?' disabled':'')+'> '+VISTAS[v.clave].nombre+(v.fija?' <span class="chip">obligatoria: aún no hay ancla</span>':'')+(bloq?' <span class="chip">cuando apruebes el ancla</span>':'')+'</label>';
   });
-  h += '</div><div class="fila"><span class="ayuda">¿Más íntimo? Plano más cerrado, 85 mm y luz lateral suave.</span><button class="btn txt chico" data-a="intimo">Aplicar «más íntimo»</button><button class="btn txt chico" data-a="restablecer">Restablecer</button></div></div>';
+  const ex = S.vistas.find(v=>v.clave==="expresion");
+  if (ex && ex.marcada && anclaLista()) h += '<div class="fila" style="font-size:12px;color:var(--tinta2)">Expresiones, de 1 a 3 (vista frontal, una por imagen):</div><div class="fila">'+EXPRESIONES.map(e=>'<button class="btn chico" style="'+(S.expr.includes(e)?'border-color:var(--ambar);color:var(--ambar)':'')+'" data-a="expr" data-v="'+e+'">'+e+'</button>').join("")+'</div>';
+  return h + '</div><button class="btn amb" data-a="ir" data-p="5">Seguir</button>';
+}
+function sel(id,k,val,lista){ return '<select id="'+id+'" data-a="'+k+'">'+lista.map(o=>'<option'+(o===val?' selected':'')+'>'+esc(o)+'</option>').join("")+'</select>'+(PORQUE[val]?'<span class="porque">'+esc(PORQUE[val])+'</span>':''); }
+function pDir(){
+  let h = '<h3>Dirección</h3><div class="bloque"><div class="fila"><b style="font-size:13px">Dirección de la hoja</b><span class="director">'+(S.hojaGuardada?'Guardada':'Preparada por el Director')+'</span></div><p class="ayuda">La misma para todas las vistas del personaje. Se guarda con la ficha al aprobarla, para que las vistas que pidas después salgan iguales.</p><div class="dirfila">'+
+    '<label for="hfondo">Fondo</label>'+sel("hfondo","hoja-fondo",S.hoja.fondo,OPC.fondo)+
+    '<label for="hluz">Luz</label>'+sel("hluz","hoja-luz",S.hoja.luz,OPC.luz)+
+    '<label for="hacab">Acabado</label>'+sel("hacab","hoja-acabado",S.hoja.acabado,OPC.acabado)+'</div>';
+  const encs = S.vistas.filter(v=>v.marcada).map(v=>VISTAS[v.clave].nombre+": "+v.enc.toLowerCase()).join(" · ");
+  h += '<p class="ayuda"><b style="color:var(--tinta)">Encuadre por vista:</b> '+esc(encs||"—")+'</p></div>';
+  const marc = S.vistas.filter(v=>v.marcada && (v.clave==="ancla"||anclaLista()));
+  if (!marc.length) return h + '<p class="ayuda">Marca alguna vista en el paso 5.</p>';
+  if (!S.vistaDir || !marc.some(v=>v.clave===S.vistaDir)) S.vistaDir = marc[0].clave;
+  const v = S.vistas.find(x=>x.clave===S.vistaDir);
+  h += '<div class="fila">'+marc.map(m=>'<button class="btn chico" style="'+(m.clave===S.vistaDir?'border-color:var(--ambar);color:var(--ambar)':'')+'" data-a="vdir" data-v="'+m.clave+'">'+VISTAS[m.clave].nombre+'</button>').join("")+'</div>';
+  h += '<div class="bloque"><span class="director">Ajustes de esta vista · no tocan la hoja ni la ficha</span><div class="dirfila">'+
+    '<label for="venc">Encuadre</label>'+sel("venc","v-enc",v.enc,OPC.encuadre)+
+    '<label for="vang">Ángulo</label>'+sel("vang","v-ang",v.ang,OPC.angulo)+
+    '<label for="vobj">Objetivo</label>'+sel("vobj","v-obj",v.obj,OPC.objetivo)+'</div>'+
+    '<label class="fila" style="font-size:12.5px"><input type="checkbox" id="vexc" data-a="v-exc"'+(v.exc?' checked':'')+'> Excepción de luz y fondo solo en esta vista</label>'+
+    (v.exc?'<div class="dirfila"><label for="vluz">Luz</label>'+sel("vluz","v-luz",v.luz,OPC.luz)+'<label for="vfon">Fondo</label>'+sel("vfon","v-fondo",v.fondo,OPC.fondo)+'</div>':'')+
+    '<div class="fila"><span class="ayuda">¿Más íntimo? Plano más cerrado y 85 mm.</span><button class="btn txt chico" data-a="intimo">Aplicar «más íntimo»</button><button class="btn txt chico" data-a="restablecer">Restablecer</button></div></div>';
   return h + '<button class="btn amb" data-a="ir" data-p="6">Ver qué se enviará</button>';
 }
+function porGenerar(){ return unidades().filter(u=>estadoU(u)==="pendiente"); }
 function pEnvio(){
-  const us = unidades().filter(u=>u.v.clave==="ancla"||anclaLista()).filter(u=>u.v.estado!=="aprobada");
+  const us = porGenerar();
   let h = '<h3>Qué se enviará</h3><p class="ayuda">Una generación por tarjeta. Imágenes numeradas en el orden en que viajan, con su para qué.</p>';
   if (!us.length) return h + '<div class="aviso ok">No queda ninguna vista por generar.</div>';
   us.forEach(u=>{
     const rs = refsDe(u);
-    h += '<div class="tarjeta"><div class="fila"><b>'+esc(nombreUnidad(u))+'</b><span class="precio">'+euro(PRECIO)+'</span></div><pre>'+esc(texto(u))+'</pre><div class="imgs">'+(rs.length?rs.map(r=>'<span>Imagen '+r.n+' · '+esc(r.que)+' → '+esc(r.para.split(":")[0])+'</span>').join(""):'<span>Sin imágenes: se genera desde la descripción.</span>')+'<span>Modelo: '+MODELO+' · '+TARIFA+' · '+rs.length+' de '+MAX_REFS+' referencias</span></div></div>';
+    h += '<div class="tarjeta"><div class="fila"><b>'+esc(nombreU(u))+'</b><span class="precio">'+euro(PRECIO)+'</span></div><pre>'+esc(texto(u))+'</pre><div class="imgs">'+(rs.length?rs.map(r=>'<span>Imagen '+r.n+' · '+esc(r.que)+' → '+esc(r.para.split(":")[0])+'</span>').join(""):'<span>Sin imágenes: se genera desde la descripción.</span>')+'<span>Modelo: '+MODELO+' · '+MODELO_NOTA+'</span><span>'+TARIFA+' · '+rs.length+' de '+MAX_REFS+' referencias</span></div></div>';
   });
   const total = us.length*PRECIO, queda = PRESUPUESTO - S.gastoEst - S.gastoRes;
   h += '<div class="total"><span>Total previsto · '+us.length+' generaciones</span><b>'+euro(total)+'</b></div>';
-  h += '<div class="aviso'+(total>queda?' err':'')+'">Presupuesto de ejemplo: '+euro(PRESUPUESTO)+'. Te quedan '+euro(queda)+'.'+(total>queda?' Este lote lo supera: te pediré confirmación.':'')+'</div>';
-  h += '<button class="btn amb" data-a="preparar">'+(S.preparado?'Preparado · volver a preparar':'Preparar')+'</button><p class="ayuda">Preparar guarda y deja listo el botón de la barra. No genera ni gasta.</p>';
-  return h;
+  h += '<div class="aviso'+(total>queda?' err':'')+'">Presupuesto de ejemplo: '+euro(PRESUPUESTO)+'. Te quedan '+euro(queda)+' (descontado lo gastado y lo reservado).'+(total>queda?' Este lote lo supera: te pediré confirmación para este total.':'')+'</div>';
+  h += '<div class="aviso">Al autorizar, cada vista reserva su precio. Si una falla, su reserva se libera y te ofrezco generar solo las que faltan. Si una queda sin confirmar, su reserva se mantiene como posible cargo.</div>';
+  return h + '<button class="btn amb" data-a="preparar">'+(S.preparado?'Preparado · volver a preparar':'Preparar')+'</button><p class="ayuda">Preparar guarda y deja listo el botón de la barra. No genera ni gasta.</p>';
 }
 
 function panelImagen(t){
-  let h = '<div class="marco" style="aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:#9A9590;max-width:100%">'+(t.estado==="generando"?'':retrato(t.vista,"T"+t.n,t.drift,t.etiqueta))+'</div>';
-  h += '<div class="fila"><b>T'+t.n+' · '+esc(t.nombre)+'</b>'+(t.enFicha?'<span class="chip ficha">En la ficha · v'+t.enFicha+' · '+esc(t.rol)+'</span>':'')+'</div>';
-  if (t.estado==="generando") return h + '<div class="aviso">Generando… '+euro(PRECIO)+' reservado. Si cierras, se recupera al volver.</div>';
+  let h = '<div class="marco" style="aspect-ratio:3/4;border-radius:8px;overflow:hidden;background:#9A9590;max-width:100%">'+(t.estado==="lista"?retrato(t.vclave,"T"+t.n,t.drift,t.expresion):'')+'</div>';
+  h += '<div class="fila"><b>T'+t.n+'</b><span class="chip">Vista: '+esc(t.vista)+'</span><span class="chip">Expresión: '+esc(t.expresion||"neutra")+'</span>'+chipToma(t)+'</div>';
+  if (t.estado==="generando") return h + '<div class="aviso">Generando. '+euro(PRECIO)+' reservado. Si cierras, se recupera al volver por su id_peticion.</div>';
+  if (t.estado==="preparada") return h + '<div class="aviso">Preparada en el lote '+esc(t.lote)+' pero sin autorizar: no ha reservado ni gastado. Se autoriza desde la barra, viendo el precio.</div>';
+  if (t.estado==="incierta") return h + '<div class="aviso err">El proveedor no respondió. La reserva de '+euro(PRECIO)+' se mantiene como posible cargo. «Comprobar» pregunta por ella y nunca la reenvía.</div><button class="btn" data-a="comprobar">Comprobar</button>';
+  if (t.estado==="fallida") return h + '<div class="aviso">El proveedor la rechazó. Su reserva se ha liberado y no cuenta como gasto. La barra ofrece generar las que faltan.</div>';
   h += '<div class="fila"><button class="btn chico" data-a="fav">'+(t.fav?'★ Favorita':'☆ Favorita')+'</button><button class="btn chico" data-a="comparar">Comparar con el ancla</button>'+(t.desc?'<button class="btn chico" data-a="recuperar">Recuperar</button>':'<button class="btn chico" data-a="descartar">Descartar</button>')+'</div>';
   h += '<p class="ayuda">★ es solo «me gusta». Lo que viaja con el personaje es lo aprobado para la ficha.</p>';
   if (!t.enFicha && !t.desc) h += '<div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para la ficha</button><button class="btn" data-a="noid">No mantiene la identidad</button></div><p class="ayuda">El modelo puede cambiar la cara: compara con el ancla antes de aprobar.</p>';
   if (t.motivo==="identidad"){
-    const dos = S.tomas.filter(x=>x.vista===t.vista&&x.motivo==="identidad").length>=2;
+    const dos = S.tomas.filter(x=>x.clave===t.clave&&x.motivo==="identidad").length>=2;
     h += '<div class="bloque"><b style="font-size:13px">¿Qué hacemos con esta vista?</b><span class="director">Preparado por el Director · nada se ejecuta solo</span>'+
-      '<button class="opcion" data-a="corregir"><div><b>1 · Corregir editando · '+euro(PRECIO)+'</b><small>Sobre T'+t.n+' con el ancla: «cambia solo la cara para que sea la de la imagen 1».</small></div></button>'+
+      '<button class="opcion" data-a="corregir"><div><b>1 · Corregir editando · '+euro(PRECIO)+'</b><small>Sobre T'+t.n+' con el ancla: «cambia solo la cara para que sea la de la imagen 2».</small></div></button>'+
       '<button class="opcion" data-a="revdir"><div><b>2 · Revisar la dirección</b><small>Por ejemplo, de perfil a tres cuartos. Sin coste.</small></div></button>'+
       '<button class="opcion" data-a="regenerar"><div><b>3 · Volver a generar · '+euro(PRECIO)+'</b><small>La misma vista, desde la barra.</small></div></button>'+
       (dos?'<div class="aviso err">Dos descartes por identidad en esta vista: prueba con otra referencia o con otra vista; este modelo no la está manteniendo.</div>':'')+'</div>';
   }
-  h += '<div><b style="font-size:13px">Cómo se hizo</b><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:var(--fondo);border-radius:6px;padding:8px;margin:6px 0 0;max-height:140px;overflow:auto">'+esc(t.texto)+'</pre><p class="ayuda" style="margin-top:6px">'+MODELO+' · '+euro(PRECIO)+' estimado, sin importe del proveedor · id_peticion '+esc(t.idp)+'</p></div>';
-  h += '<div><b style="font-size:13px">Historial</b><ul class="hist">'+t.hist.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
-  return h;
+  h += '<div><b style="font-size:13px">Cómo se hizo</b><pre style="white-space:pre-wrap;font-family:inherit;font-size:12px;background:var(--fondo);border-radius:6px;padding:8px;margin:6px 0 0;max-height:140px;overflow:auto">'+esc(t.texto)+'</pre><p class="ayuda" style="margin-top:6px">'+MODELO+' · '+euro(PRECIO)+' estimado, sin importe del proveedor · lote '+esc(t.lote)+' · id_peticion '+esc(t.idp)+'</p></div>';
+  return h + '<div><b style="font-size:13px">Historial</b><ul class="hist">'+t.hist.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
 }
 
 function barra(){
-  let alc = 'Nueva imagen', msg = 'Escribe en la barra o prepara con el Director.', btn = '<button class="btn amb" disabled>Generar</button>';
-  const us = unidades().filter(u=>u.v.clave==="ancla"||anclaLista()).filter(u=>u.v.estado==="preparada");
+  let alc='Nueva imagen', msg='Escribe en la barra o prepara con el Director.', btn='<button class="btn amb" disabled>Generar</button>';
   const gen = S.tomas.some(t=>t.estado==="generando");
+  const prep = S.tomas.filter(t=>t.estado==="preparada");
+  const fall = S.tomas.filter(t=>t.estado==="fallida" && !t.reemplazada);
+  const us = S.preparado ? porGenerar() : [];
   if (S.accionBarra){
-    alc = S.accionBarra.alcance; msg = S.accionBarra.msg;
-    btn = '<button class="btn" data-a="cancelarBarra">Cancelar</button><button class="btn amb" data-a="ejecutarBarra"'+(gen?' disabled':'')+'>'+esc(S.accionBarra.boton)+'</button>';
-  } else if (S.preparado && us.length){
-    alc = 'Hoja de personaje · '+esc(S.nombre);
-    msg = 'Preparado por el Director: '+us.map(nombreUnidad).join(", ")+'. Pulsar el botón es la autorización.';
-    btn = '<button class="btn amb" data-a="generar"'+(gen?' disabled':'')+'>'+(gen?'Generando…':'Generar '+us.length+(us.length===1?' vista':' vistas')+' · '+euro(us.length*PRECIO))+'</button>';
+    alc=S.accionBarra.alcance; msg=S.accionBarra.msg;
+    btn='<button class="btn" data-a="cancelarBarra">Cancelar</button><button class="btn amb" data-a="ejecutarBarra"'+(gen?' disabled':'')+'>'+esc(S.accionBarra.boton)+'</button>';
+  } else if (prep.length){
+    alc='Lote '+esc(prep[0].lote); msg=prep.length+' vistas preparadas sin autorizar tras la recarga. No han reservado nada. Pulsar autoriza este importe.';
+    btn='<button class="btn amb" data-a="autorizarPreparadas">Autorizar '+prep.length+' · '+euro(prep.length*PRECIO)+'</button>';
+  } else if (fall.length && !gen){
+    alc='Hoja de personaje · '+esc(S.nombre); msg=fall.length+' vista'+(fall.length>1?'s':'')+' falló y su reserva se liberó. Generar las que faltan es un lote nuevo, con su precio.';
+    btn='<button class="btn amb" data-a="faltan">Generar las que faltan · '+euro(fall.length*PRECIO)+'</button>';
+  } else if (us.length){
+    alc='Hoja de personaje · '+esc(S.nombre); msg='Preparado por el Director: '+us.map(nombreU).join(", ")+'. Pulsar el botón es la autorización.';
+    btn='<button class="btn amb" data-a="generar"'+(gen?' disabled':'')+'>'+(gen?'Generando…':'Generar '+us.length+(us.length===1?' vista':' vistas')+' · '+euro(us.length*PRECIO))+'</button>';
   }
   return '<div class="barra"><span class="alcance">'+alc+'</span><span class="msg">'+msg+'</span>'+btn+'</div>';
 }
@@ -456,86 +471,98 @@ function modal(){
   if (!S.modal) return "";
   if (S.modal.tipo==="comparar"){
     const t = S.tomas.find(x=>x.id===S.modal.id);
-    return '<div class="velo" data-a="cerrarModal"><div class="modal" role="dialog" aria-label="Comparar con el ancla" data-stop="1"><div class="fila"><h3>Comparar T'+t.n+' con el ancla</h3><button class="btn chico" style="margin-left:auto" data-a="cerrarModal">Cerrar</button></div><div class="par"><div><div class="marco">'+retrato("ancla","ancla",false)+'</div><p class="ayuda">Ancla · ficha v'+S.ficha.vigente+'</p></div><div><div class="marco">'+retrato(t.vista,"T"+t.n,t.drift,t.etiqueta)+'</div><p class="ayuda">T'+t.n+' · '+esc(t.nombre)+'</p></div></div><b style="font-size:13px">Revisa en este orden</b><ol class="lista"><li>Forma de la cara</li><li>Ojos y su color</li><li>Cejas</li><li>Nariz y boca</li><li>Pelo</li><li>Señas en su lado</li><li>Edad aparente</li></ol>'+(t.enFicha||t.desc?'':'<div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para la ficha</button><button class="btn" data-a="noid">No mantiene la identidad</button></div>')+'</div></div>';
+    return '<div class="velo" data-a="cerrarModal"><div class="modal" role="dialog" aria-label="Comparar con el ancla" data-stop="1"><div class="fila"><h3>Comparar T'+t.n+' con el ancla</h3><button class="btn chico" style="margin-left:auto" data-a="cerrarModal">Cerrar</button></div><div class="par"><div><div class="marco">'+retrato("ancla","ancla",false)+'</div><p class="ayuda">Ancla · frontal · neutra</p></div><div><div class="marco">'+retrato(t.vclave,"T"+t.n,t.drift,t.expresion)+'</div><p class="ayuda">T'+t.n+' · '+esc(t.vista)+' · '+esc(t.expresion||"neutra")+'</p></div></div><b style="font-size:13px">Revisa en este orden</b><ol class="lista"><li>Forma de la cara</li><li>Ojos y su color</li><li>Cejas</li><li>Nariz y boca</li><li>Pelo</li><li>Señas en su lado</li><li>Edad aparente</li></ol>'+(t.enFicha||t.desc?'':'<div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para la ficha</button><button class="btn" data-a="noid">No mantiene la identidad</button></div>')+'</div></div>';
   }
-  if (S.modal.tipo==="ficha"){
-    const refs = S.ficha.refs;
-    let h = '<div class="velo" data-a="cerrarModal"><div class="modal" role="dialog" aria-label="Ficha del personaje" data-stop="1"><div class="fila"><h3>Ficha de '+esc(S.nombre)+'</h3><button class="btn chico" style="margin-left:auto" data-a="cerrarModal">Cerrar</button></div>';
-    h += '<p class="ayuda">Vigente: v'+S.ficha.vigente+' (aprobada, no se toca). '+(S.ficha.borrador?'Borrador: v'+S.ficha.borrador+'. Lo aprobado en la Mesa entra aquí.':'Sin borrador.')+'</p>';
-    h += '<div class="bloque"><b style="font-size:13px">Referencias</b>'+(S.origen==="refs"?'<span style="font-size:12.5px">v2 · frontal · ancla</span>':'')+(refs.map(r=>'<span style="font-size:12.5px">v'+r.v+' · '+esc(r.rol)+(r.ancla?' · ancla':'')+' · de T'+r.n+(r.v===S.ficha.borrador?' (borrador)':'')+'</span>').join("")||(S.origen==="refs"?'':'<span class="ayuda">Ninguna todavía.</span>'))+'</div>';
-    h += '<div class="bloque"><b style="font-size:13px">Bloqueo de identidad</b><span style="font-size:12.5px">'+esc(bloqueo()||"Sin decidir.")+'</span></div>';
-    if (S.ficha.borrador) h += '<button class="btn amb" data-a="aprobarFicha"'+(refs.some(r=>r.v===S.ficha.borrador)?'':' disabled')+'>Aprobar ficha v'+S.ficha.borrador+'</button><p class="ayuda">Aprobada, la versión queda inmutable. Para cambiarla después se crea otra.</p>';
-    return h + '</div></div>';
-  }
-  return "";
+  const refs = S.ficha.refs, dh = S.ficha.direccionHoja || (S.hojaGuardada ? S.hoja : null);
+  let h = '<div class="velo" data-a="cerrarModal"><div class="modal" role="dialog" aria-label="Ficha del personaje" data-stop="1"><div class="fila"><h3>Ficha de '+esc(S.nombre)+'</h3><button class="btn chico" style="margin-left:auto" data-a="cerrarModal">Cerrar</button></div>';
+  h += '<p class="ayuda">Vigente: v'+S.ficha.vigente+' (aprobada, no se toca). '+(S.ficha.borrador?'Borrador: v'+S.ficha.borrador+'. Lo aprobado en la Mesa entra aquí.':'Sin borrador.')+'</p>';
+  h += '<div class="bloque"><b style="font-size:13px">Referencias</b>'+(S.origen==="refs"?'<span style="font-size:12.5px">v2 · vista frontal · expresión neutra · ancla</span>':'')+refs.map(r=>'<span style="font-size:12.5px">v'+r.v+' · vista '+esc(r.vista)+' · expresión '+esc(r.expresion||"neutra")+(r.ancla?' · ancla':'')+' · de T'+r.n+(r.v===S.ficha.borrador?' (borrador)':'')+'</span>').join("")+(!refs.length&&S.origen!=="refs"?'<span class="ayuda">Ninguna todavía.</span>':'')+'</div>';
+  h += '<div class="bloque"><b style="font-size:13px">Rasgos y referencias que se deben conservar</b><span style="font-size:12.5px">'+esc(resumen()||"Sin decidir.")+'</span></div>';
+  h += '<div class="bloque"><b style="font-size:13px">Dirección de la hoja</b>'+(dh?'<span style="font-size:12.5px">Fondo: '+esc(dh.fondo)+' · Luz: '+esc(dh.luz)+' · Acabado: '+esc(dh.acabado)+(S.ficha.direccionHoja?' · guardada en v'+S.ficha.vigente:' · se guardará al aprobar el borrador')+'</span>':'<span class="ayuda">Sin guardar todavía.</span>')+'</div>';
+  if (S.ficha.borrador) h += '<button class="btn amb" data-a="aprobarFicha"'+(refs.some(r=>r.v===S.ficha.borrador)?'':' disabled')+'>Aprobar ficha v'+S.ficha.borrador+'</button><p class="ayuda">Aprobada, la versión queda inmutable. Para cambiarla después se crea otra.</p>';
+  return h + '</div></div>';
 }
 
-function toast(t){
-  const d = document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d);
-  setTimeout(()=>d.remove(), 3200);
-}
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3400); }
 
-function asegurarBorrador(){
-  if (!S.ficha.borrador) S.ficha.borrador = S.ficha.vigente + 1;
-}
-
-function generarUnidades(us, extra){
+function crearLote(us, extra){
   const total = us.length*PRECIO;
-  if (S.gastoEst + S.gastoRes + total > PRESUPUESTO){ toast("Supera el presupuesto de ejemplo: en Picasso pediría confirmación."); }
+  if (S.gastoEst + S.gastoRes + total > PRESUPUESTO) toast("Supera el presupuesto de ejemplo: en Picasso pediría confirmación para este total.");
   S.revision++;
-  us.forEach(u=>{
+  const lote = "L"+(S.lotes.length+1);
+  const ids = [];
+  const n = us.length;
+  us.forEach((u,i)=>{
     S.nTomas++;
-    const id = "t"+S.nTomas;
-    const rol = u.v.clave==="ancla"?"frontal":u.v.clave==="expresion"?"expresión · "+u.etiqueta.toLowerCase():VISTAS[u.v.clave].nombre.toLowerCase();
-    const idp = "sesion:pic05:"+u.v.clave+(u.etiqueta?"-"+u.etiqueta.toLowerCase().replace(/\s/g,"_"):"")+":"+S.revision;
-    const t = {id, n:S.nTomas, vista:u.v.clave, etiqueta:u.etiqueta, nombre:nombreUnidad(u), rol, estado:"generando", fav:false, desc:false, motivo:null, enFicha:null, drift:false, texto:extra&&extra.texto?extra.texto:texto(u), idp, hist:["Generada con la ficha v"+S.ficha.vigente+" · "+euro(PRECIO)+" estimado · "+idp+(extra&&extra.nota?" · "+extra.nota:"")]};
-    if (S.armarDrift){ t.drift = true; S.armarDrift = false; }
-    S.tomas.push(t);
-    u.v.estado = "generando";
-    S.gastoRes += PRECIO; S.ops++;
+    const id="t"+S.nTomas, idp="sesion:pic05:"+u.v.clave+":"+(u.expresion||"neutra").replace(/\s/g,"_")+":"+S.revision;
+    const t={id, n:S.nTomas, clave:claveU(u), vclave:u.v.clave, vista:VISTAS[u.v.clave].vista, expresion:u.expresion, estado:"generando", fav:false, desc:false, motivo:null, enFicha:null, drift:false, reemplazada:false, lote, idp, texto:extra&&extra.texto?extra.texto:texto(u), hist:["Lote "+lote+": "+euro(PRECIO)+" reservado al autorizar · "+idp+(extra&&extra.nota?" · "+extra.nota:"")]};
+    if (S.armar.drift && i===0){ t.drift=true; }
+    if (S.armar.fallo && i===n-1) t.fin="fallida";
+    else if (S.armar.incierta && i===n-1) t.fin="incierta";
+    if (S.armar.corte && i>0){ t.estado="preparada"; t.hist=["Lote "+lote+": preparada; sin autorizar cuando se recargó · "+idp]; }
+    else { S.gastoRes+=PRECIO; S.ops++; }
+    S.tomas.push(t); ids.push(id);
   });
-  setTimeout(terminar, 1100);
+  S.lotes.push({id:lote, total, tomas:ids, tarifa:TARIFA});
+  const corte = S.armar.corte;
+  S.armar={drift:false, fallo:false, incierta:false, corte:false};
+  S.gastoRes=redondo(S.gastoRes);
+  if (corte){ setTimeout(()=>{ acciones.cerrarVolver(); }, 50); }
+  else setTimeout(terminar, 1100);
 }
 function terminar(){
-  let cambio=false;
-  S.tomas.forEach(t=>{ if (t.estado==="generando"){ t.estado="lista"; S.gastoRes-=PRECIO; S.gastoEst+=PRECIO; cambio=true;
-    const v = S.vistas.find(x=>x.clave===t.vista); if (v && v.estado==="generando") v.estado="por_revisar"; } });
-  S.gastoRes = Math.max(0, Math.round(S.gastoRes*100)/100);
-  if (cambio) render();
+  let c=false;
+  S.tomas.forEach(t=>{
+    if (t.estado!=="generando") return;
+    c=true;
+    if (t.fin==="fallida"){ t.estado="fallida"; S.gastoRes-=PRECIO; t.hist.push("Rechazada por el proveedor: reserva liberada"); }
+    else if (t.fin==="incierta"){ t.estado="incierta"; t.hist.push("Sin respuesta del proveedor: reserva mantenida como posible cargo"); }
+    else { t.estado="lista"; S.gastoRes-=PRECIO; S.gastoEst+=PRECIO; t.hist.push("Completada: "+euro(PRECIO)+" estimado, sin importe del proveedor"); }
+    delete t.fin;
+  });
+  S.gastoRes=redondo(S.gastoRes); S.gastoEst=redondo(S.gastoEst);
+  if (c) render();
 }
 
 const acciones = {
   receta(){ S.paso=1; },
   origen(el){
-    S.origen = el.dataset.v; S.uso=null; S.vistas=[]; S.preparado=false; S.bloqueoManual=null;
-    if (S.origen==="refs"){ S.nombre="Marta"; S.rasgos=rasgosMarta(); S.preguntas=preguntasMarta(); S.ficha={vigente:2,borrador:null,refs:[]}; }
-    else { S.nombre="Personaje nuevo"; S.real=false; S.rasgos=[]; S.preguntas=preguntasNuevo(); S.ficha={vigente:1,borrador:null,refs:[]}; }
+    S.origen=el.dataset.v; S.uso=null; S.vistas=[]; S.preparado=false; S.resumenManual=null;
+    if (S.origen==="refs"){ S.nombre="Marta"; S.rasgos=rasgosMarta(); S.preguntas=preguntasMarta(); S.ficha={vigente:2,borrador:null,refs:[],direccionHoja:null}; }
+    else { S.nombre="Personaje nuevo"; S.real=false; S.rasgos=[]; S.preguntas=preguntasNuevo(); S.ficha={vigente:1,borrador:null,refs:[],direccionHoja:null}; }
     S.paso=2;
   },
-  real(el){ S.real = el.checked; },
-  mover(el){ const r=S.rasgos.find(x=>x.id===el.dataset.id); r.c = r.c==="fijo"?"var":"fijo"; S.bloqueoManual=null; marcarCambio(); },
-  resp(el){
-    const q=S.preguntas.find(x=>x.id===el.dataset.id), i=+el.dataset.i;
-    if (i<0){ q.r="omit"; }
-    else { q.r=q.o[i]; if (!/^Ninguna|^Nada fijo/.test(q.r)) S.rasgos.push({id:"a"+q.id,t:q.r,c:q.campo}); S.bloqueoManual=null; marcarCambio(); }
-  },
+  real(el){ S.real=el.checked; },
+  mover(el){ const r=S.rasgos.find(x=>x.id===el.dataset.id); r.c=r.c==="fijo"?"var":"fijo"; S.resumenManual=null; cambio(); },
+  resp(el){ const q=S.preguntas.find(x=>x.id===el.dataset.id), i=+el.dataset.i; if (i<0) q.r="omit"; else { q.r=q.o[i]; if (!/^Ninguna|^Nada fijo/.test(q.r)) S.rasgos.push({id:"a"+q.id,t:q.r,c:q.campo}); S.resumenManual=null; cambio(); } },
   uso(el){ S.uso=el.dataset.v; S.vistas=vistasPara(S.uso); S.preparado=false; },
-  marcar(el){ S.vistas[+el.dataset.i].marcada = el.checked; S.preparado=false; },
-  expr(el){ const e=el.dataset.v; if (S.expr.includes(e)) { if (S.expr.length>1) S.expr=S.expr.filter(x=>x!==e); } else if (S.expr.length<3) S.expr.push(e); else toast("Como mucho 3 expresiones por ronda."); S.preparado=false; },
+  marcar(el){ S.vistas[+el.dataset.i].marcada=el.checked; S.preparado=false; },
+  expr(el){ const e=el.dataset.v; if (S.expr.includes(e)){ if (S.expr.length>1) S.expr=S.expr.filter(x=>x!==e); } else if (S.expr.length<3) S.expr.push(e); else toast("Como mucho 3 expresiones por ronda."); S.preparado=false; },
   vdir(el){ S.vistaDir=el.dataset.v; },
-  dir(el){ const v=S.vistas.find(x=>x.clave===S.vistaDir); v.dir[+el.dataset.k]=el.value; if (v.estado==="preparada") v.estado="pendiente"; S.preparado=false; },
-  intimo(){ const v=S.vistas.find(x=>x.clave===S.vistaDir); v.dir[0]="Plano medio corto, cabeza y hombros"; v.dir[2]="85 mm"; v.dir[3]="Ventana lateral suave"; S.preparado=false; toast("«Más íntimo»: plano más cerrado, 85 mm y luz lateral suave. Revísalo."); },
-  restablecer(){ const v=S.vistas.find(x=>x.clave===S.vistaDir); v.dir=[...VISTAS[v.clave].dir]; S.preparado=false; },
-  ir(el){ S.paso=+el.dataset.p; },
-  preparar(){
-    unidades().forEach(u=>{ if ((u.v.clave==="ancla"||anclaLista()) && u.v.estado!=="aprobada" && u.v.estado!=="generando") u.v.estado="preparada"; });
-    S.preparado=true; toast("Preparado y guardado. No se ha generado nada ni se ha gastado.");
+  "hoja-fondo"(el){ S.hoja.fondo=el.value; S.hojaGuardada=true; S.preparado=false; },
+  "hoja-luz"(el){ S.hoja.luz=el.value; S.hojaGuardada=true; S.preparado=false; },
+  "hoja-acabado"(el){ S.hoja.acabado=el.value; S.hojaGuardada=true; S.preparado=false; },
+  "v-enc"(el){ vd().enc=el.value; S.preparado=false; },
+  "v-ang"(el){ vd().ang=el.value; S.preparado=false; },
+  "v-obj"(el){ vd().obj=el.value; S.preparado=false; },
+  "v-exc"(el){ const v=vd(); v.exc=el.checked; v.luz=S.hoja.luz; v.fondo=S.hoja.fondo; S.preparado=false; },
+  "v-luz"(el){ vd().luz=el.value; S.preparado=false; },
+  "v-fondo"(el){ vd().fondo=el.value; S.preparado=false; },
+  intimo(){ const v=vd(); v.enc="Plano medio corto, cabeza y hombros"; v.obj="85 mm"; S.preparado=false; toast("«Más íntimo»: plano más cerrado y 85 mm. Revísalo."); },
+  restablecer(){ const v=vd(), b=VISTAS[v.clave]; v.enc=b.enc; v.ang=b.ang; v.obj=b.obj; v.exc=false; S.preparado=false; },
+  ir(el){ S.paso=+el.dataset.p; if (S.paso===5) S.hojaGuardada=true; },
+  preparar(){ S.preparado=true; S.hojaGuardada=true; toast("Preparado y guardado, con la dirección de la hoja. No se ha generado nada ni se ha gastado."); },
+  generar(){ if (S.tomas.some(t=>t.estado==="generando")) return; crearLote(porGenerar()); S.preparado=false; },
+  autorizarPreparadas(){
+    S.tomas.filter(t=>t.estado==="preparada").forEach(t=>{ t.estado="generando"; S.gastoRes+=PRECIO; S.ops++; t.hist.push("Autorizada después de la recarga: "+euro(PRECIO)+" reservado"); });
+    S.gastoRes=redondo(S.gastoRes); setTimeout(terminar,1100);
   },
-  generar(){
-    const us = unidades().filter(u=>u.v.clave==="ancla"||anclaLista()).filter(u=>u.v.estado==="preparada");
-    const vistos = new Set(); const lote = us.filter(u=>{ const k=u.v.clave+(u.etiqueta||""); if (vistos.has(k)) return false; vistos.add(k); return true; });
-    generarUnidades(lote); S.preparado=false;
+  faltan(){
+    const f = S.tomas.filter(t=>t.estado==="fallida" && !t.reemplazada);
+    const us = f.map(t=>{ t.reemplazada=true; return {v:S.vistas.find(x=>x.clave===t.vclave), expresion:t.expresion}; });
+    crearLote(us);
   },
+  comprobar(){ const t=cur(); t.estado="lista"; S.gastoRes=redondo(S.gastoRes-PRECIO); S.gastoEst=redondo(S.gastoEst+PRECIO); t.hist.push("Comprobada: el proveedor la tenía hecha; pasa a estimado"); },
   sel(el){ S.sel=el.dataset.id; S.tab="imagen"; },
   tab(el){ S.tab=el.dataset.v; },
   fav(){ const t=cur(); t.fav=!t.fav; t.hist.push(t.fav?"★ favorita":"★ quitada"); },
@@ -543,72 +570,61 @@ const acciones = {
   recuperar(){ const t=cur(); t.desc=false; t.motivo=null; t.hist.push("Recuperada"); },
   comparar(){ S.modal={tipo:"comparar", id:S.sel}; },
   aprobar(){
-    const t=cur(); asegurarBorrador();
-    const ancla = t.vista==="ancla";
-    t.enFicha=S.ficha.borrador; t.hist.push("Aprobada para la ficha v"+S.ficha.borrador+" · "+t.rol+(ancla?" · ancla":"")+" (no marca ★)");
-    S.ficha.refs.push({v:S.ficha.borrador, rol:t.rol, ancla, n:t.n});
-    const v=S.vistas.find(x=>x.clave===t.vista); if (v && v.clave!=="expresion") v.estado="aprobada";
+    const t=cur(); if (!S.ficha.borrador) S.ficha.borrador=S.ficha.vigente+1;
+    const ancla = t.vclave==="ancla";
+    t.enFicha=S.ficha.borrador; t.hist.push("Aprobada para la ficha v"+S.ficha.borrador+" · vista "+t.vista+" · expresión "+(t.expresion||"neutra")+(ancla?" · ancla":"")+" (no marca ★)");
+    S.ficha.refs.push({v:S.ficha.borrador, vista:t.vista, expresion:t.expresion, ancla, n:t.n});
     S.modal=null;
-    if (ancla){ S.vistas.forEach(x=>{ if (x.clave!=="ancla" && S.uso){ const u=USOS.find(z=>z.id===S.uso); x.marcada=u.v.includes(x.clave); } }); toast("Ancla aprobada en el borrador. Ya puedes preparar las demás vistas."); }
+    if (ancla && S.uso){ const u=USOS.find(z=>z.id===S.uso); S.vistas.forEach(x=>{ if (x.clave!=="ancla") x.marcada=u.v.includes(x.clave); }); toast("Ancla aprobada en el borrador. Ya puedes preparar las demás vistas."); }
     else toast("Añadida al borrador v"+S.ficha.borrador+". La ficha vigente no cambia hasta que apruebes la versión.");
   },
   noid(){ const t=cur(); t.desc=true; t.motivo="identidad"; t.hist.push("Descartada: no mantiene la identidad. El medio se conserva."); S.modal=null; S.tab="imagen"; },
   corregir(){ const t=cur(); S.accionBarra={alcance:"Editar T"+t.n, msg:"Preparado por el Director: corregir T"+t.n+" con el ancla como imagen 2, «cambia solo la cara». El modelo puede alterar otros detalles.", boton:"Aplicar cambio · "+euro(PRECIO), tipo:"corregir", id:t.id}; },
-  revdir(){ const t=cur(); S.tab="director"; S.paso=5; S.vistaDir=t.vista; },
-  regenerar(){ const t=cur(); S.accionBarra={alcance:"Hoja de personaje · "+t.nombre, msg:"Preparado: volver a generar «"+t.nombre+"» con la misma dirección.", boton:"Generar 1 vista · "+euro(PRECIO), tipo:"regenerar", id:t.id}; },
+  revdir(){ const t=cur(); S.tab="director"; S.paso=5; S.vistaDir=t.vclave; },
+  regenerar(){ const t=cur(); S.accionBarra={alcance:"Hoja de personaje · "+S.nombre, msg:"Preparado: volver a generar T"+t.n+" (vista "+t.vista+", expresión "+(t.expresion||"neutra")+") con la misma dirección.", boton:"Generar 1 vista · "+euro(PRECIO), tipo:"regenerar", id:t.id}; },
   cancelarBarra(){ S.accionBarra=null; },
   ejecutarBarra(){
-    const a=S.accionBarra, t=S.tomas.find(x=>x.id===a.id), v=S.vistas.find(x=>x.clave===t.vista)||{clave:t.vista,dir:[...VISTAS[t.vista].dir]};
-    const u={v, etiqueta:t.etiqueta};
-    if (a.tipo==="corregir") generarUnidades([u],{nota:"edición de T"+t.n+" con el ancla", texto:"Cambia solo la cara para que sea la de la imagen 2. Mantén todo lo demás como está.\nImagen 1: T"+t.n+" (imagen a editar).\nImagen 2: identidad de "+S.nombre+": conserva exactamente su cara, pelo, tono de piel y complexión."});
-    else generarUnidades([u]);
+    const a=S.accionBarra, t=S.tomas.find(x=>x.id===a.id), v=S.vistas.find(x=>x.clave===t.vclave)||{clave:t.vclave,...VISTAS[t.vclave],exc:false};
+    const u={v, expresion:t.expresion};
+    if (a.tipo==="corregir") crearLote([u],{nota:"edición de T"+t.n+" con el ancla", texto:"Cambia solo la cara para que sea la de la imagen 2. Mantén todo lo demás como está.\nImagen 1: T"+t.n+" (imagen a editar).\nImagen 2: identidad de "+S.nombre+": conserva su cara, pelo, tono de piel y complexión."});
+    else crearLote([u]);
     S.accionBarra=null;
   },
   cerrarModal(){ S.modal=null; },
   verFicha(){ S.modal={tipo:"ficha"}; },
-  aprobarFicha(){ S.ficha.vigente=S.ficha.borrador; S.ficha.borrador=null; S.modal=null; toast("Ficha v"+S.ficha.vigente+" aprobada y vigente. Ya no se puede cambiar: los cambios irán a una versión nueva."); },
-  armarDrift(){ S.armarDrift=!S.armarDrift; },
+  aprobarFicha(){ S.ficha.vigente=S.ficha.borrador; S.ficha.borrador=null; S.ficha.direccionHoja={...S.hoja}; S.modal=null; toast("Ficha v"+S.ficha.vigente+" aprobada, con su dirección de la hoja. Los cambios irán a una versión nueva."); },
+  armar(el){ const k=el.dataset.v; S.armar[k]=!S.armar[k]; },
   cero(){ S=nuevoEstado(); try{ localStorage.removeItem(CLAVE); }catch(e){} },
   cerrarVolver(){
-    const copia = JSON.stringify(S);
-    const v = document.createElement("div"); v.className="cerrado"; v.textContent="Taller cerrado. Volviendo a abrir…"; document.body.appendChild(v);
+    const copia=JSON.stringify(S);
+    const v=document.createElement("div"); v.className="cerrado"; v.textContent="Taller cerrado. Volviendo a abrir…"; document.body.appendChild(v);
     setTimeout(()=>{
-      S = JSON.parse(copia); S.modal=null;
-      const enCurso = S.tomas.filter(t=>t.estado==="generando").length;
-      v.remove(); render();
-      const pend = unidades().filter(u=>u.v.estado==="preparada").length, rev = S.tomas.filter(t=>t.estado==="lista"&&!t.enFicha&&!t.desc).length;
-      toast("Recuperado: paso «"+PASOS[S.paso]+"», "+pend+" vistas preparadas, "+rev+" por revisar"+(enCurso?", "+enCurso+" en curso (se reconcilian por id_peticion, sin duplicar)":"")+".");
-      if (enCurso) setTimeout(terminar, 900);
-    }, 700);
+      S=JSON.parse(copia); S.modal=null; v.remove(); render();
+      const en=S.tomas.filter(t=>t.estado==="generando").length, pr=S.tomas.filter(t=>t.estado==="preparada").length, inc=S.tomas.filter(t=>t.estado==="incierta").length, rev=S.tomas.filter(t=>t.estado==="lista"&&!t.enFicha&&!t.desc).length;
+      toast("Recuperado: paso «"+PASOS[S.paso]+"», dirección de la hoja guardada, "+rev+" por revisar"+(en?", "+en+" en curso (se reconcilian por id_peticion)":"")+(pr?", "+pr+" preparadas sin autorizar (no se autorizan solas)":"")+(inc?", "+inc+" sin confirmar":"")+".");
+      if (en) setTimeout(terminar,900);
+    },700);
     return "noRender";
   }
 };
 function cur(){ return S.tomas.find(x=>x.id===S.sel); }
-function marcarCambio(){
-  S.vistas.forEach(v=>{ if (v.estado==="preparada") v.estado="pendiente"; });
-  if (S.preparado){ S.preparado=false; toast("Has cambiado un rasgo: las vistas preparadas se rehacen. Las aprobadas quedan marcadas como hechas antes del cambio."); }
-}
+function vd(){ return S.vistas.find(x=>x.clave===S.vistaDir); }
+function cambio(){ if (S.preparado){ S.preparado=false; toast("Has cambiado un rasgo: las vistas preparadas se rehacen. Las aprobadas quedan marcadas como hechas antes del cambio."); } }
 
+const DE_CAMBIO = ["marcar","real","hoja-fondo","hoja-luz","hoja-acabado","v-enc","v-ang","v-obj","v-exc","v-luz","v-fondo"];
 document.addEventListener("click", e=>{
-  const el = e.target.closest("[data-a]");
-  if (!el) return;
+  const el=e.target.closest("[data-a]"); if (!el) return;
   if (el.classList.contains("velo") && e.target.closest("[data-stop]")) return;
-  const a = el.dataset.a;
-  if (["marcar","real","dir","bloqueo"].includes(a)) return;
-  if (el.disabled) return;
-  const r = acciones[a] && acciones[a](el);
+  const a=el.dataset.a;
+  if (DE_CAMBIO.includes(a) || a==="resumen" || el.disabled) return;
+  const r=acciones[a] && acciones[a](el);
   if (r!=="noRender") render();
 });
-document.addEventListener("change", e=>{
-  const el = e.target; const a = el.dataset && el.dataset.a;
-  if (a==="marcar"||a==="real"||a==="dir"){ acciones[a](el); render(); }
-});
-document.addEventListener("input", e=>{
-  if (e.target.id==="bloqueo"){ S.bloqueoManual=e.target.value; guardar(); }
-});
+document.addEventListener("change", e=>{ const el=e.target, a=el.dataset&&el.dataset.a; if (DE_CAMBIO.includes(a)){ acciones[a](el); render(); } });
+document.addEventListener("input", e=>{ if (e.target.id==="resumen"){ S.resumenManual=e.target.value; guardar(); } });
 document.addEventListener("keydown", e=>{ if (e.key==="Escape" && S.modal){ S.modal=null; render(); } });
 
-try{ const g = localStorage.getItem(CLAVE); if (g){ const x = JSON.parse(g); if (x && x.tomas){ S = x; S.modal=null; S.tomas.forEach(t=>{ if (t.estado==="generando") setTimeout(terminar, 900); }); } } }catch(e){}
+try{ const g=localStorage.getItem(CLAVE); if (g){ const x=JSON.parse(g); if (x && x.tomas){ S=x; S.modal=null; if (S.tomas.some(t=>t.estado==="generando")) setTimeout(terminar,900); } } }catch(e){}
 render();
 })();
 </script>

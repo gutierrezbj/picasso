@@ -4,33 +4,47 @@ Versión navegable: https://claude.ai/artifact/SLbhDsi6bGatVStBdHkpku (privada; 
 
 Datos simulados: nada se genera ni se cobra. El precio que enseña es el de Nano Banana Pro en fal del catálogo (0,15 $, verificado el 14-11-2026). El presupuesto de 5,00 $ es de ejemplo. Paleta oscura aprobada en PIC-01 (D11).
 
-## Recorrido
+## Recorrido (revisión 2)
 
-1. Pestaña «Director de Studio» del lateral → «Hoja de personaje».
-2. Origen: «De referencias existentes» (Marta, ficha v2 con ancla) o «Describir un personaje nuevo» (la primera vista es el retrato ancla, y las demás esperan a que se apruebe).
-3. Identidad: «Se conserva» y «Puede variar», con flechas para mover los rasgos; el bloqueo de identidad se rehace solo y es editable.
-4. Lo que falta: dos preguntas por vez, con opciones y «Omitir».
-5. Uso y vistas: el uso propone vistas, que se marcan o desmarcan; las expresiones van de 1 a 3.
-6. Dirección por vista: encuadre, ángulo, objetivo, luz y fondo, cada uno con su por qué, más «Aplicar "más íntimo"» y «Restablecer».
-7. Qué se enviará: el texto exacto, las imágenes numeradas con su para qué, el modelo, el precio por vista y el total. «Preparar» no genera ni gasta.
-8. Barra: «Generar N vistas · X $» (simulado). Después hay que seleccionar una toma y elegir entre:
-   - ★, que no vincula;
-   - «Comparar con el ancla», con la lista de revisión;
-   - «Aprobar para la ficha», que la añade al borrador vN+1;
-   - «No mantiene la identidad», que la descarta y ofrece corregir editando, revisar la dirección o volver a generar, sin ejecutar nada.
-9. «Ficha de Marta» (arriba): referencias por versión y «Aprobar ficha vN».
-10. Franja de prototipo: «la próxima pierde la identidad», «cerrar y volver a abrir» (recupera el paso, las vistas y las tomas en curso) y «empezar de cero».
+1. Pestaña «Director de Studio» → «Hoja de personaje».
+   - Lleva la marca «Receta guiada · sin agente».
+   - «Hablar con el Director», el agente, aparece como «Próximamente».
+2. Origen:
+   - «De referencias existentes»: Marta, ficha v2 con ancla.
+   - «Describir un personaje nuevo»: primero el retrato ancla.
+3. Identidad:
+   - columnas «Se conserva» y «Puede variar»;
+   - resumen «Rasgos y referencias que se deben conservar», editable, que nombra las referencias que viajan;
+   - aviso de que la continuidad se comprueba en los resultados.
+4. Lo que falta: dos preguntas cada vez, con «Omitir».
+5. Uso y vistas: una vista por imagen; las expresiones (de 1 a 3) van aparte, con vista frontal.
+6. Dirección:
+   - «Dirección de la hoja» guardada: fondo, luz, acabado y encuadre por vista;
+   - por vista: encuadre, ángulo, objetivo y una excepción de luz y fondo que no toca la hoja.
+7. Qué se enviará: texto exacto con vista y expresión por separado, imágenes numeradas, modelo («calidad para hojas de personaje: sin validar»), precio por vista y total, y el aviso de cómo se reserva. «Preparar» no gasta.
+8. Barra: «Generar N vistas · X $». Cada vista reserva su precio al autorizarse.
+   - Una que falla libera su reserva, y la barra ofrece «Generar las que faltan».
+   - Una que queda sin confirmar mantiene la reserva y se resuelve con «Comprobar».
+   - Si se recarga entre fases, las vistas quedan «preparadas, sin autorizar» y se autorizan desde la barra, viendo el precio.
+9. Toma:
+   - ★ (no vincula);
+   - «Comparar con el ancla»;
+   - «Aprobar para la ficha» (borrador vN+1, con vista y expresión);
+   - «No mantiene la identidad», con tres opciones que no se ejecutan solas.
+10. «Ficha de Marta»: referencias con su vista y su expresión, dirección de la hoja y «Aprobar ficha vN», que guarda la dirección en la versión.
+11. Franja de prototipo para el próximo lote: una pierde la identidad, una falla, una queda sin confirmar, se recarga entre fases. Además: cerrar y volver a abrir, empezar de cero.
 
 ## Comprobado
 
-- Lógica (21-11-2026): 28 comprobaciones en Node sobre el script de la maqueta.
-  - Sin operaciones al abrir ni al preparar.
-  - Tres operaciones con `id_peticion` distinto; el doble clic no duplica.
-  - La ★ no vincula; aprobar va al borrador v3 sin tocar la v2.
-  - Identidad perdida con sus tres opciones.
-  - Corregir no gasta al preparar.
-  - Aprobar la ficha.
-  - Reabrir.
-  - Ruta sin ancla: solo el retrato, y después las demás.
-- **La vista renderizada no la he revisado**: el navegador de la sesión no tiene la sesión de claude.ai abierta.
-- La maqueta **no** valida la continuidad del personaje: los retratos son dibujos simulados.
+- Revisión 1 (`0467afb`): 28 comprobaciones de lógica en Node.
+- Revisión 2 (21-11-2026): 29 comprobaciones de lógica en Node sobre el script:
+  - receta y agente separados, sin la palabra «bloqueo» y sin prometer identidad;
+  - la dirección de la hoja se guarda y una excepción no la toca;
+  - 3 vistas y 1 expresión dan 4 tarjetas, con vista y expresión por separado;
+  - preparar no gasta y el doble clic no duplica;
+  - una fallida libera su reserva (0,60 → 0,45 estimado y 0 reservado) y se ofrece «las que faltan»;
+  - una incierta mantiene su reserva y no se reofrece;
+  - recarga entre fases: 1 autorizada y 2 preparadas que no se autorizan solas;
+  - `direccion_hoja` queda guardada al aprobar la v3.
+- Recorrido visual de la versión publicada en Chrome (revisión 2): receta, origen, identidad, uso, dirección de la hoja, qué se enviará, preparar y un lote de 3 con una fallida («Generar las que faltan · 0,15 $»). Se ve bien a 1295 px; el ancho de móvil no lo he mirado.
+- Esto **no** sustituye el recorrido de Juan ni la revisión del SDD. La maqueta **no** valida la continuidad del personaje: los retratos son dibujos simulados.
