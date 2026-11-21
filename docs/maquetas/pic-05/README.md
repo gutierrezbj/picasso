@@ -4,47 +4,59 @@ Versión navegable: https://claude.ai/artifact/SLbhDsi6bGatVStBdHkpku (privada; 
 
 Datos simulados: nada se genera ni se cobra. El precio que enseña es el de Nano Banana Pro en fal del catálogo (0,15 $, verificado el 14-11-2026). El presupuesto de 5,00 $ es de ejemplo. Paleta oscura aprobada en PIC-01 (D11).
 
-## Recorrido (revisión 2)
+## Recorrido (revisión 3)
 
-1. Pestaña «Director de Studio» → «Hoja de personaje».
-   - Lleva la marca «Receta guiada · sin agente».
-   - «Hablar con el Director», el agente, aparece como «Próximamente».
-2. Origen:
-   - «De referencias existentes»: Marta, ficha v2 con ancla.
-   - «Describir un personaje nuevo»: primero el retrato ancla.
-3. Identidad:
-   - columnas «Se conserva» y «Puede variar»;
-   - resumen «Rasgos y referencias que se deben conservar», editable, que nombra las referencias que viajan;
-   - aviso de que la continuidad se comprueba en los resultados.
-4. Lo que falta: dos preguntas cada vez, con «Omitir».
-5. Uso y vistas: una vista por imagen; las expresiones (de 1 a 3) van aparte, con vista frontal.
-6. Dirección:
-   - «Dirección de la hoja» guardada: fondo, luz, acabado y encuadre por vista;
-   - por vista: encuadre, ángulo, objetivo y una excepción de luz y fondo que no toca la hoja.
-7. Qué se enviará: texto exacto con vista y expresión por separado, imágenes numeradas, modelo («calidad para hojas de personaje: sin validar»), precio por vista y total, y el aviso de cómo se reserva. «Preparar» no gasta.
-8. Barra: «Generar N vistas · X $». Cada vista reserva su precio al autorizarse.
-   - Una que falla libera su reserva, y la barra ofrece «Generar las que faltan».
-   - Una que queda sin confirmar mantiene la reserva y se resuelve con «Comprobar».
-   - Si se recarga entre fases, las vistas quedan «preparadas, sin autorizar» y se autorizan desde la barra, viendo el precio.
-9. Toma:
-   - ★ (no vincula);
-   - «Comparar con el ancla»;
-   - «Aprobar para la ficha» (borrador vN+1, con vista y expresión);
-   - «No mantiene la identidad», con tres opciones que no se ejecutan solas.
-10. «Ficha de Marta»: referencias con su vista y su expresión, dirección de la hoja y «Aprobar ficha vN», que guarda la dirección en la versión.
-11. Franja de prototipo para el próximo lote: una pierde la identidad, una falla, una queda sin confirmar, se recarga entre fases. Además: cerrar y volver a abrir, empezar de cero.
+**Cambios de la revisión 3:**
+- La siguiente acción está siempre en la barra y en el panel.
+- Los costes son discretos: el precio va en el botón, y la pastilla «Gasto» abre el «Detalle de costes».
+- Etiqueta «Simulación · sin gasto»; las «Pruebas de la maqueta» van plegadas al pie.
+- Se elige entre hoja compuesta y vistas sueltas.
+- «Referencia principal»; aprobar para el borrador es distinto de publicar la ficha.
+- Campos con ejemplos y nombre propio; el vestuario se conserva sin contradicciones.
+- Panel al lado, superpuesto o a pantalla completa, según el ancho.
 
-## Comprobado
+**Recorrido desde cero:**
+1. «Director de Studio» → «Hoja de personaje» → «Crear un personaje nuevo».
+2. Nombre y campos, con ejemplos a un clic.
+   - Cada campo tiene «Se conserva».
+   - Solo se pregunta lo obligatorio que falte; los opcionales se pueden omitir.
+3. Uso y vistas, y la forma de generarlas: hoja con todas (recomendada, pendiente de prueba) o una imagen por vista.
+4. Dirección de la hoja (fondo, luz, acabado) y, en un desplegable, los ajustes de una vista.
+5. Qué se envía: resumen por generación, y el texto completo en un desplegable. «Preparar» → «Listo» con «Generar retrato · 0,15 $» y «Editar preparación».
+6. Retrato → «Revisa y elige la referencia principal» → «Elegir como referencia principal» (sin comparar).
+7. «Continuar con las vistas pendientes» → «Generar hoja · 0,15 $» → «Revisa la hoja y recórtala en vistas» → «Recortar en vistas».
+8. Revisar cada recorte:
+   - aprobar para el borrador, ★, comparar con la principal o «No mantiene la identidad»;
+   - «Ampliar esta vista · 0,15 $» la genera como imagen suelta.
+9. «Revisar y publicar la ficha v1» → «Publicar» → «En la ficha v1» y «Preparar otra vista».
 
-- Revisión 1 (`0467afb`): 28 comprobaciones de lógica en Node.
-- Revisión 2 (21-11-2026): 29 comprobaciones de lógica en Node sobre el script:
-  - receta y agente separados, sin la palabra «bloqueo» y sin prometer identidad;
-  - la dirección de la hoja se guarda y una excepción no la toca;
-  - 3 vistas y 1 expresión dan 4 tarjetas, con vista y expresión por separado;
-  - preparar no gasta y el doble clic no duplica;
-  - una fallida libera su reserva (0,60 → 0,45 estimado y 0 reservado) y se ofrece «las que faltan»;
-  - una incierta mantiene su reserva y no se reofrece;
-  - recarga entre fases: 1 autorizada y 2 preparadas que no se autorizan solas;
-  - `direccion_hoja` queda guardada al aprobar la v3.
-- Recorrido visual de la versión publicada en Chrome (revisión 2): receta, origen, identidad, uso, dirección de la hoja, qué se enviará, preparar y un lote de 3 con una fallida («Generar las que faltan · 0,15 $»). Se ve bien a 1295 px; el ancho de móvil no lo he mirado.
-- Esto **no** sustituye el recorrido de Juan ni la revisión del SDD. La maqueta **no** valida la continuidad del personaje: los retratos son dibujos simulados.
+En el pie, «Pruebas de la maqueta» simula:
+- que una generación pierda la identidad, falle o quede sin confirmar;
+- una recarga entre fases;
+- una hoja irregular;
+- un cambio de precio;
+- un presupuesto de 0,20 $;
+- cerrar y volver a abrir.
+
+## Comprobado (revisión 3, 21-11-2026)
+
+- **Lógica:** 46 comprobaciones en Node sobre el script de la maqueta.
+  - Etiqueta de simulación, y ningún texto que diga dónde está el panel.
+  - Ningún «Preparado por el Director» sobre un campo vacío.
+  - Con 65 años y la procedencia rellenas, no las vuelve a preguntar; el nombre se ve en todas partes.
+  - Primero el retrato, sin «No queda ninguna vista». Preparar no gasta.
+  - Elegir la referencia principal la deja en el borrador v1 sin publicar, con la cabecera coherente. Después, «Continuar con las vistas pendientes».
+  - **Pescador:** con el vestuario conservado, la hoja y la vista suelta nombran «jersey verde oscuro y camisa de cuadros» y no dicen «no copies la ropa». Marta, con el vestuario variable, sí lo dice.
+  - La hoja da 3 recortes de unos 683 × 1 152 px.
+  - Aprobar no marca ★, y la ★ no aprueba.
+  - Ampliar sustituye el recorte.
+  - Publicar pasa de «Aprobada · borrador v1» a «En la ficha v1».
+  - Gasto: 0,45 $ (retrato, hoja y ampliación), en una pastilla discreta, con su detalle.
+  - Fallo, generación sin confirmar, recarga entre fases, cambio de precio, presupuesto superado y hoja irregular.
+  - Al reabrir, dice cuál es la siguiente acción.
+- **Recorrido visual en Chrome sobre la versión publicada:**
+  - A 1 280 px, completo desde cero, hasta «Ficha de Ramón v1 publicada» y «Preparar otra vista».
+  - A 900 px, el panel se superpone, con «Volver a la Mesa».
+  - A 390 px, el panel ocupa la pantalla completa y la barra queda visible.
+  - El recorrido encontró dos fallos, ya corregidos: el panel volvía arriba al pulsar un ejemplo, y la barra no se actualizaba al elegir la receta.
+- **Sin validar:** el recorrido de Juan; la recuperación al cerrar y volver a abrir hecha por Juan; la publicación de la ficha hecha por Juan; la continuidad con imágenes reales; el valor de la hoja compuesta frente a las vistas sueltas (D13). Los retratos son dibujos simulados.

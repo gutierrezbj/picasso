@@ -1126,5 +1126,5 @@ Estado comprobado contra el código del commit `7006686` (traspaso del 13-11-202
 | 18.24, 18.25, 18.31–18.35, 18.39–18.51 | Propuestas | No | — | — | — |
 | 18.54–18.65 (rama `formacion/hotmart-prompteando-videos`) | Propuestas, sin fusionar | No | — | — | — |
 | 18.66: Director de Studio, recetas guiadas y continuidad visual | Propuesta (21-11-2026), sin aprobar; requiere SDD | No | — | — | Posterior; no amplía PIC-04 |
-| PIC-05: Director de Studio, hoja de personaje (primer incremento de la 18.66; receta guiada, no el agente) | SDD y maqueta autorizados (21-11-2026), revisión 2 tras el revisor; código, gasto, fusión y despliegue sin autorizar; D1–D12 abiertas | No | Lógica de la maqueta (29 comprobaciones en Node) | Pendiente: recorrer la maqueta | Posterior |
+| PIC-05: Director de Studio, hoja de personaje (primer incremento de la 18.66; receta guiada, no el agente) | SDD y maqueta autorizados (21-11-2026), revisión 3 tras el recorrido de Juan, sin aprobar; código, gasto, fusión y despliegue sin autorizar; D1–D16 abiertas (D13: hoja compuesta o vistas sueltas) | No | Lógica de la maqueta (46 comprobaciones en Node) y recorrido visual a 1 280, 900 y 390 px | Pendiente: recorrer la maqueta | Posterior |
 | 19.19–19.25 y 19.29 | Detectadas al operar | No | — | — | Las que toquen al Taller, en el 1 |
