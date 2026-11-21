@@ -1,6 +1,14 @@
 # PIC-05 · Director de Studio: hoja de personaje
 
-**Estado:** revisión 3, diseño. Revisión 1: `0467afb`. Revisión 2: `848f754`. **Ni el SDD ni la maqueta están aprobados.**
+**Estado:** revisión 4, cierre de la revisión técnica. Revisión 1: `0467afb`. Revisión 2: `848f754`. Revisión 3: `15cc213`. **Ni el SDD ni la maqueta están aprobados.** El encargo de construcción está en §11 y no empieza sin la autorización de Juan.
+
+**Revisión 4 (21-11-2026), pedida por el revisor antes de construir:**
+- El recorte es local y sin coste (§4.14a).
+- La hoja original se conserva (§4.14b).
+- Crear una vista independiente no es lo mismo que aumentar la resolución (§4.14c).
+- Decisiones nuevas: D17–D20.
+- El encargo de construcción, en §11.
+- El ayudante de prompts queda como siguiente prioridad del Director (§12).
 
 **Revisión 3 (21-11-2026), tras el recorrido de Juan por la revisión 2.** Lo que encontró: demasiada contabilidad en pantalla y varios momentos en los que no sabía cómo seguir. Cambios:
 1. Costes discretos, con «Detalle de costes» y los controles de PIC-02 y PIC-04 intactos (§4.10).
@@ -309,7 +317,7 @@ El trabajo creativo va delante. La contabilidad está a un clic, pero no ocupa l
 | Coste previsto | 3 × 0,15 = **0,45 $** | **0,15 $** (más un recorte local, gratis) |
 | Resolución por vista | Imagen 4:5 de ~1 638 × 2 048 (≈3,4 MP) | Panel de ~682 × 1 152 (≈0,8 MP, una cuarta parte), menos márgenes. En cuerpo entero, la cara queda en unos 100–150 px de alto |
 | Continuidad entre vistas | Cada vista se genera aparte, con la misma referencia principal: puede variar de una a otra | Las vistas comparten una sola generación: *puede* que salgan más coherentes entre sí, pero **no está demostrado** con nuestro modelo, y tampoco garantiza parecerse a la referencia principal |
-| Corregir una vista | Se edita o regenera solo esa (0,15 $) | Regenerar la hoja cambia también los paneles buenos. Lo práctico es «Ampliar o corregir esta vista» como vista suelta (0,15 $) |
+| Corregir una vista | Se edita o regenera solo esa (0,15 $) | Regenerar la hoja cambia también los paneles buenos. Lo práctico es «Crear vista independiente» de esa vista (0,15 $, §4.14c) |
 | Uso como referencia posterior | Directo: una vista, una cara | La hoja entera **no** debe viajar como referencia: varias caras en una imagen tienden a promediarse (VDLT). Viajan sus recortes, de menor resolución |
 | Riesgos propios | Coste y deriva entre vistas | El modelo puede no respetar los paneles (tamaños distintos, texto, una persona de más); los recortes iguales fallan si la composición no es regular |
 
@@ -319,17 +327,17 @@ El trabajo creativo va delante. La contabilidad está a un clic, pero no ocupa l
 - La hoja completa se guarda como referencia con rol nuevo `hoja`. Se ve en la ficha, pero **no viaja** a las generaciones.
 - «Recortar en vistas» es una acción local, sin coste, con la librería de imágenes que ya usa el backend (PIL). Crea un `Medio` nuevo por panel (`origen: recorte`, `medio_origen_id`, `caja`). Cada recorte es una toma con su vista y se aprueba para el borrador como cualquier otra, con su resolución a la vista.
 - Si los paneles no son regulares, la maqueta lo avisa («La hoja no tiene paneles iguales») y propone vistas sueltas. El ajuste manual del recorte queda fuera de PIC-05.
-- Las vistas sueltas siguen para **ampliar** (más resolución de una vista) o **corregir** (una vista que no se parece).
+- Las vistas sueltas siguen como **vista independiente**: una imagen nueva de esa vista, a resolución completa, para corregir o para tener más detalle. Aumentar la resolución del mismo recorte es otra cosa (§4.14c).
 
 **Recomendación (pendiente de decidir, D13):** recorrido por defecto **híbrido**:
 1. Retrato individual → elegir referencia principal.
 2. **Hoja compuesta** con las vistas elegidas, para ver de un vistazo el personaje en todas ellas al precio de una imagen.
 3. Recortar y aprobar los recortes que valgan.
-4. «Ampliar» como vista suelta solo las que se vayan a usar como referencia de alta resolución o salgan mal.
+4. «Crear vista independiente» solo de las que se vayan a usar como referencia de alta resolución o salgan mal.
 
 Desde cero son 0,30 $ en vez de 0,60 $, y el gasto adicional solo va donde hace falta.
 
-La decisión final necesita una prueba corta de pago, que se autoriza aparte. El mismo personaje con la misma referencia principal, generado de las dos formas (hoja y 3 vistas sueltas, unos 0,60 $), y comparado con la lista de §4.7, más la comprobación del vestuario de §4.3. Hasta entonces, la maqueta ofrece las dos formas y marca la recomendada como «recomendada, pendiente de prueba».
+La decisión final necesita una prueba corta de pago, que se autoriza aparte. El mismo personaje con la misma referencia principal, generado de las dos formas (retrato, hoja y 3 vistas sueltas: 5 imágenes, unos 0,75 $; §11), y comparado con la lista de §4.7, más la comprobación del vestuario de §4.3. Hasta entonces, la maqueta ofrece las dos formas y marca la recomendada como «recomendada, pendiente de prueba».
 
 #### 4.12 Siguiente acción evidente
 
@@ -351,6 +359,11 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 | Todo revisado, borrador con imágenes | «Todo revisado» | «Revisar y publicar la ficha v2» | Preparar más vistas |
 | Ficha publicada | «Ficha de Ramón v2 publicada» | «Preparar otra vista» | Cerrar receta |
 
+- Si lo que la acción abriría ya está abierto, la barra pasa al paso siguiente:
+  - con el retrato abierto, «Elegir como referencia principal»;
+  - con la hoja abierta, «Recortar en vistas»;
+  - con una imagen por revisar abierta, «Aprobar para el borrador» y, como secundaria, «Pasar a la siguiente»;
+  - en «Qué se envía» antes de preparar, «Preparar», igual que el panel.
 - «No queda ninguna vista por generar» solo aparece cuando es verdad. Si hay vistas esperando la referencia principal, el mensaje dice eso.
 - La misma tabla vale para la hoja compuesta, con sus filas «Hoja lista» y «Recortar».
 
@@ -362,6 +375,50 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 - **Los textos no dicen dónde está el panel** («en el lateral», «debajo»). Dicen «el panel del Director», que es cierto en los tres casos.
 - **Inspector de una imagen:** la imagen se ajusta al espacio, con una altura máxima de un 45 % de la ventana y sin recortar. Las acciones (elegir o aprobar, ★, comparar, descartar) van justo debajo, sin desplazarse.
 - **Resumen legible por vista** (vista, expresión, encuadre, imágenes que viajan y precio). El texto completo, los identificadores (`id_peticion`, lote) y el historial técnico van en desplegables («Ver el texto completo», «Detalles técnicos»).
+
+#### 4.14 Recorte, hoja original, vista independiente y aumento de resolución
+
+##### a) Recorte local, sin coste
+
+- **No es una operación del motor.** No hay proveedor, ni precio, ni reserva, ni presupuesto. No aparece en «Detalle de costes» salvo como nota («Los recortes son locales y no cuestan»).
+- **Dónde se hace:** en el backend, con PIL, que ya usan `api/medios.py` y `proveedores/fal.py`. No hace falta ninguna dependencia nueva y funciona igual en el VPS Linux.
+- **Endpoint:** `POST /api/tomas/{id}/recortar`.
+  - Solo acepta una toma de tipo hoja.
+  - Recibe `{cajas?: [[x,y,ancho,alto], …]}`. Sin cajas, divide la imagen en tantas columnas iguales como paneles pidió la hoja (`paneles` de la operación), con un margen interior del 1 % por lado.
+- **Antes de cortar, vista previa.** El panel enseña la hoja con las líneas de corte, y Juan confirma con «Recortar (sin coste)» o pulsa «Los paneles no son iguales».
+  - En el segundo caso se propone pasar a vistas sueltas (D16).
+  - Picasso **no** detecta solo si los paneles son regulares: lo decide Juan viendo las líneas. El ajuste manual de las cajas queda fuera de PIC-05.
+- **Píxeles intactos.** Se corta sin reescalar ni comprimir: PNG sin pérdida, con los píxeles del original. La resolución real (ancho × alto) se guarda y se enseña.
+- **Lo que deja:**
+  - por cada panel, un `Medio` nuevo, con `origen: recorte`, `medio_origen_id` (la hoja), `caja`, `ancho` y `alto`;
+  - y una `Toma` en la carpeta del personaje, con `toma_origen_id` (la toma de la hoja), `accion: recorte`, vista y expresión del panel. Sin `operacion_id`.
+- **Idempotente.** Volver a recortar la misma hoja con las mismas cajas devuelve los recortes que ya existen (clave: `medio_origen_id` + caja) y no crea duplicados. Con cajas distintas se crean recortes nuevos, y los anteriores se conservan.
+
+##### b) Conservación de la hoja original
+
+- **La hoja no se toca.** Su `Medio` es inmutable (§3 del maestro). Recortar solo crea medios nuevos.
+- **Protección contra el borrado (PIC-02 R1).** `usos_de_medio` añade dos usos nuevos:
+  - «origen de N recortes» (medios con `medio_origen_id` igual a la hoja);
+  - la referencia con rol `hoja` en una ficha.
+
+  Mientras tenga cualquiera de los dos, `DELETE /api/medios/{id}` devuelve 409, como con los demás usos.
+- **Trazabilidad en la ficha.** Al aprobar el primer recorte de una hoja para el borrador, la hoja entra en esa versión como referencia con rol `hoja`. Se ve en la ficha y **no viaja** a las generaciones. Así, la versión publicada dice de qué hoja sale cada recorte.
+- **Descartar la hoja** la atenúa en la Mesa. No borra su medio ni sus recortes, y los recortes aprobados siguen en el borrador.
+- **Recortes en la ficha:** su línea muestra la resolución («recorte de 683 × 1 152 px») y la hoja de origen.
+
+##### c) «Crear vista independiente» frente a «Aumentar resolución»
+
+| | Crear vista independiente | Aumentar resolución |
+|---|---|---|
+| Qué hace | Una **imagen nueva** de esa vista y expresión, a resolución completa | **La misma imagen** con más píxeles |
+| Cómo | `imagen_con_referencias`, con la referencia principal como imagen 1 y la dirección de la vista. El recorte **no** viaja, para no meter una cara de más | Acción `escalar` de la 18.13 (aprobada y aplazada), con un modelo de escalado |
+| Resultado | Puede salir distinta del recorte (pose, gesto, detalle). Se revisa y se aprueba aparte; si se aprueba, sustituye al recorte en el borrador | Se parece al recorte por construcción, pero puede inventar detalle al escalar. También se revisa |
+| Coste | Una imagen: 0,15 $ con el catálogo actual | El del modelo de escalado: **sin catálogo ni precio verificado** |
+| En PIC-05 | **Sí** | **No.** El botón no aparece en la construcción. La maqueta lo enseña desactivado («Próximamente»), con su explicación |
+
+Textos de la interfaz:
+- «Crear vista independiente · 0,15 $»: «Una imagen nueva de esta vista, con la referencia principal. Puede salir distinta del recorte».
+- «Aumentar resolución» (desactivado): «Mantiene esta misma imagen con más píxeles. Llegará cuando haya un modelo de escalado verificado».
 
 ### 5. Cambios mínimos
 
@@ -422,7 +479,10 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 | H19 | Coherencia del vestuario | Pescador con «jersey verde oscuro y camisa de cuadros» marcado «Se conserva»: todas las vistas lo nombran, y ninguna dice «no copies la ropa» |
 | H20 | Costes discretos | El precio solo está en el botón y en cada tarjeta. El detalle se abre desde la pastilla de gasto. Solo se destacan: supera el presupuesto, cambio de precio y petición sin confirmar |
 | H21 | Distribución | A 1 280 px, panel al lado; a ~900 px, panel superpuesto; a 390 px, panel a pantalla completa. El inspector deja ver las acciones sin desplazarse |
-| H22 | Hoja compuesta | «Generar hoja · 0,15 $» → «Recortar en vistas» → tres recortes con su vista y resolución → aprobar o «Ampliar esta vista · 0,15 $» |
+| H23 | Recorte sin coste | Recortar no crea operaciones ni cambia el gasto. Los recortes son PNG con los píxeles del original y su resolución real. Recortar dos veces con las mismas cajas no duplica |
+| H24 | Hoja conservada | Después de recortar, el hash del medio de la hoja no cambia. Borrar la hoja con recortes devuelve 409. Al aprobar un recorte, la hoja entra en el borrador con rol `hoja` y no viaja en la siguiente generación |
+| H25 | Vista independiente | «Crear vista independiente» genera con la referencia principal y sin el recorte. Si se aprueba, el recorte sale del borrador y entra la vista nueva. «Aumentar resolución» no aparece en la construcción |
+| H22 | Hoja compuesta | «Generar hoja · 0,15 $» → «Recortar en vistas» (vista previa de los cortes, sin coste) → tres recortes con su vista y resolución → aprobar o «Crear vista independiente · 0,15 $». La hoja sigue intacta |
 | H14 | Vista y expresión por separado | Una referencia «frontal + sonrisa amplia» y otra «perfil + neutra» se distinguen en la ficha y en la barra; «cuerpo entero» es una vista de pies a cabeza con una sola persona |
 
 ## SDD-06 · Reglas de desarrollo
@@ -479,10 +539,14 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 | D9 | ¿Presupuesto del Taller y del lote? | **El global, como hoy, con el lote de §4.9:** el servidor comprueba el total, se crea en dos fases y cada operación reserva al autorizarse. Lo que falla con rechazo se libera, lo incierto queda como posible cargo y nada se reautoriza solo. Un presupuesto por espacio queda propuesto aparte |
 | D10 | ¿Vincular a la ficha marca favorita? | **No.** Se separan; las tomas ya vinculadas con ★ la conservan |
 | D11 | ¿Aprobar una vista exige comparar antes? | **No obliga, pero lo propone:** «Aprobar para el borrador» abre la comparación con la referencia principal. No aplica al primer retrato, que todavía no tiene con qué compararse |
-| D13 | ¿Recorrido por defecto: hoja compuesta, vistas sueltas o híbrido? | **Recomendación: híbrido** (§4.11). Retrato individual para la referencia principal; después, una hoja compuesta con las vistas; luego recortar, aprobar y ampliar solo lo necesario. **Pendiente de decidir** tras una prueba de pago autorizada aparte (unos 0,60 $), con la misma referencia principal en las dos formas |
+| D13 | ¿Recorrido por defecto: hoja compuesta, vistas sueltas o híbrido? | **Recomendación: híbrido** (§4.11). Retrato individual para la referencia principal; después, una hoja compuesta con las vistas; luego recortar, aprobar y ampliar solo lo necesario. **Pendiente de decidir** tras una prueba de pago autorizada aparte (unos 0,75 $, §11), con la misma referencia principal en las dos formas |
 | D14 | ¿Se conserva el término «ancla»? | **En la interfaz no: «referencia principal»,** con su ayuda la primera vez. «Ancla» queda en el código y en este documento |
 | D15 | ¿Dónde está el gasto? | **Una pastilla discreta en la cabecera con «Detalle de costes».** El precio se ve en el botón; los avisos solo aparecen cuando hay que decidir (§4.10) |
-| D16 | ¿Qué pasa si la hoja no sale en paneles iguales? | **Avisar y proponer vistas sueltas.** El ajuste manual del recorte queda para más adelante |
+| D16 | ¿Qué pasa si la hoja no sale en paneles iguales? | **Lo decide Juan en la vista previa del recorte** («Los paneles no son iguales»), y se propone pasar a vistas sueltas. Ni detección automática ni ajuste manual de las cajas en PIC-05 |
+| D17 | ¿El recorte es una operación del motor? | **No:** es una acción local, sin coste, con su traza en `Medio` y `Toma` (§4.14a) |
+| D18 | ¿La hoja entra en la ficha? | **Sí, con rol `hoja`, que no viaja,** al aprobar el primer recorte. Queda protegida contra el borrado mientras tenga recortes o esté en una ficha (§4.14b) |
+| D19 | ¿Viaja el recorte al crear una vista independiente? | **No.** Solo la referencia principal y la dirección; el recorte añadiría una cara más |
+| D20 | ¿«Aumentar resolución» en PIC-05? | **No.** Queda para la 18.13, con un modelo y un precio verificados. En la maqueta aparece desactivado |
 | D12 | ¿Modelo para la hoja? | **El más económico que cumpla tres condiciones:** 1) admite las referencias que necesita la vista (hasta 3); 2) admite edición, para «corregir editando» (§4.7); 3) su calidad está **validada para este trabajo**, con una prueba corta autorizada (el mismo ancla y las mismas tres vistas, comparadas con la lista de §4.7). El precio solo decide entre los que cumplen las tres. Hoy solo cumple las dos primeras Nano Banana Pro en fal (6 referencias, con edición), y su calidad para hojas está sin validar. Los candidatos baratos del §9.7 pasan por la misma prueba antes de ser el modelo por defecto |
 
 ## SDD-08 · Despliegue
@@ -490,6 +554,62 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 - Rama `pic-05/sdd-hoja-personaje`: solo documentación y maqueta. Sin fusionar.
 - El código, cuando se autorice, va en una rama `pic-05/director-hoja` e instancia aislada (`picasso_pic05`, `simulado`), igual que PIC-04.
 - Fusión y despliegue con respaldo de base y medios, etiquetas `antes-pic05` y vuelta atrás, cada paso con autorización de Juan.
+
+## 11. Encargo de construcción (preparado; no empieza sin la autorización de Juan)
+
+**Puerta para empezar.** Juan aprueba esta revisión del SDD y la maqueta, o cambia las recomendaciones de D1–D20. Si no dice nada sobre D13, se construyen **las dos formas** (hoja y vistas sueltas), con la híbrida por defecto y un ajuste para cambiarla. La decisión final de D13 se toma con la prueba real.
+
+**Dónde.**
+- Rama `pic-05/director-hoja`, desde `main`, con los documentos de `pic-05/sdd-hoja-personaje`. Llevar esos documentos a `main` es una fusión de documentación que también autoriza Juan.
+- Instancia aislada, como en PIC-04:
+  - proyecto de compose propio, con base `picasso_pic05` y `DB_NAME_PRUEBAS=picasso_pic05`;
+  - imágenes y volumen de medios propios;
+  - **puertos que asigna Juan** (en PIC-04 se usaron 3013 y 8013; Code no los elige).
+- Sin claves de proveedores en la instancia: `FAL_KEY` y `OPENAI_API_KEY` vacías. Solo el proveedor `simulado`.
+- La instalación de Juan no se toca.
+
+**Fases**, cada una con sus pruebas en verde antes de la siguiente:
+
+| Fase | Qué | Pruebas que la cierran |
+|---|---|---|
+| B1 · Datos | Roles `tres_cuartos`, `cuerpo_entero` y `hoja`; `ancla`; `expresion`; `direccion_hoja`; campos del personaje (§4.2a); `Medio.origen=recorte`, `medio_origen_id`, `caja`; `Toma.motivo_descarte`; colección `sesiones_director` | pytest de modelos; las fichas existentes se leen igual (compatibilidad) |
+| B2 · Textos | Plantillas de retrato, vista y hoja; línea de la referencia principal según lo conservado; resumen de lo que se conserva; persona real | pytest, incluida la comprobación del pescador (H19) |
+| B3 · Lote | Total comprobado en el servidor, dos fases, reserva por operación, `id_peticion` por vista, repetir sin duplicar, reconciliar | `p19_director_hoja.py`: H8, H9, H9b |
+| B4 · Recorte y ficha | `recortar`, idempotencia, PIL sin reescalar, usos nuevos en R1, hoja con rol `hoja`, `pasar-a-ficha` con rol, ancla y expresión y sin tocar ★, publicar | p19: H10, H17, H23, H24, H25; p16 sigue en verde |
+| B5 · Interfaz | Panel del Director con la receta; barra con la siguiente acción (§4.12); inspector compacto; costes discretos (§4.10); distribución por anchos (§4.13) | `node --test` de la siguiente acción y de las preguntas; batería completa |
+| B6 · Recorrido | Juan recorre la instancia aislada con `simulado`: desde cero hasta publicar, más recarga, fallo y sin confirmar | Validación de Juan en la interfaz (H13, H15, H16, H18, H21) |
+
+**Entrega de la construcción:**
+- commits de la rama;
+- batería completa en verde (`scripts_pruebas/en_docker.sh`, pytest y `node --test`);
+- capturas o grabación del recorrido en `~/dev/picasso-evidencias/pic05-…`;
+- lista de lo que queda sin validar.
+
+Sin fusión ni despliegue.
+
+**Fuera de la construcción:**
+- aumentar resolución (18.13);
+- el agente del Director;
+- el ayudante de prompts (§12);
+- extracción desde Pinterest;
+- análisis de estilos;
+- proveedores nuevos (§9.7);
+- ajuste manual del recorte;
+- la hoja compuesta de la 18.41 como lámina para imprimir.
+
+**Prueba real (aparte, con su presupuesto).** Cuando B6 esté cerrado, Picasso prepara la prueba de D13: el mismo personaje inventado y la misma referencia principal, con una hoja de 3 paneles y 3 vistas sueltas. Son 4 imágenes más el retrato, unos 0,75 $ al precio verificado ese día. Antes de cada envío se enseña el precio, y lo autoriza Juan. Sirve para decidir D13 y la calidad del modelo para hojas (D12). Es la única prueba que dice algo de la continuidad.
+
+## 12. Siguiente prioridad del Director: el ayudante de prompts
+
+Después de PIC-05, el Director sigue con el **ayudante de prompts**, que reutiliza lo que deja esta receta:
+- los campos del personaje (§4.2a);
+- lo que se conserva y lo que varía;
+- la dirección de la hoja y de cada vista;
+- vista y expresión;
+- la referencia principal;
+- las plantillas de B2.
+
+Se apoya en la 18.52 (prompt verificado, revisión con severidad) y en la 18.66 (Director). Necesita su propio SDD. Queda anotado en el backlog (§21 del maestro) sin aprobar.
 
 ## Mapa de reutilización
 

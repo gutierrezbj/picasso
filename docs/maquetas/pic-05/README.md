@@ -4,6 +4,29 @@ Versión navegable: https://claude.ai/artifact/SLbhDsi6bGatVStBdHkpku (privada; 
 
 Datos simulados: nada se genera ni se cobra. El precio que enseña es el de Nano Banana Pro en fal del catálogo (0,15 $, verificado el 14-11-2026). El presupuesto de 5,00 $ es de ejemplo. Paleta oscura aprobada en PIC-01 (D11).
 
+## Revisión 4 (21-11-2026): recorte, hoja original y vista independiente
+
+- **«Recortar en vistas»** abre una vista previa con las líneas de corte, la resolución de cada panel y dos botones:
+  - «Recortar (sin coste)»;
+  - «Los paneles no son iguales», que pasa a vistas sueltas.
+
+  Recortar no crea operación ni lote y no cambia el gasto. Hacerlo dos veces no duplica.
+- **La hoja se conserva.** Al aprobar el primer recorte, la hoja entra en el borrador con rol `hoja` («se conserva y no viaja»). Descartarla no borra nada.
+- **En cada recorte:**
+  - «Crear vista independiente · 0,15 $»: una imagen nueva con la referencia principal y sin el recorte, que puede salir distinta. Aprobada, sustituye al recorte en el borrador.
+  - «Aumentar resolución · próximamente», desactivado, con su explicación.
+- **La barra actúa sobre lo que está abierto:** retrato → elegir; hoja → recortar; imagen por revisar → aprobar o pasar a la siguiente; «Qué se envía» → preparar.
+- **Comprobado:**
+  - 58 comprobaciones de lógica en Node (las 46 de la revisión 3 más 12 nuevas):
+    - vista previa del recorte;
+    - sin coste ni lote;
+    - sin duplicados;
+    - hoja conservada y en el borrador con rol `hoja`;
+    - vista independiente sin el recorte y su sustitución en el borrador;
+    - la barra sobre lo abierto.
+  - Recorrido en Chrome sobre la versión publicada, a 1 280 px: vista previa del recorte, recortes e inspector con las dos acciones.
+  - Al recargar la página se recuperó el estado anterior: la ficha de Ramón v1 publicada.
+
 ## Recorrido (revisión 3)
 
 **Cambios de la revisión 3:**

@@ -341,7 +341,7 @@ function estadoChip(t){
   if (t.estado==="fallida") return '<span class="chip err">Falló</span>';
   if (S.principal===t.id) return '<span class="chip ok">Referencia principal · '+(publicadaEn(t.v)?'en la ficha v'+t.v:'borrador v'+t.v)+'</span>';
   if (t.v) return publicadaEn(t.v) ? '<span class="chip ok">En la ficha v'+t.v+'</span>' : '<span class="chip ok">Aprobada · borrador v'+t.v+'</span>';
-  if (t.reemplazada) return '<span class="chip">Ampliada aparte</span>';
+  if (t.reemplazada) return '<span class="chip">Sustituida por vista independiente</span>';
   if (t.tipo==="hoja") return t.recortada ? '<span class="chip">Recortada</span>' : t.desc ? '<span class="chip err">Descartada</span>' : '<span class="chip amb">Por recortar</span>';
   if (t.desc) return '<span class="chip err">'+(t.motivo==="identidad"?'No mantiene la identidad':'Descartada')+'</span>';
   return '<span class="chip">Por revisar</span>';
@@ -453,11 +453,11 @@ function inspector(t){
   } else if (t.tipo==="hoja"){
     h+= t.recortada||t.desc ? '<p class="ayuda">'+(t.recortada?'Recortada en '+t.paneles.length+' vistas: revísalas en la Mesa.':'Descartada.')+'</p>' : '<div class="fila"><button class="btn amb" data-a="recortar">Recortar en vistas</button><button class="btn" data-a="otraHoja">Generar otra hoja · '+euro(S.precio)+'</button><button class="btn" data-a="aSueltas">Pasar a vistas sueltas</button></div><p class="ayuda">La hoja entera no viaja como referencia: varias caras en una imagen tienden a mezclarse. Viajan los recortes que apruebes.</p>';
   } else if (t.reemplazada){
-    h+='<p class="ayuda">Esta vista se amplió como imagen suelta; revisa la nueva.</p>';
+    h+='<p class="ayuda">Se creó una vista independiente de esta vista; revisa la nueva. Este recorte se conserva.</p>';
   } else if (!t.v && !t.desc){
-    h+='<div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para el borrador</button><button class="btn" data-a="comparar">Comparar con la principal</button></div><div class="fila"><button class="btn chico" data-a="fav">'+(t.fav?'★ Favorita':'☆ Favorita')+'</button><button class="btn chico" data-a="noid">No mantiene la identidad</button><button class="btn chico" data-a="descartar">Descartar</button></div>'+(t.tipo==="recorte"?'<p class="ayuda">Recorte de la hoja, de unos '+esc(t.res)+'. <button class="btn txt chico" data-a="ampliar">Ampliar esta vista · '+euro(S.precio)+'</button></p>':'');
+    h+='<div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para el borrador</button><button class="btn" data-a="comparar">Comparar con la principal</button></div><div class="fila"><button class="btn chico" data-a="fav">'+(t.fav?'★ Favorita':'☆ Favorita')+'</button><button class="btn chico" data-a="noid">No mantiene la identidad</button><button class="btn chico" data-a="descartar">Descartar</button></div>'+(t.tipo==="recorte"?recorteAyuda(t):'');
   } else if (t.v && !publicadaEn(t.v) && t.id!==S.principal){
-    h+='<div class="fila"><button class="btn chico" data-a="quitarBorrador">Quitar del borrador</button><button class="btn chico" data-a="fav">'+(t.fav?'★ Favorita':'☆ Favorita')+'</button></div>';
+    h+='<div class="fila"><button class="btn chico" data-a="quitarBorrador">Quitar del borrador</button><button class="btn chico" data-a="fav">'+(t.fav?'★ Favorita':'☆ Favorita')+'</button></div>'+(t.tipo==="recorte"?recorteAyuda(t):'');
   } else if (t.desc && t.tipo!=="hoja"){
     h+='<div class="fila"><button class="btn chico" data-a="recuperar">Recuperar</button></div>';
   }
@@ -466,6 +466,10 @@ function inspector(t){
   return h;
 }
 
+function recorteAyuda(t){
+  const h=S.tomas.find(x=>x.tipo==="hoja"&&x.lote===t.lote);
+  return '<div class="bloque"><span class="ayuda">Recorte de '+esc(t.res)+(h?' de la hoja T'+h.n+', que se conserva':'')+'.</span><button class="btn" data-a="ampliar">Crear vista independiente · '+euro(S.precio)+'</button><span class="ayuda">Una imagen nueva de esta vista, con la referencia principal. Puede salir distinta del recorte.</span><button class="btn" disabled title="Próximamente">Aumentar resolución · próximamente</button><span class="ayuda">Mantendrá esta misma imagen con más píxeles. Llegará cuando haya un modelo de escalado verificado.</span></div>';
+}
 function siguiente(){
   if (S.accionBarra) return {msg:S.accionBarra.msg, a:"ejecutarBarra", label:S.accionBarra.boton, sec:"cancelarBarra", secLabel:"Cancelar"};
   const gen=S.tomas.filter(t=>t.estado==="generando").length;
@@ -477,11 +481,13 @@ function siguiente(){
   const fall=S.tomas.filter(t=>t.estado==="fallida"&&!t.reemplazada);
   if (fall.length) return {msg:fall.length+(fall.length===1?" generación falló":" generaciones fallaron"), a:"faltan", label:"Generar "+(fall.length===1?"la que falta":"las que faltan")+" · "+euro(fall.length*S.precio)};
   if (S.tomas.some(t=>t.tipo==="retrato"&&t.estado==="lista"&&!t.desc) && !tienePrincipal()){ const c=cur(); return (c&&c.tipo==="retrato"&&!c.desc&&S.tab==="imagen") ? {msg:"Revisa y elige la referencia principal para continuar", a:"elegirPrincipal", label:"Elegir como referencia principal", sec:"otroRetrato", secLabel:"Generar otro · "+euro(S.precio)} : {msg:"Revisa y elige la referencia principal para continuar", a:"verRetrato", label:"Ver el retrato"}; }
-  if (S.tomas.some(t=>t.tipo==="hoja"&&t.estado==="lista"&&!t.recortada&&!t.desc)) return {msg:"Revisa la hoja y recórtala en vistas", a:"verHoja", label:"Revisar la hoja"};
+  if (S.tomas.some(t=>t.tipo==="hoja"&&t.estado==="lista"&&!t.recortada&&!t.desc)){ const c=cur(); return (c&&c.tipo==="hoja"&&!c.recortada&&!c.desc&&S.tab==="imagen") ? {msg:"Revisa la hoja y recórtala en vistas", a:"recortar", label:"Recortar en vistas"} : {msg:"Revisa la hoja y recórtala en vistas", a:"verHoja", label:"Revisar la hoja"}; }
   const rev=S.tomas.filter(t=>t.estado==="lista"&&!t.desc&&!t.v&&!t.reemplazada&&(t.tipo==="vista"||t.tipo==="recorte"));
-  if (rev.length) return {msg:"Revisa "+rev.length+(rev.length===1?" imagen":" imágenes"), sub:"Aprueba para el borrador las que valgan.", a:"revisarSiguiente", label:"Revisar la siguiente"};
+  if (rev.length){ const c=cur(); if (c && S.tab==="imagen" && rev.includes(c)) return {msg:"Revisa "+rev.length+(rev.length===1?" imagen":" imágenes"), sub:"Esta es T"+c.n+": apruébala si vale.", a:"aprobar", label:"Aprobar para el borrador", sec:rev.length>1?"saltar":null, secLabel:"Pasar a la siguiente"};
+    return {msg:"Revisa "+rev.length+(rev.length===1?" imagen":" imágenes"), sub:"Aprueba para el borrador las que valgan.", a:"revisarSiguiente", label:"Revisar la siguiente"}; }
   const g=generaciones();
   if (S.preparado && g.length) return {msg:g[0].tipo==="retrato"?"Listo: retrato para elegir la referencia principal":"Listo para generar", a:"generar", label:etiquetaGenerar(g), sec:"editarPrep", secLabel:"Editar preparación"};
+  if (S.tab==="director" && S.paso===6 && g.length) return {msg:"Revisa lo que se envía", a:"preparar", label:"Preparar"};
   if (tienePrincipal() && S.uso && g.length) return {msg:(S.origen==="desc"&&!S.tomas.some(t=>t.tipo!=="retrato")?"Referencia principal elegida. ":"")+"Faltan "+pendientes().length+" vistas", a:"continuarVistas", label:"Continuar con las vistas pendientes"};
   if (S.ficha.borrador && S.ficha.refs.some(r=>r.v===S.ficha.borrador)) return {msg:"Todo revisado", sub:"Las imágenes aprobadas están en el borrador v"+S.ficha.borrador+".", a:"verFicha", label:"Revisar y publicar la ficha v"+S.ficha.borrador};
   if (S.ficha.publicada && S.tomas.length) return {msg:"Ficha de "+nombreP()+" v"+S.ficha.publicada+" publicada", a:"prepararOtra", label:"Preparar otra vista"};
@@ -508,12 +514,18 @@ function modal(){
     const filas=S.tomas.filter(t=>t.estado!=="preparada"&&t.tipo!=="recorte").map(t=>'<tr><td>T'+t.n+' · '+esc(t.nombre)+'</td><td>'+esc(t.lote)+'</td><td>'+(est[t.estado]||t.estado)+'</td><td>'+euro(t.estado==="fallida"?0:S.precio)+'</td></tr>').join("");
     return abre+'<div class="fila"><h3>Detalle de costes</h3>'+x+'</div><table class="costes"><tr><td>Estimado (completadas, sin importe del proveedor)</td><td>'+euro(S.gastoEst)+'</td></tr><tr><td>Reservado (en curso o sin confirmar)</td><td>'+euro(S.gastoRes)+'</td></tr><tr><td>Presupuesto</td><td>'+euro(S.presupuesto)+'</td></tr></table><b style="font-size:13px">Por intento</b><div style="overflow-x:auto"><table class="costes"><tr><th>Imagen</th><th>Lote</th><th>Estado</th><th>Importe</th></tr>'+(filas||'<tr><td colspan="4">Nada todavía.</td></tr>')+'</table></div><p class="ayuda">'+MODELO+' · '+euro(S.precio)+' por imagen · tarifa verificada el '+TARIFA_FECHA+'. Los recortes son locales y no cuestan. Lotes: '+(S.lotes.map(l=>l.id+" ("+euro(l.total)+" autorizado)").join(", ")||"ninguno")+'.</p>'+cierra;
   }
+  if (S.modal.tipo==="recorte"){
+    const t=S.tomas.find(y=>y.id===S.modal.id), n=t.paneles.length, w=Math.round(2048/n);
+    let lineas=''; for (let i=1;i<n;i++) lineas+='<line x1="'+(1600*i/n)+'" y1="0" x2="'+(1600*i/n)+'" y2="900" stroke="#F5A623" stroke-width="6" stroke-dasharray="24 16"/>';
+    const prev=svgHoja(t).replace('</svg>'+'<text','</svg>'+lineas+'<text');
+    return abre+'<div class="fila"><h3>Vista previa del recorte</h3>'+x+'</div><div class="marco" style="aspect-ratio:16/9">'+prev+'</div><p class="ayuda">'+n+' columnas iguales, de unos '+w+' × 1 152 px cada una, sin reescalar. La hoja original se conserva tal cual. Recortar es local y no cuesta.</p><p class="ayuda">Si algún panel no cae dentro de su columna, no recortes: genera esas vistas una a una.</p><div class="fila"><button class="btn" data-a="aSueltas">Los paneles no son iguales</button><button class="btn amb" data-a="recortarYa">Recortar (sin coste)</button></div>'+cierra;
+  }
   if (S.modal.tipo==="confirmar"){
     const m=S.modal;
     return abre+'<div class="fila"><h3>'+esc(m.titulo)+'</h3>'+x+'</div><p>'+esc(m.texto)+'</p><div class="fila"><button class="btn" data-a="cerrarModal">Cancelar</button><button class="btn amb" data-a="'+m.accion+'">'+esc(m.boton)+'</button></div>'+cierra;
   }
   const f=S.ficha, br=f.refs.filter(r=>r.v===f.borrador), pub=f.refs.filter(r=>publicadaEn(r.v));
-  const fila=r=>'<span>'+(r.ancla?'Referencia principal':'T'+r.n)+' · '+esc(r.vista)+' · '+esc(r.expresion||"neutra")+(r.res?' · recorte de '+esc(r.res):'')+'</span>';
+  const fila=r=>r.hoja ? '<span>Hoja T'+r.n+' · rol hoja · se conserva y no viaja</span>' : '<span>'+(r.ancla?'Referencia principal':'T'+r.n)+' · '+esc(r.vista)+' · '+esc(r.expresion||"neutra")+(r.res?' · recorte de '+esc(r.res):'')+'</span>';
   let h=abre+'<div class="fila"><h3>Ficha de '+esc(nombreP())+'</h3>'+x+'</div><p class="ayuda">'+esc(fichaTxt())+'. Aprobar una imagen la añade al borrador; publicar convierte el borrador en la versión que usan las generaciones.</p>';
   h+='<div class="bloque"><b style="font-size:13px">Publicado'+(f.publicada?' (v'+f.publicada+')':'')+'</b>'+(S.origen==="refs"?'<span>Referencia principal · frontal · neutra (v2)</span>':'')+(pub.map(fila).join("")||(S.origen==="refs"?'':'<span class="ayuda">Nada publicado todavía.</span>'))+'</div>';
   if (f.borrador) h+='<div class="bloque"><b style="font-size:13px">Borrador v'+f.borrador+'</b>'+(br.map(fila).join("")||'<span class="ayuda">Sin imágenes aprobadas.</span>')+'<span class="ayuda">Dirección de la hoja: '+esc(S.hoja.fondo+" · "+S.hoja.luz+" · "+S.hoja.acabado)+'</span></div><button class="btn amb" data-a="publicar"'+(br.length?'':' disabled')+'>Publicar la ficha v'+f.borrador+'</button><p class="ayuda">Una vez publicada, la versión no se cambia: los cambios irán a otra.</p>';
@@ -616,25 +628,33 @@ const acciones={
   cerrarPanel(){ S.panel=false; },
   verRetrato(){ abrirToma(S.tomas.find(x=>x.tipo==="retrato"&&x.estado==="lista"&&!x.desc)); },
   verHoja(){ abrirToma(S.tomas.find(x=>x.tipo==="hoja"&&x.estado==="lista"&&!x.recortada&&!x.desc)); },
+  saltar(){ const rev=S.tomas.filter(x=>x.estado==="lista"&&!x.desc&&!x.v&&!x.reemplazada&&(x.tipo==="vista"||x.tipo==="recorte")); const i=rev.findIndex(x=>x.id===S.sel); abrirToma(rev[(i+1)%rev.length]); },
   revisarSiguiente(){ abrirToma(S.tomas.find(x=>x.estado==="lista"&&!x.desc&&!x.v&&!x.reemplazada&&(x.tipo==="vista"||x.tipo==="recorte"))); },
   elegirPrincipal(){ const t=cur(), v=asegurarBorrador(); S.principal=t.id; t.v=v; S.ficha.refs.push({v, clave:"retrato", vista:"frontal", expresion:null, ancla:true, n:t.n}); t.hist.push("Elegida como referencia principal · borrador v"+v); toast("Referencia principal elegida. Queda en el borrador v"+v+", sin publicar."); },
   otroRetrato(){ const t=cur(); t.desc=true; lanzar([{tipo:"retrato", texto:textoRetrato()}]); },
   descartar(){ const t=cur(); t.desc=true; t.hist.push("Descartada"); },
   recuperar(){ const t=cur(); t.desc=false; t.motivo=null; t.hist.push("Recuperada"); },
   continuarVistas(){ S.tab="director"; S.panel=true; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
-  recortar(){
-    const t=cur();
-    if (t.irregular){ S.modal={tipo:"confirmar", titulo:"La hoja no tiene paneles iguales", texto:"El último panel no ocupa lo mismo que los demás y un recorte igual lo cortaría mal. Te propongo generar esas vistas una a una.", boton:"Pasar a vistas sueltas", accion:"aSueltas"}; return; }
+  recortar(){ S.modal={tipo:"recorte", id:S.sel}; },
+  recortarYa(){
+    const t=S.tomas.find(x=>x.id===S.modal.id); S.modal=null; S.sel=t.id;
+    if (t.recortada) return;
     t.recortada=true; t.hist.push("Recortada en "+t.paneles.length+" vistas (local, sin coste)");
     const w=Math.round(2048/t.paneles.length);
     t.paneles.forEach(p=>{ S.n++; S.tomas.push({id:"t"+S.n, n:S.n, tipo:"recorte", vclave:p.vclave, clave:p.clave, nombre:p.nombre+" (recorte)", vista:p.vista, expresion:p.expresion, estado:"lista", fav:false, desc:false, motivo:null, v:null, drift:t.drift, reemplazada:false, lote:t.lote, idp:t.idp+":recorte", res:w+" × 1 152 px", texto:"Recorte de T"+t.n+".", hist:["Recorte de T"+t.n+" · "+w+" × 1 152 px, sin coste"]}); });
     toast("Hoja recortada en "+t.paneles.length+" vistas. Revisa cada una.");
   },
   otraHoja(){ const t=cur(); t.desc=true; S.modo="hoja"; S.tab="director"; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
-  aSueltas(){ const t=S.tomas.find(x=>x.tipo==="hoja"&&!x.recortada&&!x.desc); if (t) t.desc=true; S.modo="sueltas"; S.modal=null; S.tab="director"; S.panel=true; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
-  aprobar(){ const t=cur(), v=asegurarBorrador(); t.v=v; S.ficha.refs.push({v, clave:t.clave, vista:t.vista, expresion:t.expresion, ancla:false, n:t.n, res:t.res||null}); t.hist.push("Aprobada para el borrador v"+v+" (no marca ★)"); S.modal=null; },
+  aSueltas(){ const t=S.tomas.find(x=>x.tipo==="hoja"&&!x.recortada&&!x.desc); if (t){ t.desc=true; t.hist.push("Paneles no iguales: se pasa a vistas sueltas. La hoja se conserva."); } S.modo="sueltas"; S.modal=null; S.tab="director"; S.panel=true; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
+  aprobar(){
+    const t=cur(), v=asegurarBorrador();
+    if (t.tipo==="recorte"){ const h=S.tomas.find(x=>x.tipo==="hoja"&&x.paneles.some(p=>p.clave===t.clave)&&x.recortada&&x.lote===t.lote);
+      if (h && !S.ficha.refs.some(r=>r.v===v&&r.hoja&&r.n===h.n)){ S.ficha.refs.push({v, clave:"hoja:"+h.n, vista:"hoja", expresion:null, ancla:false, n:h.n, hoja:true}); h.hist.push("Entra en el borrador v"+v+" con rol hoja (no viaja)"); } }
+    if (t.tipo==="vista"){ const viejo=S.ficha.refs.find(r=>r.v===v&&r.clave===t.clave&&r.res); if (viejo){ S.ficha.refs=S.ficha.refs.filter(r=>r!==viejo); const tv=S.tomas.find(x=>x.n===viejo.n); if (tv){ tv.v=null; tv.reemplazada=true; tv.hist.push("Sustituida en el borrador por T"+t.n); } } }
+    t.v=v; S.ficha.refs.push({v, clave:t.clave, vista:t.vista, expresion:t.expresion, ancla:false, n:t.n, res:t.res||null}); t.hist.push("Aprobada para el borrador v"+v+" (no marca ★)"); S.modal=null;
+  },
   quitarBorrador(){ const t=cur(); S.ficha.refs=S.ficha.refs.filter(r=>r.n!==t.n); t.v=null; t.hist.push("Quitada del borrador"); },
-  ampliar(){ const t=cur(); S.accionBarra={msg:"Ampliar «"+t.nombre.replace(" (recorte)","")+"» como imagen suelta, a resolución completa.", boton:"Generar 1 vista · "+euro(S.precio), tipo:"ampliar", id:t.id}; },
+  ampliar(){ const t=cur(); S.accionBarra={msg:"Crear una vista independiente de «"+t.nombre.replace(" (recorte)","")+"»: imagen nueva con la referencia principal, sin el recorte. Puede salir distinta.", boton:"Generar 1 vista · "+euro(S.precio), tipo:"ampliar", id:t.id}; },
   fav(){ const t=cur(); t.fav=!t.fav; },
   comparar(){ S.modal={tipo:"comparar", id:S.sel}; },
   noid(){ const t=cur(); t.desc=true; t.motivo="identidad"; t.hist.push("No mantiene la identidad; el medio se conserva"); S.modal=null; },
@@ -645,7 +665,7 @@ const acciones={
   ejecutarBarra(){
     const a=S.accionBarra, t=S.tomas.find(x=>x.id===a.id); S.accionBarra=null;
     const u=unidadesVistas().find(x=>x.clave===t.clave) || {v:{...VISTAS[t.vclave], clave:t.vclave, exc:false}, clave:t.clave, vista:t.vista, expresion:t.expresion, nombre:t.nombre};
-    if (a.tipo==="ampliar") t.reemplazada=true;
+    if (a.tipo==="ampliar" && !t.v){ t.reemplazada=true; t.hist.push("Sustituida por una vista independiente"); }
     lanzar([{tipo:"vista", u, texto:a.tipo==="corregir" ? "Cambia solo la cara para que sea la de la imagen 2. Mantén todo lo demás.\nImagen 1: T"+t.n+".\n"+lineaPrincipal().replace("Imagen 1","Imagen 2") : textoVista(u)}]);
   },
   verFicha(){ S.modal={tipo:"ficha"}; },
