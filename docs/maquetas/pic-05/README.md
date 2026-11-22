@@ -4,6 +4,24 @@ Versión navegable: https://claude.ai/artifact/SLbhDsi6bGatVStBdHkpku (privada; 
 
 Datos simulados: nada se genera ni se cobra. El precio que enseña es el de Nano Banana Pro en fal del catálogo (0,15 $, verificado el 14-11-2026). El presupuesto de 5,00 $ es de ejemplo. Paleta oscura aprobada en PIC-01 (D11).
 
+## Revisión 6 (22-11-2026): preparación exacta, «Puede variar», posible cargo y cajas
+
+- **Preparación inmutable.**
+  - «Preparar» crea una preparación con su huella (P1, P2…).
+  - Generar comprueba la huella. Si cambió el precio u otra cosa, no se genera nada y la única acción es «Preparar de nuevo», que enseña el precio nuevo.
+  - Cambiar un campo, la dirección o las vistas deja la preparación sin valor.
+  - Cada `id_peticion` es `prep:{preparación}:{n}` y se ve en «Detalles técnicos».
+- **«Puede variar».** La línea de la referencia principal solo pide conservar lo marcado. Lo que puede variar y se ve en la foto (pelo, ropa, accesorio) va en «No copies de esta imagen…». Con persona real, la cara queda marcada y bloqueada.
+- **Reserva y posible cargo separados, como en PIC-02:**
+  - una generación sin confirmar sigue reservada;
+  - «Marcar como fallida» libera la reserva y deja un posible cargo en ese intento, que se resuelve con «No hubo cargo» o «Hubo cargo…»;
+  - reintentar no lo borra;
+  - «Detalle de costes» enseña por separado informado, estimado, reservado y posible cargo.
+- **Recorte.** «Recortar (sin coste)» ignora el segundo clic. La validación de las cajas y las peticiones simultáneas son del servidor (SDD §4.14a); la maqueta no las simula.
+- **Comprobado:**
+  - 62 comprobaciones de lógica en Node, con un guion reescrito porque el anterior se perdió al limpiarse el directorio temporal. Cubre los recorridos de las revisiones 3 a 5 y los cuatro puntos nuevos.
+  - La vista renderizada de esta revisión **no** la he revisado en el navegador: los cambios son de lógica y de texto, no de distribución.
+
 ## Revisión 5 (21-11-2026): corte ajustable, selección reversible y D13 provisional
 
 - **Vista previa del recorte con líneas ajustables:**

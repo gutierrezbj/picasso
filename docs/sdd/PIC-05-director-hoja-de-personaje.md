@@ -1,6 +1,17 @@
 # PIC-05 · Director de Studio: hoja de personaje
 
-**Estado:** revisión 5, para revisión completa antes de autorizar la construcción aislada. Revisiones anteriores: 1 `0467afb`, 2 `848f754`, 3 `15cc213`, 4 `efbffaa`. **Ni el SDD ni la maqueta están aprobados.** El encargo de construcción está en §11.
+**Estado:** revisión 6, para la revisión del revisor antes de autorizar la construcción aislada. Revisiones anteriores: 1 `0467afb`, 2 `848f754`, 3 `15cc213`, 4 `efbffaa`, 5 `73ca6f9`. **Ni el SDD ni la maqueta están aprobados.** El encargo de construcción está en §11.
+
+**Revisión 6 (22-11-2026): los cuatro puntos pendientes del revisor sobre `73ca6f9`:**
+1. **La autorización va atada a la preparación exacta,** no solo al precio: una preparación inmutable con su huella, y un 409 si algo cambió (§4.9a).
+2. **«Puede variar» se respeta en la línea de cada referencia.** Solo se pide conservar lo marcado «Se conserva»; lo que puede variar se dice que no se copie (§4.3).
+3. **Reserva y posible cargo separados, como en PIC-02:**
+   - incierta = reservado;
+   - marcada fallida = posible cargo del intento;
+   - «No hubo cargo» y «Hubo cargo…» resuelven por intento (§4.9).
+4. **Las cajas de recorte se validan en el servidor, y dos peticiones a la vez no duplican nada** (§4.14a).
+
+Puertos propuestos por el revisor para la instancia aislada: **3014** (interfaz) y **8014** (API), a comprobar libres antes de levantarla (§11).
 
 **Revisión 5 (21-11-2026), ajustes del revisor a la revisión 4:**
 1. **D13 no se aprueba por silencio.** El recorrido híbrido queda como **provisional en simulado**; se construyen las dos formas y la elección definitiva sale de la comparación real, que decide Juan de forma explícita (§11, D13).
@@ -179,13 +190,26 @@ La receta no interpreta texto libre. Guarda cada dato en su campo y lo coloca en
 #### 4.3 Cómo se conserva la referencia principal
 
 - **La referencia principal** (ancla en el código) es una referencia de la ficha con rol `frontal` y `ancla: true`. Hay una por versión: un retrato frontal, expresión neutra, cabeza y pelo enteros, cara grande y centrada.
-- **Toda vista nueva lleva la referencia principal como imagen 1.** La línea que la acompaña **se escribe a partir de lo que Juan marcó para conservar**, sin contradecirlo:
-  - siempre: «conserva su cara, pelo, tono de piel y complexión»;
-  - si el vestuario base está marcado «Se conserva»: «y su ropa: jersey verde oscuro y camisa de cuadros». En ese caso la línea no lleva «no copies la ropa»;
-  - si el vestuario está marcado «Puede variar»: «no copies su ropa»;
-  - en todos los casos: «no copies la pose, el encuadre ni el fondo».
+- **Toda vista nueva lleva la referencia principal como imagen 1.** La línea que la acompaña **se escribe solo con lo que Juan marcó**. No hay nada que se conserve «siempre»:
+  - **Conserva:** solo los campos marcados «Se conserva» que se ven en la foto, con su valor:
 
-  Comprobación obligatoria (pytest y maqueta): con el pescador de vestuario conservado, **ninguna** de las vistas lleva «no copies la ropa» ni «no copies […] la ropa», y todas nombran «jersey verde oscuro» y «camisa de cuadros».
+    | Campo | Texto |
+    |---|---|
+    | cara | «su cara y su tono de piel» |
+    | pelo | «su pelo» |
+    | ojos | «sus ojos» |
+    | complexión | «su complexión» |
+    | edad aparente | «su edad aparente» |
+    | señas | «sus señas, en su lado» |
+    | accesorio fijo | «su accesorio: …» |
+    | vestuario base | «su ropa: …» |
+  - **No copies:** cada campo marcado «Puede variar» que la foto enseña (pelo, ropa, accesorio), más siempre la pose, el encuadre y el fondo. Por ejemplo, con el pelo variable: «No copies de esta imagen su pelo, la pose, el encuadre ni el fondo». El texto de la vista dice el pelo pedido, si lo hay, en «Puede variar: …».
+  - **Persona real (18.20):** la cara y el tono de piel se conservan siempre. En la ficha, esa casilla va marcada y bloqueada, con la explicación.
+  - **Ninguna línea pide conservar y no copiar lo mismo.** Lo comprueban pytest y la maqueta.
+
+  **Comprobaciones obligatorias** (pytest y maqueta):
+  - Pescador con el vestuario conservado: ninguna vista dice «no copies» la ropa, y todas nombran «jersey verde oscuro» y «camisa de cuadros».
+  - Pescador con el pelo marcado «Puede variar»: ninguna línea pide conservar el pelo, y todas dicen «no copies» el pelo.
 - **Crear completo, adjuntar lo mínimo** (VDLT): la referencia principal suele bastar para perfil, tres cuartos y cuerpo entero (según VDLT; se comprueba en la prueba real). Las expresiones llevan la principal y, si existe, el cuerpo entero aprobado. Nunca más de tres imágenes por generación.
 - **Una vista por imagen** en las vistas sueltas. La hoja compuesta junta varias vistas en una generación (§4.11).
 - **Vista y expresión por separado:** la vista dice desde dónde se ve; la expresión, qué gesto hace.
@@ -269,19 +293,35 @@ La receta deja hecho lo que el agente reutilizará después: la sesión, las fic
 - **Reabrir:** la última sesión abierta por espacio se recupera desde la base. El navegador recuerda la pestaña del lateral (comodidad).
 - **Operaciones en marcha** al cerrar: se recuperan por `id_peticion` como en PIC-03 (§4.9).
 
+#### 4.9a Preparación inmutable: lo que se autoriza es exactamente lo preparado
+
+Como el presupuesto inmutable de PIC-04, aplicado al lote:
+- **«Preparar» crea una `preparacion` inmutable** (colección `preparaciones_director`), que fija:
+  - `sesion_id` y la `revision` de la sesión;
+  - por cada generación: el texto exacto enviado, las referencias (`medio_id`, número, para qué), la dirección efectiva, el modelo, la relación de aspecto, la resolución y el número de paneles (en la hoja);
+  - la tarifa aplicada, con su fecha de verificación, el precio por generación y el total.
+- **Huella:** `huella = sha256` del contenido anterior, en forma canónica. La barra y el panel muestran el precio de **esa** preparación.
+- **Generar envía `{preparacion_id, huella}`.** Antes de crear nada, el servidor vuelve a calcular la preparación con el estado actual: sesión, ficha, referencias, catálogo y tarifa. Si la huella no coincide, devuelve **409 «La preparación cambió»**, con lo que cambió (texto, referencias, dirección, modelo o precio), y **no crea ni autoriza ninguna operación**.
+- **Cambiar algo después de preparar invalida la preparación.** Pasa con un campo, un «Se conserva», la dirección, las vistas, la forma (hoja o sueltas), el modelo o la tarifa del catálogo. La interfaz deja de enseñar «Listo» y vuelve a «Preparar». Con el precio cambiado, el aviso dice «El precio ha cambiado: prepara de nuevo para verlo», y la acción es «Preparar de nuevo», no un «Generar igualmente».
+- **Cada `id_peticion` sale de la preparación:** `prep:{preparacion_id}:{n}`. Repetir con la misma preparación devuelve las mismas operaciones. Una preparación nueva da peticiones nuevas.
+- **Cada operación guarda su `preparacion_id`,** y en «Detalles técnicos» se ve de qué preparación salió.
+- **Confirmación por encima del presupuesto:** va atada a la preparación y a su total. Si la preparación cambia, hay que volver a confirmar.
+
 #### 4.9 Lote, reserva, resultados parciales y recarga
 
-Un lote es lo que se autoriza con un clic: una operación por vista suelta, o una sola operación para la hoja compuesta (`id_peticion = sesion:{id}:hoja:{revision}`).
+Un lote es lo que se autoriza con un clic: una operación por vista suelta, o una sola operación para la hoja compuesta (`id_peticion = prep:{preparacion_id}:{n}`, §4.9a).
 
-1. **Antes de autorizar.** La barra enseña el precio de cada vista y el total. El servidor vuelve a calcular el total con la tarifa del catálogo y lo compara con el presupuesto restante (gasto + reservado). Si lo supera, pide la confirmación de siempre (`confirmado_por_encima_del_presupuesto`). Esa confirmación vale para ese lote y ese total, no para otro.
+1. **Antes de autorizar.** La barra enseña el precio de cada vista y el total de la preparación (§4.9a). El servidor comprueba la huella y compara el total con el presupuesto restante, que es el presupuesto menos lo gastado, lo reservado y los posibles cargos pendientes (PIC-02). Si lo supera, pide la confirmación de siempre (`confirmado_por_encima_del_presupuesto`), y esa confirmación vale solo para esa preparación y ese total.
 2. **Creación en dos fases, sin gasto a medias.**
-   - *Fase 1, preparar:* se crean todas las operaciones del lote en estado `preparada`. Cada una lleva su `id_peticion = sesion:{id}:{vista}:{expresion}:{revision}`. Preparar no reserva ni envía nada. Si una no se puede crear (modelo no elegible, referencias de más), el lote no pasa a la fase 2 y las ya creadas quedan como `preparada`, visibles y sin coste.
+   - *Fase 1, preparar:* se crean todas las operaciones del lote en estado `preparada`, con el contenido exacto de la preparación. Cada una lleva su `id_peticion = prep:{preparacion_id}:{n}`. Preparar no reserva ni envía nada. Si una no se puede crear (modelo no elegible, referencias de más), el lote no pasa a la fase 2 y las ya creadas quedan como `preparada`, visibles y sin coste.
    - *Fase 2, autorizar:* se autorizan una a una, en orden. **Cada operación reserva su estimación al autorizarse** (la capa «reservado» de PIC-02), y la reserva vive hasta que la operación cierra.
 3. **Lote guardado en la sesión.** `lotes[]`: `{id, vistas, id_peticion[], total_autorizado, tarifa y fecha, confirmado_por_encima, creado_en}`. Así se sabe qué se autorizó y por cuánto, aunque el navegador se cierre.
 4. **Si solo algunas vistas se generan:**
    - *Completada:* toma por revisar. Cuenta por el importe informado o, si no lo hay, por la estimación con la etiqueta «estimado».
    - *Fallida con rechazo claro del proveedor:* la reserva se libera y la vista vuelve a `fallida`. La barra ofrece «Generar las que faltan · X $», que es un lote nuevo, con su precio y su autorización.
-   - *Incierta (sin respuesta):* la reserva **no** se libera. Queda «posible cargo sin confirmar» (regla de PIC-02), con «Comprobar», que nunca reenvía. No entra en «las que faltan» hasta que se resuelva.
+   - *Incierta (sin respuesta):* sigue contando como **reservado**, igual que en PIC-02: la operación incierta es reserva, no posible cargo. Tiene «Comprobar», que pregunta al proveedor y nunca reenvía. No entra en «las que faltan».
+   - *Incierta marcada fallida por Juan* («Marcar como fallida», con aviso): la reserva se libera y aparece un **posible cargo sin confirmar en ese intento** (`intento.posible_cargo`, PIC-02), que es una capa distinta del reservado. Desde ese momento la vista sí entra en «las que faltan». El posible cargo **no** desaparece al reintentar: sigue en su intento hasta que Juan lo resuelve con «No hubo cargo» o «Hubo cargo…» (`POST /api/intentos/{id}/cargo`).
+   - **Capas en «Detalle de costes»:** informado, estimado, reservado y posible cargo, cada una por separado. El total es la suma, y los cargos se ven por intento.
    - La sesión enseña el estado de cada vista del lote. El total del lote nunca se presenta como gastado si no lo está.
 5. **Recarga a mitad:**
    - *Durante la fase 1:* al volver, la sesión enseña las operaciones `preparada` del lote. No se autorizan solas: Juan vuelve a pulsar, con el precio delante.
@@ -302,7 +342,7 @@ El trabajo creativo va delante. La contabilidad está a un clic, pero no ocupa l
   - posibles cargos sin confirmar.
 - **Solo se destaca lo que exige decidir:**
   1. *Supera el presupuesto:* el botón de generar abre una confirmación con el total y lo que queda.
-  2. *Ha cambiado el precio* desde que se preparó: la tarjeta y el botón enseñan el precio nuevo y piden confirmarlo.
+  2. *Ha cambiado el precio* desde que se preparó: la preparación deja de valer (§4.9a) y la acción pasa a «Preparar de nuevo», que enseña el precio nuevo. No hay «Generar igualmente» con un precio distinto del preparado.
   3. *Petición sin confirmar:* un aviso en la Mesa con «Comprobar», que nunca reenvía.
 - **No se repite** «no genera», «no gasta» ni «pulsar es la autorización» en cada paso. Se dice una sola vez, en la primera apertura de la receta («Preparar no gasta. Generar cobra lo que indica el botón»), y queda en la ayuda.
 - **Controles que no cambian** (PIC-02 y PIC-04):
@@ -409,7 +449,22 @@ Siempre hay **una** acción principal, la misma en el panel del Director y en la
 - **Lo que deja:**
   - por cada panel, un `Medio` nuevo, con `origen: recorte`, `medio_origen_id` (la hoja), `caja`, `ancho` y `alto`;
   - y una `Toma` en la carpeta del personaje, con `toma_origen_id` (la toma de la hoja), `accion: recorte`, vista y expresión del panel. Sin `operacion_id`.
-- **Idempotente.** Volver a recortar la misma hoja con las mismas cajas devuelve los recortes que ya existen (clave: `medio_origen_id` + caja) y no crea duplicados. Con cajas distintas se crean recortes nuevos, y los anteriores se conservan.
+- **Validación de las cajas en el servidor.** No se confía en la interfaz. Se rechaza con 422, sin crear nada, si falla cualquiera de estas reglas:
+  - números enteros en píxeles;
+  - `x ≥ 0`, `y ≥ 0`, `x + ancho ≤ ancho de la hoja` y `y + alto ≤ alto de la hoja`;
+  - `ancho ≥ 10 %` del ancho de la hoja, `alto ≥ 50 %` del alto y como mínimo 64 px por lado;
+  - tantas cajas como paneles tiene la hoja, en orden de izquierda a derecha;
+  - ninguna se solapa con otra (área común cero).
+
+  El 422 dice qué caja falla y por qué.
+- **Idempotente, también con peticiones simultáneas:**
+  - **Clave del recorte:** `sha256(medio_origen_id + cajas normalizadas)`. Se guarda en una colección `recortes` con **índice único** en esa clave.
+  - La primera petición inserta el registro en estado `en_curso`, escribe los ficheros con un nombre fijo derivado de la clave (fichero temporal más renombrado atómico) y crea los medios y las tomas. Al terminar, pasa a `hecho`.
+  - Una segunda petición con la misma clave choca con el índice único. Si el registro está `hecho`, devuelve los mismos recortes. Si está `en_curso`, devuelve **409 «Recorte en curso»** y la interfaz vuelve a consultar.
+  - Además, `medios` tiene un índice único parcial en `(medio_origen_id, caja)` para los de `origen: recorte`, así que ningún panel se crea dos veces aunque algo falle a mitad.
+  - Si el proceso se corta, un registro `en_curso` de más de 5 minutos se puede reanudar: los ficheros ya escritos se reutilizan y los medios que faltan se crean.
+  - En la interfaz, «Recortar (sin coste)» se desactiva al pulsarlo.
+- Con cajas distintas se crean recortes nuevos. Los anteriores se conservan, con su historial.
 
 ##### b) Conservación de la hoja original
 
@@ -446,18 +501,19 @@ Textos de la interfaz:
 - `Referencia` gana `ancla: bool = False` y `expresion?`, una lista cerrada que va aparte del rol: neutra, sonrisa_amplia, risa, sorpresa, seria y pensativa.
 - `FichaVersion` gana `direccion_hoja?` `{fondo, luz, acabado, encuadres_por_vista}`.
 - `Toma` gana `motivo_descarte?` (`identidad` | null).
-- Colección nueva `sesiones_director`.
+- Colecciones nuevas: `sesiones_director`, `preparaciones_director` (inmutable, con `huella`) y `recortes` (con índice único en la clave del recorte). Índice único parcial en `medios (medio_origen_id, caja)` para `origen: recorte`.
 - Operación: `origen_receta?` `{sesion_id, vista, expresion?}`; en la hoja, `{sesion_id, vista: "hoja", paneles: [{vista, expresion}]}` fuera de `entradas`, para no cambiar la clave de idempotencia.
 
 **Motor:**
-- Ninguno en el ciclo. Las vistas se generan con `imagen_con_referencias`, una operación por vista suelta (o una para la hoja), con `id_peticion = sesion:{id}:{vista}:{expresion}:{revision}`. Un doble clic no duplica.
+- Ninguno en el ciclo. Las vistas se generan con `imagen_con_referencias`, una operación por vista suelta (o una para la hoja), con `id_peticion = prep:{preparacion_id}:{n}` (§4.9a). Un doble clic no duplica.
 - El lote sigue §4.9: total comprobado en el servidor, creación en dos fases (preparar todas, autorizar una a una) y reserva por operación al autorizarse. Para eso se usan `crear_operacion` y `autorizar`, que ya existen; el `generar` del Taller hace las dos cosas en una sola llamada y no sirve para un lote.
 - `USO_REFERENCIA` del personaje distingue por rol (vista), por `ancla` y por `expresion` (§4.3). Lo prueba pytest.
 
 **API:**
 - `GET/POST /api/espacios/{e}/director/sesiones`, `GET/PUT /api/director/sesiones/{id}`.
 - `POST /api/director/sesiones/{id}/preparar`: rehace los textos y devuelve las tarjetas con precio. No crea operaciones.
-- `POST /api/director/sesiones/{id}/lotes` `{vistas, total_visto, confirmado_por_encima}`: comprueba el total, guarda el lote y hace las dos fases (§4.9). Si el total del servidor no coincide con el visto, devuelve 409 y no autoriza nada.
+- `POST /api/director/sesiones/{id}/preparaciones`: crea la preparación inmutable con su huella y su total (§4.9a). No crea operaciones.
+- `POST /api/director/sesiones/{id}/lotes` `{preparacion_id, huella, confirmado_por_encima}`: recalcula y compara la huella (409 si cambió), comprueba el presupuesto, guarda el lote y hace las dos fases (§4.9).
 - `GET /api/director/sesiones/{id}/lotes/{lote}`: estado por vista, con la reserva y el gasto de cada una.
 - `POST /api/tomas/{id}/pasar-a-ficha` acepta tomas de carpeta y recibe `rol`, `ancla` y `expresion`. Ya no toca `valoracion`.
 - `POST /api/fichas/{id}/seleccion` `{vista, expresion, medio_id}`: cambia la imagen seleccionada en el borrador para esa vista y expresión, sin borrar la anterior ni su toma (§4.14c). Publicar usa el aprobar que ya existe (`api/elementos.py:166`).
@@ -485,7 +541,7 @@ Textos de la interfaz:
 | H7 | Qué se envía y cuánto cuesta | Cada tarjeta muestra texto exacto, imágenes numeradas con su para qué, modelo y precio; el total es la suma. Con más referencias que el máximo del modelo, la tarjeta se bloquea con aviso |
 | H8 | Preparar no gasta | Tras «Preparar», cero operaciones nuevas y la sesión guardada |
 | H9 | Generar con una autorización | Un clic crea una operación por vista suelta marcada (o una sola para la hoja), todas con `id_peticion` distinto y estable. Un doble clic no crea más. Por encima del presupuesto pide confirmación. Cada operación reserva su estimación al autorizarse |
-| H9b | Lote a medias y recarga | Con una vista fallida, su reserva se libera y la barra ofrece «Generar las que faltan» con su precio. Una incierta mantiene la reserva y no se reofrece. Si se recarga entre fases, las `preparada` no se autorizan solas. Repetir el lote no crea operaciones nuevas |
+| H9b | Lote a medias y recarga | Con una vista fallida, su reserva se libera y la barra ofrece «Generar las que faltan» con su precio. Una incierta cuenta como reservado y no se reofrece. Si se marca fallida, pasa a posible cargo de su intento, deja de estar reservada y sí se reofrece. Reintentar no borra ese posible cargo, y «No hubo cargo» o «Hubo cargo…» lo resuelven solo en su intento. Si se recarga entre fases, las `preparada` no se autorizan solas. Repetir el lote no crea operaciones nuevas |
 | H10 | Comparar y aprobar | «Aprobar para el borrador» añade la referencia con su vista y su expresión al borrador; no marca ★; la ★ no vincula. La toma muestra «Aprobada · borrador vN» |
 | H11 | Identidad perdida | «No mantiene la identidad» descarta sin borrar y ofrece corregir editando, revisar la dirección o regenerar, cada una con precio y sin ejecutarse |
 | H12 | Reabrir | Cerrar y volver recupera paso, vistas y su estado. Una generación en curso al cerrar se reconcilia sin duplicarse |
@@ -495,11 +551,11 @@ Textos de la interfaz:
 | H16 | Referencia principal desde cero | El primer retrato ofrece «Elegir como referencia principal», «Generar otro» y «Descartar», sin «Comparar». Tras elegir, la acción es «Continuar con las vistas pendientes» |
 | H17 | Borrador y publicación | Una imagen aprobada dice «Aprobada · borrador v2» hasta publicar. Solo después dice «En la ficha v2». La cabecera nunca contradice a la toma |
 | H18 | Campos y preguntas | Con edad 65 y procedencia rellenas no se pregunta ninguna de las dos. El nombre se ve en la cabecera, la carpeta y el panel. Se puede responder con texto propio |
-| H19 | Coherencia del vestuario | Pescador con «jersey verde oscuro y camisa de cuadros» marcado «Se conserva»: todas las vistas lo nombran, y ninguna dice «no copies la ropa» |
+| H19 | Coherencia de lo que se conserva | Pescador con «jersey verde oscuro y camisa de cuadros» marcado «Se conserva»: todas las vistas lo nombran, y ninguna dice «no copies la ropa» |
 | H20 | Costes discretos | El precio solo está en el botón y en cada tarjeta. El detalle se abre desde la pastilla de gasto. Solo se destacan: supera el presupuesto, cambio de precio y petición sin confirmar |
 | H21 | Distribución | A 1 280 px, panel al lado; a ~900 px, panel superpuesto; a 390 px, panel a pantalla completa. El inspector deja ver las acciones sin desplazarse |
 | H22 | Hoja compuesta | «Generar hoja · 0,15 $» → «Recortar en vistas» (vista previa de los cortes, sin coste) → tres recortes con su vista y resolución → aprobar o «Crear vista independiente · 0,15 $». La hoja sigue intacta |
-| H23 | Recorte sin coste y ajustable | Recortar no crea operaciones ni cambia el gasto. Las líneas de corte se mueven en la vista previa, sin cruzarse y sin bajar del 10 % del ancho. La resolución mostrada coincide con la de cada recorte. Los recortes son PNG con los píxeles del original. Recortar dos veces con las mismas cajas no duplica |
+| H23 | Recorte sin coste, ajustable y validado | Recortar no crea operaciones ni cambia el gasto. Las líneas de corte se mueven en la vista previa, sin cruzarse y sin bajar del 10 % del ancho. El servidor rechaza con 422 cajas fuera de la hoja, solapadas, demasiado pequeñas o en número distinto al de paneles. Dos peticiones simultáneas con las mismas cajas dejan un solo juego de recortes. La resolución mostrada coincide con la de cada recorte. Los recortes son PNG con los píxeles del original. Recortar dos veces con las mismas cajas no duplica |
 | H24 | Hoja conservada | Después de recortar, el hash del medio de la hoja no cambia. Borrar la hoja con recortes devuelve 409. Al aprobar un recorte, la hoja entra en el borrador con rol `hoja` y no viaja en la siguiente generación |
 | H25 | Vista independiente | «Crear vista independiente» genera con la referencia principal y sin el recorte. Si se aprueba, pasa a ser la seleccionada en el borrador. El recorte sigue en la Mesa, con su medio, su toma y su historial, y se puede volver a seleccionar. «Aumentar resolución» no aparece en la construcción |
 
@@ -523,7 +579,9 @@ Textos de la interfaz:
    - H10: favorita y aprobada separadas; 409 si la ficha está aprobada.
    - H11 y H12.
    - H3b: `direccion_hoja` guardada y recuperada.
-   - H23: recortar no crea operaciones; las líneas no se cruzan ni bajan del 10 %; PNG sin reescalar; las mismas cajas no duplican.
+   - H23: recortar no crea operaciones; PNG sin reescalar; las mismas cajas no duplican; cada regla de las cajas devuelve su 422; dos peticiones lanzadas a la vez (`asyncio.gather`) dejan un juego de medios y tomas; un `en_curso` cortado se reanuda.
+   - §4.9a: preparar, cambiar un campo o el precio del catálogo y generar devuelve 409 sin crear operaciones; la misma preparación dos veces no duplica.
+   - PIC-02 en el lote: incierta = reservado; marcada fallida = posible cargo del intento; reintento autorizado = reserva nueva más el posible cargo anterior; «No hubo cargo» solo en su intento.
    - H24: el hash de la hoja no cambia; borrarla devuelve 409; el rol `hoja` no viaja.
    - H25: la vista independiente sale sin el recorte; la selección en el borrador es reversible y no borra nada.
    - H17: aprobar no publica; publicar crea la versión vigente.
@@ -538,7 +596,7 @@ Textos de la interfaz:
      - la dirección de la hoja aplicada, con las excepciones solo en su vista.
    - Resumen de lo que se conserva: LADO en mayúsculas, «SIEMPRE lleva» y referencias nombradas.
    - Vista y expresión: se generan como campos separados.
-   - H19: pescador con el vestuario conservado; ninguna línea dice «no copies la ropa».
+   - H19: pescador con el vestuario conservado: ninguna línea dice «no copies la ropa». Con el pelo «Puede variar»: ninguna línea pide conservar el pelo y todas dicen «no copies» el pelo. Con persona real, la cara se conserva siempre.
    - H18: las preguntas salen de los campos obligatorios vacíos, nunca de los rellenos.
    - H14: vista y expresión se guardan en campos separados.
 3. **Frontend (`node --test`):** preguntas que faltan, vistas por uso, total previsto, recuperación de la sesión, la siguiente acción para cada fila de §4.12 (H15), el primer retrato sin «Comparar» (H16) y las líneas de corte de la vista previa (H23).
@@ -586,7 +644,7 @@ Textos de la interfaz:
 - Instancia aislada, como en PIC-04:
   - proyecto de compose propio, con base `picasso_pic05` y `DB_NAME_PRUEBAS=picasso_pic05`;
   - imágenes y volumen de medios propios;
-  - **puertos que asigna Juan** (en PIC-04 se usaron 3013 y 8013; Code no los elige).
+  - **puertos 3014 (interfaz) y 8014 (API)**, propuestos por el revisor. Antes de levantarla se comprueba que estén libres. Si no lo están, se para y se consulta.
 - Sin claves de proveedores en la instancia: `FAL_KEY` y `OPENAI_API_KEY` vacías. Solo el proveedor `simulado`.
 - La instalación de Juan no se toca.
 
@@ -596,8 +654,8 @@ Textos de la interfaz:
 |---|---|---|
 | B1 · Datos | Roles `tres_cuartos`, `cuerpo_entero` y `hoja`; `ancla`; `expresion`; `direccion_hoja`; campos del personaje (§4.2a); `Medio.origen=recorte`, `medio_origen_id`, `caja`; `Toma.motivo_descarte`; colección `sesiones_director` | pytest de modelos; las fichas existentes se leen igual (compatibilidad) |
 | B2 · Textos | Plantillas de retrato, vista y hoja; línea de la referencia principal según lo conservado; resumen de lo que se conserva; persona real | pytest, incluida la comprobación del pescador (H19) |
-| B3 · Lote | Total comprobado en el servidor, dos fases, reserva por operación, `id_peticion` por vista, repetir sin duplicar, reconciliar | `p19_director_hoja.py`: H8, H9, H9b |
-| B4 · Recorte y ficha | Vista previa con líneas ajustables y `cajas`; `recortar`, idempotencia, PIL sin reescalar; selección en el borrador que conserva lo sustituido; usos nuevos en R1, hoja con rol `hoja`, `pasar-a-ficha` con rol, ancla y expresión y sin tocar ★, publicar | p19: H10, H17, H23, H24, H25; p16 sigue en verde |
+| B3 · Lote | Preparación inmutable con huella (409 si cambió), total comprobado en el servidor, dos fases, incierta como reservado y fallida marcada como posible cargo del intento, reserva por operación, `id_peticion` por vista, repetir sin duplicar, reconciliar | `p19_director_hoja.py`: H8, H9, H9b |
+| B4 · Recorte y ficha | Vista previa con líneas ajustables y `cajas`; validación de cajas (422); `recortar` idempotente con índice único y peticiones simultáneas; PIL sin reescalar; selección en el borrador que conserva lo sustituido; usos nuevos en R1, hoja con rol `hoja`, `pasar-a-ficha` con rol, ancla y expresión y sin tocar ★, publicar | p19: H10, H17, H23, H24, H25; p16 sigue en verde |
 | B5 · Interfaz | Panel del Director con la receta; barra con la siguiente acción (§4.12); inspector compacto; costes discretos (§4.10); distribución por anchos (§4.13) | `node --test` de la siguiente acción y de las preguntas; batería completa |
 | B6 · Recorrido | Juan recorre la instancia aislada con `simulado`: desde cero hasta publicar, más recarga, fallo y sin confirmar | Validación de Juan en la interfaz (H13, H15, H16, H18, H21) |
 

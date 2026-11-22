@@ -254,9 +254,14 @@ function cubierta(clave){
 const pendientes = () => tienePrincipal() ? unidadesVistas().filter(u=>!cubierta(u.clave)) : [];
 const retratoPendiente = () => !tienePrincipal() && !S.tomas.some(t=>t.tipo==="retrato" && !t.desc && VIVO.includes(t.estado));
 
+const TXT_CONS={cara:()=>"su cara y su tono de piel", pelo:()=>"su pelo", ojos:()=>"sus ojos", complexion:()=>"su complexión", edad:()=>"su edad aparente", senas:()=>"sus señas, en su lado", accesorio:c=>"su accesorio: "+c.v.charAt(0).toLowerCase()+c.v.slice(1), vestuario:c=>"su ropa: "+c.v.charAt(0).toLowerCase()+c.v.slice(1)};
+const TXT_NO={pelo:"su pelo", vestuario:"su ropa", accesorio:"su accesorio"};
+function consCampo(k){ return k==="cara" && S.real ? true : C(k).cons; }
 function lineaPrincipal(){
-  const vest=C("vestuario"), lleva = vest.cons && vest.v;
-  return "Imagen 1: referencia principal de "+nombreP()+". Conserva su cara, pelo, tono de piel y complexión"+(lleva?" y su ropa: "+vest.v.charAt(0).toLowerCase()+vest.v.slice(1):"")+". "+(lleva?"No copies la pose, el encuadre ni el fondo.":"No copies su ropa, la pose, el encuadre ni el fondo.");
+  const cons=[], no=[];
+  ["cara","pelo","ojos","complexion","edad","senas","accesorio","vestuario"].forEach(k=>{ const c=C(k); if (!c.v && k!=="cara") return; if (consCampo(k)) cons.push(TXT_CONS[k](c)); else if (TXT_NO[k]) no.push(TXT_NO[k]); });
+  const lista=a=>a.length<2?a.join(""):a.slice(0,-1).join(", ")+" y "+a[a.length-1];
+  return "Imagen 1: referencia principal de "+nombreP()+". "+(cons.length?"Conserva "+lista(cons)+". ":"")+"No copies de esta imagen "+lista(no.concat(["la pose","el encuadre","el fondo"])).replace(/ y el fondo$/," ni el fondo")+".";
 }
 function refsDe(u){
   const r=[{n:1, que:"Referencia principal", para:lineaPrincipal()}];
@@ -288,6 +293,7 @@ function generaciones(){
   if (S.modo==="hoja" && us.length>1){ const h=us.slice(0,4); return [{tipo:"hoja", us:h, nombre:"Hoja con "+h.length+" vistas", texto:textoHoja(h), refs:refsDe(null), resumen:h.map(u=>u.nombre).join(" · ")}]; }
   return us.map(u=>({tipo:"vista", u, nombre:u.nombre, texto:textoVista(u), refs:refsDe(u), resumen:u.vista+" · "+(u.expresion||"neutra")+" · "+u.v.enc.toLowerCase()+" · "+u.v.obj}));
 }
+function huella(g){ const t=JSON.stringify(g.map(x=>[x.tipo,x.texto,(x.refs||[]).map(r=>r.n+":"+r.que+":"+r.para),x.u?x.u.clave:"",x.us?x.us.map(u=>u.clave):[]]))+"|"+S.precio+"|"+S.modo; let h=0; for (let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return (h>>>0).toString(16); }
 function etiquetaGenerar(g){
   if (!g.length) return "";
   return g[0].tipo==="retrato" ? "Generar retrato · "+euro(S.precio) : g[0].tipo==="hoja" ? "Generar hoja · "+euro(S.precio) : "Generar "+g.length+(g.length===1?" vista":" vistas")+" · "+euro(g.length*S.precio);
@@ -332,7 +338,7 @@ function render(){
 function cabecera(){
   const fb = S.nombre && S.origen ? '<button class="btn chico" data-a="verFicha">Ficha de '+esc(S.nombre)+': '+fichaTxt()+'</button>' : '';
   return '<header class="top"><b class="marca">Picasso Studio</b><span class="ruta">JRGB / Taller</span><span class="pest">General</span>'+(S.nombre?'<span class="pest on">Personaje · '+esc(S.nombre)+'</span>':'')+
-    '<div class="der"><span class="sim">Simulación · sin gasto</span><button class="btn pastilla" data-a="costes" title="Detalle de costes">Gasto '+euro(S.gastoEst+S.gastoRes)+' ›</button>'+fb+'<button class="btn chico" data-a="abrirPanel">Director de Studio</button></div></header>';
+    '<div class="der"><span class="sim">Simulación · sin gasto</span><button class="btn pastilla" data-a="costes" title="Detalle de costes">Gasto '+euro(S.gastoEst+S.gastoRes+(S.gastoInf||0)+posibleCargo())+' ›</button>'+fb+'<button class="btn chico" data-a="abrirPanel">Director de Studio</button></div></header>';
 }
 function estadoChip(t){
   if (t.estado==="generando") return '<span class="chip amb">Generando…</span>';
@@ -351,7 +357,7 @@ function mesa(){
   if (!S.origen) return h+'<h2>Mesa</h2><div class="vacio">Para preparar las vistas de un personaje, abre el panel del Director de Studio y elige «Hoja de personaje».</div></main>';
   const inc=S.tomas.filter(t=>t.estado==="incierta").length;
   h+='<div><h2>Personaje · '+esc(S.nombre||"sin nombre")+'</h2><p class="sub">'+(tienePrincipal()?'Referencia principal elegida':'Sin referencia principal todavía')+' · '+S.tomas.filter(t=>t.estado==="lista").length+' imágenes</p></div>';
-  if (inc) h+='<div class="alerta"><span><b>'+inc+' petición sin confirmar.</b> Puede haber un cargo de '+euro(S.precio)+'. Comprobar pregunta al proveedor y no la reenvía.</span><button class="btn chico" data-a="comprobarTodas">Comprobar</button></div>';
+  if (inc) h+='<div class="alerta"><span><b>'+inc+' petición sin confirmar.</b> Sigue reservada. Comprobar pregunta al proveedor y no la reenvía.</span><button class="btn chico" data-a="comprobarTodas">Comprobar</button></div>';
   if (!S.tomas.length && S.origen==="desc") h+='<div class="vacio">Aquí aparecerán las imágenes. Lo primero será un retrato para elegir la referencia principal.</div>';
   h+='<div class="rejilla">';
   if (S.origen==="refs") h+='<div class="toma"><div class="marco">'+svgFigura("retrato","v2",false)+'</div><div class="cab"><b>Referencia principal</b></div><span class="chip ok">En la ficha v2</span></div>';
@@ -388,7 +394,7 @@ function pPersonaje(){
   let h='<h3>'+(S.origen==="desc"?'Describe al personaje':'Personaje')+'</h3><p class="ayuda">Cada dato va en su campo. Marca «Se conserva» en lo que debe repetirse en todas las imágenes. Escribe lo tuyo o usa un ejemplo.</p>';
   h+='<div class="bloque"><div class="campo"><label class="t" for="nombre">Nombre</label><input type="text" id="nombre" data-a="nombre" value="'+esc(S.nombre)+'" placeholder="Por ejemplo, Ramón"></div>';
   CAMPOS.forEach(x=>{ const c=C(x.k);
-    h+='<div class="campo"><div class="cab"><label class="t" for="c-'+x.k+'">'+x.t+(x.ob?'':' <span class="chip">opcional</span>')+'</label><label class="cons"><input type="checkbox" data-a="cons" data-k="'+x.k+'"'+(c.cons?' checked':'')+'> Se conserva</label></div><input type="text" id="c-'+x.k+'" data-a="campo" data-k="'+x.k+'" value="'+esc(c.v)+'" placeholder="'+esc(x.ej[0])+'"><div class="ejemplos">'+x.ej.map(e=>'<button class="ej" data-a="ej" data-k="'+x.k+'" data-v="'+esc(e)+'">'+esc(e)+'</button>').join("")+'</div></div>'; });
+    h+='<div class="campo"><div class="cab"><label class="t" for="c-'+x.k+'">'+x.t+(x.ob?'':' <span class="chip">opcional</span>')+'</label><label class="cons"><input type="checkbox" data-a="cons" data-k="'+x.k+'"'+(consCampo(x.k)?' checked':'')+(x.k==="cara"&&S.real?' disabled title="Persona real: su cara se conserva siempre"':'')+'> Se conserva</label></div><input type="text" id="c-'+x.k+'" data-a="campo" data-k="'+x.k+'" value="'+esc(c.v)+'" placeholder="'+esc(x.ej[0])+'"><div class="ejemplos">'+x.ej.map(e=>'<button class="ej" data-a="ej" data-k="'+x.k+'" data-v="'+esc(e)+'">'+esc(e)+'</button>').join("")+'</div></div>'; });
   h+='</div>';
   const r=resumenConservar();
   h+='<div class="bloque"><b style="font-size:13px">Rasgos y referencias que se deben conservar</b>'+(r.conserva.length?'<span class="resumen">'+esc(r.conserva.join(" · "))+'</span>':'<span class="ayuda">Se completará con lo que rellenes.</span>')+(r.varia.length?'<span class="ayuda">Puede variar: '+esc(r.varia.join(" · "))+'</span>':'')+'<span class="ayuda">Referencias: '+(S.origen==="refs"?'la referencia principal de la ficha v2':(tienePrincipal()?'el retrato elegido':'ninguna todavía; se elige con el primer retrato'))+'. Se pide en cada imagen; si se ha conservado lo ves al revisar.</span></div>';
@@ -446,8 +452,8 @@ function inspector(t){
   let h='<div class="insp-img'+(t.tipo==="hoja"?' ancha':'')+'">'+(t.estado==="lista"?imgToma(t):'')+'</div><div class="fila"><b>T'+t.n+' · '+esc(t.nombre)+'</b>'+estadoChip(t)+(t.fav?'<span class="estrella">★</span>':'')+'</div>';
   if (t.estado==="generando") return h+'<p class="ayuda">Generando. Si cierras, se recupera al volver.</p>';
   if (t.estado==="preparada") return h+'<p class="ayuda">Quedó preparada sin autorizar al recargar. Se autoriza desde la barra, viendo el precio.</p>';
-  if (t.estado==="incierta") return h+'<p class="ayuda">El proveedor no respondió. Puede haber un cargo.</p><button class="btn amb" data-a="comprobar">Comprobar</button>';
-  if (t.estado==="fallida") return h+'<p class="ayuda">El proveedor la rechazó; no cuenta como gasto.</p>';
+  if (t.estado==="incierta") return h+'<p class="ayuda">El proveedor no respondió. Sigue reservada mientras no se sepa. «Comprobar» pregunta sin reenviar; «Marcar como fallida» libera la reserva y deja un posible cargo en este intento.</p><div class="fila"><button class="btn amb" data-a="comprobar">Comprobar</button><button class="btn" data-a="marcarFallida">Marcar como fallida</button></div>';
+  if (t.estado==="fallida") return h+(t.posibleCargo==="pendiente"?'<p class="ayuda">Marcada fallida sin respuesta del proveedor: posible cargo de '+euro(S.precio)+' sin confirmar en este intento.</p><div class="fila"><button class="btn chico" data-a="cargo" data-id="'+t.id+'" data-v="no">No hubo cargo</button><button class="btn chico" data-a="cargo" data-id="'+t.id+'" data-v="si">Hubo cargo…</button></div>':t.posibleCargo?'<p class="ayuda">'+(t.posibleCargo==="cobrado"?'Hubo cargo, informado a mano.':'No hubo cargo.')+'</p>':'<p class="ayuda">El proveedor la rechazó; no cuenta como gasto.</p>');
   if (t.tipo==="retrato" && !tienePrincipal() && !t.desc){
     h+='<div class="fila"><button class="btn amb" data-a="elegirPrincipal">Elegir como referencia principal</button><button class="btn" data-a="otroRetrato">Generar otro · '+euro(S.precio)+'</button><button class="btn" data-a="descartar">Descartar</button></div><p class="ayuda">La referencia principal es la imagen con la que se comparan las demás y la que viaja como imagen 1.</p>';
   } else if (t.tipo==="hoja"){
@@ -462,7 +468,7 @@ function inspector(t){
     h+='<div class="fila"><button class="btn chico" data-a="recuperar">Recuperar</button></div>';
   }
   if (t.motivo==="identidad") h+='<div class="bloque"><b style="font-size:13px">¿Qué hacemos con esta vista?</b><button class="opcion" data-a="corregir"><div><b>Corregir editando · '+euro(S.precio)+'</b><small>Sobre T'+t.n+', con la referencia principal: «cambia solo la cara».</small></div></button><button class="opcion" data-a="revdir"><div><b>Revisar la dirección</b><small>Por ejemplo, de perfil a tres cuartos.</small></div></button><button class="opcion" data-a="regenerar"><div><b>Volver a generar · '+euro(S.precio)+'</b><small>La misma vista.</small></div></button></div>';
-  h+='<details><summary>Ver el texto completo</summary><pre>'+esc(t.texto)+'</pre></details><details><summary>Detalles técnicos</summary><p class="ayuda" style="margin-top:6px">'+MODELO+' · '+euro(S.precio)+' estimado · lote '+esc(t.lote)+' · id_peticion '+esc(t.idp)+'</p><ul class="hist">'+t.hist.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></details>';
+  h+='<details><summary>Ver el texto completo</summary><pre>'+esc(t.texto)+'</pre></details><details><summary>Detalles técnicos</summary><p class="ayuda" style="margin-top:6px">'+MODELO+' · '+euro(S.precio)+' estimado · lote '+esc(t.lote)+' · preparación '+esc(t.prep||"—")+' · id_peticion '+esc(t.idp)+'</p><ul class="hist">'+t.hist.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></details>';
   return h;
 }
 
@@ -511,9 +517,9 @@ function modal(){
     return abre+'<div class="fila"><h3>Comparar T'+t.n+' con la referencia principal</h3>'+x+'</div><div class="par"><div><div class="marco">'+(p?imgToma(p):svgFigura("retrato","v2",false))+'</div><p class="ayuda">Referencia principal</p></div><div><div class="marco">'+imgToma(t)+'</div><p class="ayuda">T'+t.n+' · '+esc(t.nombre)+'</p></div></div><b style="font-size:13px">Revisa en este orden</b><ol class="lista"><li>Forma de la cara</li><li>Ojos y su color</li><li>Cejas</li><li>Nariz y boca</li><li>Pelo</li><li>Señas en su lado</li><li>Edad aparente</li><li>Ropa, si se conserva</li></ol><div class="fila"><button class="btn amb" data-a="aprobar">Aprobar para el borrador</button><button class="btn" data-a="noid">No mantiene la identidad</button></div>'+cierra;
   }
   if (S.modal.tipo==="costes"){
-    const est={lista:"completada · estimado",fallida:"rechazada · liberada",incierta:"sin confirmar · reservado",generando:"en curso · reservado"};
-    const filas=S.tomas.filter(t=>t.estado!=="preparada"&&t.tipo!=="recorte").map(t=>'<tr><td>T'+t.n+' · '+esc(t.nombre)+'</td><td>'+esc(t.lote)+'</td><td>'+(est[t.estado]||t.estado)+'</td><td>'+euro(t.estado==="fallida"?0:S.precio)+'</td></tr>').join("");
-    return abre+'<div class="fila"><h3>Detalle de costes</h3>'+x+'</div><table class="costes"><tr><td>Estimado (completadas, sin importe del proveedor)</td><td>'+euro(S.gastoEst)+'</td></tr><tr><td>Reservado (en curso o sin confirmar)</td><td>'+euro(S.gastoRes)+'</td></tr><tr><td>Presupuesto</td><td>'+euro(S.presupuesto)+'</td></tr></table><b style="font-size:13px">Por intento</b><div style="overflow-x:auto"><table class="costes"><tr><th>Imagen</th><th>Lote</th><th>Estado</th><th>Importe</th></tr>'+(filas||'<tr><td colspan="4">Nada todavía.</td></tr>')+'</table></div><p class="ayuda">'+MODELO+' · '+euro(S.precio)+' por imagen · tarifa verificada el '+TARIFA_FECHA+'. Los recortes son locales y no cuestan. Lotes: '+(S.lotes.map(l=>l.id+" ("+euro(l.total)+" autorizado)").join(", ")||"ninguno")+'.</p>'+cierra;
+    const est={lista:"completada · estimado",fallida:"rechazada · liberada",incierta:"sin respuesta · reservado",generando:"en curso · reservado"};
+    const filas=S.tomas.filter(t=>t.estado!=="preparada"&&t.tipo!=="recorte").map(t=>'<tr><td>T'+t.n+' · '+esc(t.nombre)+'</td><td>'+esc(t.lote)+'</td><td>'+(t.posibleCargo==="pendiente"?'posible cargo sin confirmar <button class="btn chico" data-a="cargo" data-id="'+t.id+'" data-v="no">No hubo cargo</button> <button class="btn chico" data-a="cargo" data-id="'+t.id+'" data-v="si">Hubo cargo…</button>':t.posibleCargo==="sin_cargo"?'marcada fallida · sin cargo':t.posibleCargo==="cobrado"?'marcada fallida · cobrado':(est[t.estado]||t.estado))+'</td><td>'+euro(t.estado==="fallida"&&t.posibleCargo!=="pendiente"&&t.posibleCargo!=="cobrado"?0:S.precio)+'</td></tr>').join("");
+    return abre+'<div class="fila"><h3>Detalle de costes</h3>'+x+'</div><table class="costes"><tr><td>Estimado (completadas, sin importe del proveedor)</td><td>'+euro(S.gastoEst)+'</td></tr><tr><td>Informado</td><td>'+euro(S.gastoInf||0)+'</td></tr><tr><td>Reservado (en curso o sin respuesta)</td><td>'+euro(S.gastoRes)+'</td></tr><tr><td>Posible cargo sin confirmar</td><td>'+euro(posibleCargo())+'</td></tr><tr><td>Presupuesto</td><td>'+euro(S.presupuesto)+'</td></tr></table><b style="font-size:13px">Por intento</b><div style="overflow-x:auto"><table class="costes"><tr><th>Imagen</th><th>Lote</th><th>Estado</th><th>Importe</th></tr>'+(filas||'<tr><td colspan="4">Nada todavía.</td></tr>')+'</table></div><p class="ayuda">'+MODELO+' · '+euro(S.precio)+' por imagen · tarifa verificada el '+TARIFA_FECHA+'. Los recortes son locales y no cuestan. Lotes: '+(S.lotes.map(l=>l.id+" ("+euro(l.total)+" autorizado)").join(", ")||"ninguno")+'.</p>'+cierra;
   }
   if (S.modal.tipo==="recorte"){
     const t=S.tomas.find(y=>y.id===S.modal.id), m=S.modal, n=t.paneles.length, cs=[0].concat(m.cortes,[1]);
@@ -536,9 +542,11 @@ function modal(){
   if (f.borrador) h+='<div class="bloque"><b style="font-size:13px">Borrador v'+f.borrador+'</b>'+(br.map(fila).join("")||'<span class="ayuda">Sin imágenes aprobadas.</span>')+'<span class="ayuda">Dirección de la hoja: '+esc(S.hoja.fondo+" · "+S.hoja.luz+" · "+S.hoja.acabado)+'</span></div><button class="btn amb" data-a="publicar"'+(br.length?'':' disabled')+'>Publicar la ficha v'+f.borrador+'</button><p class="ayuda">Una vez publicada, la versión no se cambia: los cambios irán a otra.</p>';
   return h+cierra;
 }
+function posibleCargo(){ return red(S.tomas.filter(t=>t.posibleCargo==="pendiente").length*S.precio); }
 function toast(t){ const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),3200); }
 
 function lanzar(gs){
+  if (!S.prep){ S.nPrep=(S.nPrep||0)+1; S.prep={id:"P"+S.nPrep, huella:"", total:red(gs.length*S.precio), n:gs.length}; }
   S.rev++; const lote="L"+(S.lotes.length+1), corte=S.pr.corte;
   gs.forEach((g,i)=>{
     S.n++;
@@ -547,7 +555,7 @@ function lanzar(gs){
     if (g.tipo==="retrato") t={...base, tipo:"retrato", vclave:"retrato", clave:"retrato", nombre:"Retrato", vista:"frontal", expresion:null, texto:g.texto};
     else if (g.tipo==="hoja") t={...base, tipo:"hoja", vclave:"hoja", clave:"hoja", nombre:"Hoja · "+g.us.length+" vistas", paneles:g.us.map(u=>({vclave:u.v.clave, clave:u.clave, vista:u.vista, expresion:u.expresion, nombre:u.nombre})), texto:g.texto, irregular:S.pr.irregular};
     else t={...base, tipo:"vista", vclave:g.u.v.clave, clave:g.u.clave, nombre:g.u.nombre, vista:g.u.vista, expresion:g.u.expresion, texto:g.texto};
-    t.idp="sesion:pic05:"+t.clave.replace(/\s/g,"_")+":"+S.rev;
+    t.idp=(S.prep?"prep:"+S.prep.id:"prep:-")+":"+(i+1); t.prep=S.prep?S.prep.id:null;
     if (S.pr.drift && i===0) t.drift=true;
     if (S.pr.fallo && i===gs.length-1) t.fin="fallida"; else if (S.pr.incierta && i===gs.length-1) t.fin="incierta";
     if (corte && i>0){ t.estado="preparada"; t.hist.push("Preparada en "+lote+"; sin autorizar al recargar"); }
@@ -556,7 +564,7 @@ function lanzar(gs){
   });
   S.lotes.push({id:lote, total:red(gs.length*S.precio)});
   S.pr={drift:false,fallo:false,incierta:false,corte:false,irregular:false};
-  S.gastoRes=red(S.gastoRes); S.preparado=false; S.precioPreparado=null;
+  S.gastoRes=red(S.gastoRes); S.preparado=false; S.precioPreparado=null; S.prep=null;
   if (corte) setTimeout(()=>acciones.cerrarVolver(),50); else setTimeout(terminar,1000);
 }
 function terminar(){
@@ -605,17 +613,18 @@ const acciones={
   "v-luz"(el){ vd().luz=el.value; S.preparado=false; },
   "v-fondo"(el){ vd().fondo=el.value; S.preparado=false; },
   ir(el){ S.paso=+el.dataset.p; S.tab="director"; },
-  preparar(){ S.preparado=true; S.precioPreparado=S.precio; },
+  preparar(){ const g=generaciones(); S.preparado=true; S.precioPreparado=S.precio; S.nPrep=(S.nPrep||0)+1; S.prep={id:"P"+S.nPrep, huella:huella(g), total:red(g.length*S.precio), n:g.length}; },
   editarPrep(){ S.preparado=false; S.paso=4; S.tab="director"; S.panel=true; },
   generar(){
     if (S.tomas.some(t=>t.estado==="generando")) return;
     const g=generaciones(); if (!g.length) return;
-    const total=g.length*S.precio, queda=S.presupuesto-S.gastoEst-S.gastoRes;
-    if (S.precioPreparado!==null && S.precioPreparado!==S.precio){ S.modal={tipo:"confirmar", titulo:"El precio ha cambiado", texto:"Al preparar era "+euro(S.precioPreparado)+" por imagen; ahora es "+euro(S.precio)+". Total: "+euro(total)+".", boton:"Generar por "+euro(total), accion:"confirmarGenerar"}; return; }
+    const total=g.length*S.precio, queda=S.presupuesto-S.gastoEst-S.gastoRes-(S.gastoInf||0)-posibleCargo();
+    if (!S.prep || S.prep.huella!==huella(g)){ const precio = S.prep && S.precioPreparado!==S.precio; S.modal={tipo:"confirmar", titulo:precio?"El precio ha cambiado":"La preparación cambió", texto:(precio?"Al preparar era "+euro(S.precioPreparado)+" por imagen; ahora es "+euro(S.precio)+". ":"Algo cambió desde que preparaste (texto, referencias o dirección). ")+"No se ha generado nada. Prepara de nuevo para ver exactamente lo que se enviará y su precio.", boton:"Preparar de nuevo", accion:"prepararDeNuevo"}; return; }
     if (total>queda+1e-9){ S.modal={tipo:"confirmar", titulo:"Supera el presupuesto", texto:"Esta generación cuesta "+euro(total)+" y quedan "+euro(Math.max(0,queda))+" del presupuesto.", boton:"Generar igualmente · "+euro(total), accion:"confirmarGenerar"}; return; }
     lanzar(g);
   },
   confirmarGenerar(){ S.modal=null; lanzar(generaciones()); },
+  prepararDeNuevo(){ S.modal=null; acciones.preparar(); S.tab="director"; S.panel=true; S.paso=6; },
   autorizarPreparadas(){ S.tomas.filter(t=>t.estado==="preparada").forEach(t=>{ t.estado="generando"; S.gastoRes+=S.precio; t.hist.push("Autorizada tras recargar: "+euro(S.precio)+" reservado"); }); S.gastoRes=red(S.gastoRes); setTimeout(terminar,1000); },
   faltan(){
     const gs=[];
@@ -626,6 +635,8 @@ const acciones={
     if (gs.length) lanzar(gs);
   },
   comprobar(){ const t=cur(); t.estado="lista"; S.gastoRes=red(S.gastoRes-S.precio); S.gastoEst=red(S.gastoEst+S.precio); t.hist.push("Comprobada: estaba hecha"); },
+  marcarFallida(){ const t=cur(); t.estado="fallida"; t.posibleCargo="pendiente"; S.gastoRes=red(S.gastoRes-S.precio); t.hist.push("Marcada fallida por Juan: la reserva se libera y queda un posible cargo de "+euro(S.precio)+" en este intento"); },
+  cargo(el){ const t=S.tomas.find(x=>x.id===el.dataset.id); if (el.dataset.v==="no"){ t.posibleCargo="sin_cargo"; t.hist.push("No hubo cargo"); } else { t.posibleCargo="cobrado"; S.gastoInf=red((S.gastoInf||0)+S.precio); t.hist.push("Hubo cargo: "+euro(S.precio)+" informado a mano"); } },
   comprobarTodas(){ S.tomas.filter(t=>t.estado==="incierta").forEach(t=>{ t.estado="lista"; S.gastoRes=red(S.gastoRes-S.precio); S.gastoEst=red(S.gastoEst+S.precio); t.hist.push("Comprobada: estaba hecha"); }); },
   sel(el){ abrirToma(S.tomas.find(x=>x.id===el.dataset.id)); },
   tab(el){ S.tab=el.dataset.v; },
@@ -639,12 +650,13 @@ const acciones={
   otroRetrato(){ const t=cur(); t.desc=true; lanzar([{tipo:"retrato", texto:textoRetrato()}]); },
   descartar(){ const t=cur(); t.desc=true; t.hist.push("Descartada"); },
   recuperar(){ const t=cur(); t.desc=false; t.motivo=null; t.hist.push("Recuperada"); },
-  continuarVistas(){ S.tab="director"; S.panel=true; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
+  continuarVistas(){ S.tab="director"; S.panel=true; S.paso=6; acciones.preparar(); },
   recortar(){ const t=cur(), n=t.paneles.length; S.modal={tipo:"recorte", id:t.id, cortes:Array.from({length:n-1},(_,k)=>(k+1)/n), margen:0.01}; },
   restablecerCortes(){ const n=S.modal.cortes.length+1; S.modal.cortes=Array.from({length:n-1},(_,k)=>(k+1)/n); S.modal.margen=0.01; },
   corte(el){ const m=S.modal, k=+el.dataset.i, v=(+el.value)/1000, min=0.1, ant=k===0?0:m.cortes[k-1], sig=k===m.cortes.length-1?1:m.cortes[k+1]; m.cortes[k]=Math.min(sig-min, Math.max(ant+min, v)); },
   margen(el){ S.modal.margen=Math.min(0.2, Math.max(0,(+el.value)/1000)); },
   recortarYa(){
+    if (!S.modal || S.modal.enCurso) return; S.modal.enCurso=true;
     const m=S.modal, t=S.tomas.find(x=>x.id===m.id); S.modal=null; S.sel=t.id;
     const cs=[0].concat(m.cortes,[1]), alto=Math.round(1152*(1-2*m.margen)), clave=JSON.stringify([m.cortes.map(c=>Math.round(c*1000)),Math.round(m.margen*1000)]);
     if (t.recortes && t.recortes.includes(clave)) return;
@@ -654,8 +666,8 @@ const acciones={
     t.paneles.forEach((p,k)=>{ const w=Math.round(2048*(cs[k+1]-cs[k])); S.n++; S.tomas.push({id:"t"+S.n, n:S.n, tipo:"recorte", vclave:p.vclave, clave:p.clave, nombre:p.nombre+" (recorte)", vista:p.vista, expresion:p.expresion, estado:"lista", fav:false, desc:false, motivo:null, v:null, drift:t.drift, reemplazada:false, lote:t.lote, idp:t.idp+":recorte", res:w+" × "+alto+" px", texto:"Recorte de T"+t.n+".", hist:["Recorte de T"+t.n+" · "+w+" × "+alto+" px, sin coste"]}); });
     toast("Hoja recortada en "+t.paneles.length+" vistas. Revisa cada una.");
   },
-  otraHoja(){ const t=cur(); t.desc=true; S.modo="hoja"; S.tab="director"; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
-  aSueltas(){ const t=S.tomas.find(x=>x.tipo==="hoja"&&!x.recortada&&!x.desc); if (t){ t.desc=true; t.hist.push("Paneles no iguales: se pasa a vistas sueltas. La hoja se conserva."); } S.modo="sueltas"; S.modal=null; S.tab="director"; S.panel=true; S.paso=6; S.preparado=true; S.precioPreparado=S.precio; },
+  otraHoja(){ const t=cur(); t.desc=true; S.modo="hoja"; S.tab="director"; S.paso=6; acciones.preparar(); },
+  aSueltas(){ const t=S.tomas.find(x=>x.tipo==="hoja"&&!x.recortada&&!x.desc); if (t){ t.desc=true; t.hist.push("Paneles no iguales: se pasa a vistas sueltas. La hoja se conserva."); } S.modo="sueltas"; S.modal=null; S.tab="director"; S.panel=true; S.paso=6; acciones.preparar(); },
   aprobar(){
     const t=cur(), v=asegurarBorrador();
     if (t.tipo==="recorte"){ const h=S.tomas.find(x=>x.tipo==="hoja"&&x.lote===t.lote);
